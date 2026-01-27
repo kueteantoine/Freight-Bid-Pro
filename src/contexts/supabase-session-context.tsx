@@ -6,10 +6,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { usePathname, useRouter } from "next/navigation";
 import { Toaster, toast } from "sonner";
 
+export type UserRole = "shipper" | "carrier" | "driver" | "broker" | "admin";
+
 interface SessionContextType {
   session: Session | null;
   user: User | null;
   isLoading: boolean;
+  userRoles: UserRole[];
+  activeRole: UserRole | null;
+  setActiveRole: (role: UserRole) => void;
 }
 
 const SessionContext = createContext<SessionContextType | undefined>(undefined);
@@ -18,63 +23,122 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [userRoles, setUserRoles] = useState<UserRole[]>([]);
+  const [activeRole, _setActiveRole] = useState<UserRole | null>(null);
   const router = useRouter();
   const pathname = usePathname();
 
-  const AUTH_ROUTES = ["/login", "/register", "/forgot-password"];
+  const AUTH_ROUTES = ["/login", "/register", "/forgot-password", "/reset-password"];
   const PROTECTED_ROUTE_PREFIXES = ["/shipper", "/carrier", "/driver", "/broker", "/admin"];
 
+  const fetchUserRoles = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("user_roles")
+        .select("role_type")
+        .eq("user_id", userId)
+        .eq("is_active", true);
+
+      if (error) throw error;
+
+      const roles = data.map((r) => r.role_type as UserRole);
+      setUserRoles(roles);
+
+      // Set default active role if not set
+      if (roles.length > 0 && !activeRole) {
+        const storedRole = localStorage.getItem("activeRole") as UserRole;
+        if (storedRole && roles.includes(storedRole)) {
+          _setActiveRole(storedRole);
+        } else {
+          _setActiveRole(roles[0]);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching user roles:", error);
+    }
+  };
+
+  const setActiveRole = (role: UserRole) => {
+    _setActiveRole(role);
+    localStorage.setItem("activeRole", role);
+    router.push(`/${role}/dashboard`);
+  };
+
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, currentSession) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
+
+      if (currentSession?.user) {
+        await fetchUserRoles(currentSession.user.id);
+      } else {
+        setUserRoles([]);
+        _setActiveRole(null);
+        localStorage.removeItem("activeRole");
+      }
+
       setIsLoading(false);
 
-      const isAuthRoute = AUTH_ROUTES.some(route => pathname.startsWith(route));
-      const isProtectedRoute = PROTECTED_ROUTE_PREFIXES.some(prefix => pathname.startsWith(prefix));
+      const isAuthRoute = AUTH_ROUTES.some((route) => pathname.startsWith(route));
+      const isProtectedRoute = PROTECTED_ROUTE_PREFIXES.some((prefix) =>
+        pathname.startsWith(prefix)
+      );
 
-      if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION') {
+      if (event === "SIGNED_IN" || event === "INITIAL_SESSION") {
         if (currentSession && isAuthRoute) {
-          // Redirect authenticated users away from auth pages
-          router.push("/shipper/dashboard"); // Default redirect to Shipper Dashboard for now
-          toast.success("Welcome back! Redirecting to dashboard.");
+          // Default redirect will wait for role check in the other useEffect
         }
-      } else if (event === 'SIGNED_OUT') {
+      } else if (event === "SIGNED_OUT") {
         if (isProtectedRoute) {
-          // Redirect unauthenticated users away from protected pages
           router.push("/login");
           toast.info("You have been signed out.");
         }
       }
     });
 
-    // Initial check (in case onAuthStateChange doesn't fire immediately or we are server rendering)
     supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
-        setSession(initialSession);
-        setUser(initialSession?.user ?? null);
+      setSession(initialSession);
+      setUser(initialSession?.user ?? null);
+      if (initialSession?.user) {
+        fetchUserRoles(initialSession.user.id);
+      } else {
         setIsLoading(false);
+      }
     });
 
     return () => subscription.unsubscribe();
   }, [pathname, router]);
 
-  // Handle redirection on initial load if session is already known
+  // Handle redirection based on session and roles
   useEffect(() => {
     if (!isLoading) {
-      const isAuthRoute = AUTH_ROUTES.some(route => pathname.startsWith(route));
-      const isProtectedRoute = PROTECTED_ROUTE_PREFIXES.some(prefix => pathname.startsWith(prefix));
+      const isAuthRoute = AUTH_ROUTES.some((route) => pathname.startsWith(route));
+      const isProtectedRoute = PROTECTED_ROUTE_PREFIXES.some((prefix) =>
+        pathname.startsWith(prefix)
+      );
 
       if (session && isAuthRoute) {
-        router.replace("/shipper/dashboard");
+        if (activeRole) {
+          router.replace(`/${activeRole}/dashboard`);
+        } else if (userRoles.length > 0) {
+          router.replace(`/${userRoles[0]}/dashboard`);
+        } else {
+          // If authenticated but no roles found (shouldn't happen with trigger)
+          // maybe they need to complete profile/role selection
+          router.replace("/register");
+        }
       } else if (!session && isProtectedRoute) {
         router.replace("/login");
       }
     }
-  }, [isLoading, session, pathname, router]);
-
+  }, [isLoading, session, pathname, router, activeRole, userRoles]);
 
   return (
-    <SessionContext.Provider value={{ session, user, isLoading }}>
+    <SessionContext.Provider
+      value={{ session, user, isLoading, userRoles, activeRole, setActiveRole }}
+    >
       {children}
       <Toaster richColors position="top-right" />
     </SessionContext.Provider>
