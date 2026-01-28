@@ -6,12 +6,7 @@ import {
   Package,
   Truck,
   Users,
-  ShieldCheck,
-  ArrowRight,
   ChevronRight,
-  TrendingUp,
-  MapPin,
-  Clock,
   Briefcase
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -28,7 +23,7 @@ export const LandingRoles = () => {
             Tailored Experiences for Every Logistics Partner.
           </h3>
           <p className="text-lg text-slate-500 font-medium">
-            Whether you're shipping industrial goods or managing a national fleet, FreightBid provides the tools to grow your operations.
+            Whether you&apos;re shipping industrial goods or managing a national fleet, FreightBid provides the tools to grow your operations.
           </p>
         </div>
 
@@ -93,7 +88,7 @@ function RoleCard({ role, desc, icon: Icon, color, bg, href, features }: any) {
             {features.map((f: string) => (
               <div key={f} className="flex items-center gap-3">
                 <div className="h-4 w-4 bg-emerald-50 rounded-full flex items-center justify-center">
-                  <CheckCircle2 className="h-2.5 w-2.5 text-emerald-500" />
+                  <CheckCircleIcon className="h-2.5 w-2.5 text-emerald-500" />
                 </div>
                 <span className="text-[11px] font-bold text-slate-600 uppercase tracking-tight">{f}</span>
               </div>
@@ -109,13 +104,12 @@ function RoleCard({ role, desc, icon: Icon, color, bg, href, features }: any) {
         </CardContent>
       </Card>
 
-      {/* Glow Effect on Hover */}
       <div className="absolute inset-0 bg-primary/20 rounded-[40px] blur-[80px] opacity-0 group-hover:opacity-40 transition-opacity pointer-events-none -z-10"></div>
     </div>
   );
 }
 
-function CheckCircle2({ className }: { className?: string }) {
+function CheckCircleIcon({ className }: { className?: string }) {
   return (
     <svg
       className={className}

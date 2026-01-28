@@ -3,14 +3,10 @@
 import React, { useState } from "react";
 import {
     Search,
-    Plus,
     MoreHorizontal,
-    DollarSign,
     ShieldAlert,
     History,
-    Paperclip,
     Send,
-    ChevronRight,
     FileText
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -208,7 +204,7 @@ function ChatMessage({ sender, role, text, time, isMe, attachments }: any) {
                 </div>
             )}
         </div>
-    );
+  );
 }
 
 function SystemMessage({ text }: { text: string }) {

@@ -4,14 +4,12 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Truck,
-  ArrowUpRight,
   Hourglass,
   Wrench,
   Search,
   Download,
   Share2,
   Maximize2,
-  CheckCircle2,
   AlertCircle,
   CreditCard
 } from "lucide-react";

@@ -11,8 +11,7 @@ import {
   Globe
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import Link from "next/link";
-import { cn } from "@/lib/utils"; // Assuming cn utility is available
+import { cn } from "@/lib/utils";
 
 export const LandingHero = () => {
   return (
@@ -38,7 +37,7 @@ export const LandingHero = () => {
           </h1>
 
           <p className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed font-medium">
-            Transforming Cameroon's logistics landscape with a transparent, AI-driven bidding marketplace. Connect with verified carriers, optimize routes, and scale your business with ease.
+            Transforming Cameroon&apos;s logistics landscape with a transparent, AI-driven bidding marketplace. Connect with verified carriers, optimize routes, and scale your business with ease.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-6">
@@ -52,7 +51,6 @@ export const LandingHero = () => {
             </Button>
           </div>
 
-          {/* Trust Indicators */}
           <div className="pt-20 grid grid-cols-2 md:grid-cols-4 gap-8">
             <TrustStat label="Verified Carriers" value="2.4k+" icon={ShieldCheck} />
             <TrustStat label="Digital Corridors" value="150+" icon={Globe} />
@@ -62,7 +60,6 @@ export const LandingHero = () => {
         </div>
       </div>
 
-      {/* Floating UI Elements (Decorative) */}
       <div className="hidden lg:block">
         <FloatingCard
           top="20%"
