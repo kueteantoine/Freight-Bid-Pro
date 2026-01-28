@@ -73,9 +73,12 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
 
-      if (currentSession?.user) {
+      // Synchronization of session with cookies for middleware
+      if (currentSession) {
+        document.cookie = `sb-access-token=${currentSession.access_token}; path=/; max-age=${currentSession.expires_in}; SameSite=Lax; Secure`;
         await fetchUserRoles(currentSession.user.id);
       } else {
+        document.cookie = `sb-access-token=; path=/; max-age=0; SameSite=Lax; Secure`;
         setUserRoles([]);
         _setActiveRole(null);
         removeLocalStorage("activeRole");
@@ -83,7 +86,6 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
 
       setIsLoading(false);
 
-      const isAuthRoute = AUTH_ROUTES.some((route) => pathname.startsWith(route));
       const isProtectedRoute = PROTECTED_ROUTE_PREFIXES.some((prefix) =>
         pathname.startsWith(prefix)
       );
@@ -99,12 +101,11 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
       const { data: { session: initialSession } } = await supabase.auth.getSession();
       setSession(initialSession);
       setUser(initialSession?.user ?? null);
-      
+
       if (initialSession?.user) {
         await fetchUserRoles(initialSession.user.id);
-      } else {
-        setIsLoading(false);
       }
+      setIsLoading(false);
     };
 
     initSession();
@@ -125,9 +126,10 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
           router.replace(`/${activeRole}/dashboard`);
         } else if (userRoles.length > 0) {
           router.replace(`/${userRoles[0]}/dashboard`);
-        } else {
+        } else if (pathname.startsWith("/login")) {
           router.replace("/register");
         }
+        // If no roles and on another auth route (like /register), the page itself will handle showing the registration form
       } else if (!session && isProtectedRoute) {
         router.replace("/login");
       }

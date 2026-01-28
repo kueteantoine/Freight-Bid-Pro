@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import Link from "next/link";
+import { useSession } from "@/contexts/supabase-session-context";
 
 const registerSchema = z.object({
     email: z.string().email({ message: "Invalid email address" }),
@@ -39,7 +40,8 @@ const registerSchema = z.object({
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export function RegisterForm() {
-    const [step, setStep] = useState(1);
+    const { session } = useSession();
+    const [step, setStep] = useState(session ? 2 : 1);
     const [isLoading, setIsLoading] = useState(false);
 
     const form = useForm<RegisterFormValues>({
@@ -52,6 +54,15 @@ export function RegisterForm() {
         },
     });
 
+    useEffect(() => {
+        if (session && step === 1) {
+            setStep(2);
+        }
+        if (session?.user?.email) {
+            form.setValue("email", session.user.email);
+        }
+    }, [session, step, form]);
+
     const nextStep = async () => {
         const fieldsToValidate = step === 1 ? ["email", "password", "phone"] : ["role"];
         const isValid = await form.trigger(fieldsToValidate as any);
@@ -63,26 +74,31 @@ export function RegisterForm() {
     async function onSubmit(values: RegisterFormValues) {
         setIsLoading(true);
         try {
-            // 1. Sign up user
-            const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-                email: values.email,
-                password: values.password,
-                options: {
-                    data: {
-                        phone_number: values.phone,
-                    },
-                },
-            });
+            let userId = session?.user?.id;
 
-            if (signUpError) {
-                toast.error(signUpError.message);
-                return;
+            if (!userId) {
+                // 1. Sign up user only if not already logged in
+                const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+                    email: values.email,
+                    password: values.password,
+                    options: {
+                        data: {
+                            phone_number: values.phone,
+                        },
+                    },
+                });
+
+                if (signUpError) {
+                    toast.error(signUpError.message);
+                    return;
+                }
+                userId = signUpData.user?.id;
             }
 
-            if (signUpData.user) {
+            if (userId) {
                 // 2. Assign initial role
                 const { error: roleError } = await supabase.from("user_roles").insert({
-                    user_id: signUpData.user.id,
+                    user_id: userId,
                     role_type: values.role,
                     is_active: true,
                     verification_status: "pending",
@@ -90,9 +106,12 @@ export function RegisterForm() {
 
                 if (roleError) {
                     console.error("Error assigning role:", roleError);
-                    toast.error("Account created but role assignment failed. Please contact support.");
-                } else {
+                    toast.error("Role assignment failed. Please contact support.");
+                } else if (!session) {
                     toast.success("Account created successfully! Please check your email for verification.");
+                } else {
+                    toast.success("Role assigned successfully! Redirecting...");
+                    window.location.reload();
                 }
             }
         } catch (error) {
@@ -101,6 +120,21 @@ export function RegisterForm() {
             setIsLoading(false);
         }
     }
+
+    const handleFormSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (session) {
+            // Already logged in, only care about role
+            const values = form.getValues();
+            if (!values.role) {
+                form.setError("role", { message: "Please select a role" });
+                return;
+            }
+            await onSubmit(values);
+        } else {
+            form.handleSubmit(onSubmit)(e);
+        }
+    };
 
     return (
         <div className="space-y-6">
@@ -123,7 +157,7 @@ export function RegisterForm() {
             </div>
 
             <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                <form onSubmit={handleFormSubmit} className="space-y-4">
                     {step === 1 && (
                         <>
                             <FormField
@@ -221,7 +255,7 @@ export function RegisterForm() {
                                 </Button>
                                 <Button type="submit" className="flex-1" disabled={isLoading}>
                                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                    Register
+                                    {session ? "Complete Profile" : "Register"}
                                 </Button>
                             </div>
                         </>

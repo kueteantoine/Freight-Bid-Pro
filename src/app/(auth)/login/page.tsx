@@ -18,7 +18,11 @@ export default function LoginPage() {
   }
 
   if (session) {
-    return null;
+    return (
+      <Card className="w-full max-w-md shadow-xl border-primary/20">
+        <AuthLoading />
+      </Card>
+    );
   }
 
   return (

@@ -16,28 +16,28 @@ import { cn } from "@/lib/utils"; // Assuming cn utility is available
 
 export const LandingHero = () => {
   return (
-    <section className="relative min-h-[90vh] flex items-center pt-20 pb-32 overflow-hidden bg-slate-950">
+    <section className="relative min-h-[90vh] flex items-center pt-20 pb-32 overflow-hidden bg-blue-50/50">
       {/* Background Decorative Elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary/20 rounded-full blur-[120px] animate-pulse"></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-600/10 rounded-full blur-[120px]"></div>
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full opacity-5 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:40px_40px]"></div>
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary/10 rounded-full blur-[120px] animate-pulse"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-200/40 rounded-full blur-[120px]"></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full opacity-20 bg-[radial-gradient(#007aff_1px,transparent_1px)] [background-size:40px_40px]"></div>
       </div>
 
       <div className="container mx-auto px-6 relative z-10">
         <div className="max-w-4xl mx-auto text-center space-y-10">
           <div className="flex justify-center">
-            <Badge className="bg-white/5 border-white/10 text-primary-foreground font-black text-[10px] uppercase tracking-[0.3em] px-4 py-2 rounded-full backdrop-blur-sm shadow-xl">
+            <Badge className="bg-blue-100 border-blue-200 text-blue-700 font-black text-[10px] uppercase tracking-[0.3em] px-4 py-2 rounded-full backdrop-blur-sm shadow-sm">
               <Zap className="h-3 w-3 mr-2 text-primary fill-primary" />
               Revolutionizing Digital Logistics
             </Badge>
           </div>
 
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-white leading-[1.05] tracking-tighter">
-            The Future of <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-400">Freight Bidding</span> is Here.
+          <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-slate-900 leading-[1.05] tracking-tighter">
+            The Future of <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-600">Freight Bidding</span> is Here.
           </h1>
 
-          <p className="text-lg md:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed font-medium">
+          <p className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed font-medium">
             Transforming Cameroon's logistics landscape with a transparent, AI-driven bidding marketplace. Connect with verified carriers, optimize routes, and scale your business with ease.
           </p>
 
@@ -46,7 +46,7 @@ export const LandingHero = () => {
               Get Started Now
               <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </Button>
-            <Button variant="ghost" size="lg" className="h-16 px-10 rounded-2xl border border-white/10 bg-white/5 text-white font-bold hover:bg-white/10 group">
+            <Button variant="ghost" size="lg" className="h-16 px-10 rounded-2xl border border-blue-200 bg-white text-slate-700 font-bold hover:bg-blue-50 group">
               <PlayCircle className="mr-2 h-5 w-5 text-primary" />
               Watch Demo
             </Button>
@@ -89,11 +89,11 @@ export const LandingHero = () => {
 function TrustStat({ label, value, icon: Icon }: any) {
   return (
     <div className="flex flex-col items-center space-y-2">
-      <div className="bg-white/5 p-3 rounded-xl border border-white/5">
+      <div className="bg-white p-3 rounded-xl border border-blue-100 shadow-sm">
         <Icon className="h-5 w-5 text-primary" />
       </div>
       <div className="flex flex-col">
-        <span className="text-2xl font-black text-white">{value}</span>
+        <span className="text-2xl font-black text-slate-900">{value}</span>
         <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{label}</span>
       </div>
     </div>
@@ -103,15 +103,15 @@ function TrustStat({ label, value, icon: Icon }: any) {
 function FloatingCard({ top, left, right, title, value, status, delay, success }: any) {
   return (
     <div
-      className="absolute bg-white/5 backdrop-blur-xl border border-white/10 p-6 rounded-3xl shadow-2xl animate-bounce-slow"
+      className="absolute bg-white/90 backdrop-blur-xl border border-blue-100 p-6 rounded-3xl shadow-2xl shadow-blue-900/10 animate-bounce-slow"
       style={{ top, left, right, animationDelay: delay }}
     >
       <div className="flex items-center gap-4">
-        <div className={cn("h-10 w-10 rounded-full flex items-center justify-center", success ? "bg-emerald-500/20 text-emerald-400" : "bg-primary/20 text-primary")}>
+        <div className={cn("h-10 w-10 rounded-full flex items-center justify-center", success ? "bg-emerald-500/10 text-emerald-600" : "bg-primary/10 text-primary")}>
           <ShieldCheck className="h-5 w-5" />
         </div>
         <div>
-          <h4 className="text-xs font-black text-white">{title}</h4>
+          <h4 className="text-xs font-black text-slate-900">{title}</h4>
           <p className="text-sm font-bold text-primary">{value}</p>
           <div className="flex items-center gap-2 mt-2">
             <div className={cn("h-1.5 w-1.5 rounded-full", success ? "bg-emerald-500" : "bg-amber-500")}></div>

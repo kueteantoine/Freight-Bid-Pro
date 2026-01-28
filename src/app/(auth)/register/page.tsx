@@ -7,7 +7,7 @@ import { AuthLoading } from "@/components/auth/auth-loading";
 import { RegisterForm } from "@/components/auth/register-form";
 
 export default function RegisterPage() {
-    const { isLoading, session } = useSession();
+    const { isLoading, session, userRoles } = useSession();
 
     if (isLoading) {
         return (
@@ -18,7 +18,14 @@ export default function RegisterPage() {
     }
 
     if (session) {
-        return null; // Context handles redirect
+        if (userRoles.length > 0) {
+            return (
+                <Card className="w-full max-w-lg shadow-xl border-primary/20">
+                    <AuthLoading />
+                </Card>
+            );
+        }
+        // If session exists but no roles, we stay on this page to let them pick a role
     }
 
     return (
