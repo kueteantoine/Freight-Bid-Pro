@@ -18,7 +18,11 @@ import {
   Save,
   Clock,
   Upload,
-  ChevronDown
+  DollarSign, // Added for Bidding step
+  Snowflake, // Added for Refrigerated truck
+  Droplet, // Added for Tanker truck
+  Car, // Added for Small Van
+  Eye, // Added for Visibility
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -53,6 +57,9 @@ import {
   getShipmentTemplates
 } from "@/app/actions/shipment-actions";
 
+const auctionTypeEnum = z.enum(["standard", "sealed", "dutch", "buy_it_now"]);
+const visibilityEnum = z.enum(["public", "private"]);
+
 const bookingSchema = z.object({
   pickup_location: z.string().min(5, { message: "Pickup location is required" }),
   delivery_location: z.string().min(5, { message: "Delivery location is required" }),
@@ -74,17 +81,32 @@ const bookingSchema = z.object({
   unloading_requirements: z.string().optional(),
   save_as_template: z.boolean().default(false),
   template_name: z.string().optional(),
+
+  // --- New Bidding Fields ---
+  auction_type: auctionTypeEnum.default("standard"),
+  bidding_duration_minutes: z.coerce.number().min(5, "Minimum duration is 5 minutes").optional(),
+  min_bid_increment: z.coerce.number().min(0).default(0),
+  reserve_price: z.coerce.number().min(0).optional(),
+  buy_it_now_price: z.coerce.number().min(0).optional(),
+  marketplace_visibility: visibilityEnum.default("public"),
 });
 
 type BookingFormValues = z.infer<typeof bookingSchema>;
 
 const TRUCK_TYPES = [
   { id: "flatbed", label: "Flatbed", icon: Truck, description: "Open trailer for construction, machinery" },
-  { id: "van", label: "Box Van", icon: Package, description: "Enclosed van for general consumer goods" },
-  { id: "refrigerated", label: "Refrigerated", icon: CheckCircle2, description: "Temperature controlled for food/medical" },
-  { id: "tanker", label: "Tanker", icon: ChevronDown, description: "For liquid bulk or hazardous materials" },
+  { id: "box_van", label: "Box Van", icon: Package, description: "Enclosed van for general consumer goods" },
+  { id: "refrigerated", label: "Refrigerated", icon: Snowflake, description: "Temperature controlled for food/medical" },
+  { id: "tanker", label: "Tanker", icon: Droplet, description: "For liquid bulk or hazardous materials" },
   { id: "curtainside", label: "Curtainside", icon: FileText, description: "Easy side-loading for pallets" },
-  { id: "small_van", label: "Small Van", icon: Truck, description: "For small deliveries and courier service" },
+  { id: "small_van", label: "Small Van", icon: Car, description: "For small deliveries and courier service" },
+];
+
+const AUCTION_TYPES = [
+  { id: "standard", label: "Standard Auction", desc: "Open bidding, highest bid wins." },
+  { id: "sealed", label: "Sealed Bid", desc: "Bids hidden until auction closes." },
+  { id: "buy_it_now", label: "Buy It Now", desc: "Set a fixed price for instant acceptance." },
+  // Dutch auction is complex, omitting for simplicity in initial implementation
 ];
 
 export function ShipmentBookingForm() {
@@ -97,7 +119,7 @@ export function ShipmentBookingForm() {
   const router = useRouter();
 
   const form = useForm<BookingFormValues>({
-    resolver: zodResolver(bookingSchema),
+    resolver: zodResolver(bookingSchema) as any,
     defaultValues: {
       pickup_location: "",
       delivery_location: "",
@@ -107,7 +129,7 @@ export function ShipmentBookingForm() {
       weight_kg: 0,
       quantity: 1,
       dimensions_json: { length: 0, width: 0, height: 0 },
-      preferred_vehicle_type: "van",
+      preferred_vehicle_type: "box_van", // Changed default to box_van
       special_handling_requirements: "",
       insurance_required: false,
       insurance_value: 0,
@@ -115,6 +137,12 @@ export function ShipmentBookingForm() {
       unloading_requirements: "",
       save_as_template: false,
       template_name: "",
+      auction_type: "standard",
+      bidding_duration_minutes: 60,
+      min_bid_increment: 1000,
+      reserve_price: undefined,
+      buy_it_now_price: undefined,
+      marketplace_visibility: "public",
     },
   });
 
@@ -160,9 +188,10 @@ export function ShipmentBookingForm() {
   const nextStep = async () => {
     let fields: (keyof BookingFormValues)[] = [];
     if (step === 1) fields = ["pickup_location", "scheduled_pickup_date"];
-    if (step === 2) fields = ["delivery_location", "scheduled_delivery_date"];
+    if (step === 2) fields = ["delivery_location"];
     if (step === 3) fields = ["freight_type", "weight_kg", "quantity"];
     if (step === 4) fields = ["preferred_vehicle_type"];
+    if (step === 5) fields = ["auction_type"]; // Validate auction type selection
 
     const isValid = await form.trigger(fields);
     if (isValid) setStep((s) => s + 1);
@@ -209,6 +238,10 @@ export function ShipmentBookingForm() {
     );
   }
 
+  const auctionType = form.watch("auction_type");
+  const insuranceRequired = form.watch("insurance_required");
+  const saveAsTemplate = form.watch("save_as_template");
+
   return (
     <div className="max-w-4xl mx-auto py-8 px-4">
       {/* Templates Section */}
@@ -252,7 +285,8 @@ export function ShipmentBookingForm() {
           { icon: MapPin, label: "Delivery" },
           { icon: Package, label: "Freight" },
           { icon: Truck, label: "Vehicle" },
-          { icon: Shield, label: "Review" }
+          { icon: DollarSign, label: "Bidding" }, // New Step 5
+          { icon: CheckCircle2, label: "Review & Post" } // New Step 6
         ].map((item, i) => (
           <div key={i} className="relative z-10 flex flex-col items-center">
             <div className={cn(
@@ -275,6 +309,7 @@ export function ShipmentBookingForm() {
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <Card className="border-none shadow-2xl bg-card">
             <CardContent className="pt-8 px-6 sm:px-10">
+              {/* Step 1: Pickup */}
               {step === 1 && (
                 <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
                   <div className="space-y-2">
@@ -283,7 +318,7 @@ export function ShipmentBookingForm() {
                   </div>
                   <div className="grid grid-cols-1 gap-6">
                     <FormField
-                      control={form.control}
+                      control={form.control as any}
                       name="pickup_location"
                       render={({ field }) => (
                         <FormItem>
@@ -300,7 +335,7 @@ export function ShipmentBookingForm() {
                       )}
                     />
                     <FormField
-                      control={form.control}
+                      control={form.control as any}
                       name="scheduled_pickup_date"
                       render={({ field }) => (
                         <FormItem>
@@ -319,6 +354,7 @@ export function ShipmentBookingForm() {
                 </div>
               )}
 
+              {/* Step 2: Delivery */}
               {step === 2 && (
                 <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
                   <div className="space-y-2">
@@ -327,7 +363,7 @@ export function ShipmentBookingForm() {
                   </div>
                   <div className="grid grid-cols-1 gap-6">
                     <FormField
-                      control={form.control}
+                      control={form.control as any}
                       name="delivery_location"
                       render={({ field }) => (
                         <FormItem>
@@ -343,7 +379,7 @@ export function ShipmentBookingForm() {
                       )}
                     />
                     <FormField
-                      control={form.control}
+                      control={form.control as any}
                       name="scheduled_delivery_date"
                       render={({ field }) => (
                         <FormItem>
@@ -363,6 +399,7 @@ export function ShipmentBookingForm() {
                 </div>
               )}
 
+              {/* Step 3: Freight */}
               {step === 3 && (
                 <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
                   <div className="space-y-2">
@@ -371,7 +408,7 @@ export function ShipmentBookingForm() {
                   </div>
                   <div className="space-y-6">
                     <FormField
-                      control={form.control}
+                      control={form.control as any}
                       name="freight_type"
                       render={({ field }) => (
                         <FormItem>
@@ -385,7 +422,7 @@ export function ShipmentBookingForm() {
                     />
                     <div className="grid grid-cols-2 gap-6">
                       <FormField
-                        control={form.control}
+                        control={form.control as any}
                         name="weight_kg"
                         render={({ field }) => (
                           <FormItem>
@@ -398,7 +435,7 @@ export function ShipmentBookingForm() {
                         )}
                       />
                       <FormField
-                        control={form.control}
+                        control={form.control as any}
                         name="quantity"
                         render={({ field }) => (
                           <FormItem>
@@ -415,7 +452,7 @@ export function ShipmentBookingForm() {
                       <FormLabel>Dimensions (m)</FormLabel>
                       <div className="grid grid-cols-3 gap-4">
                         <FormField
-                          control={form.control}
+                          control={form.control as any}
                           name="dimensions_json.length"
                           render={({ field }) => (
                             <FormItem>
@@ -424,7 +461,7 @@ export function ShipmentBookingForm() {
                           )}
                         />
                         <FormField
-                          control={form.control}
+                          control={form.control as any}
                           name="dimensions_json.width"
                           render={({ field }) => (
                             <FormItem>
@@ -433,7 +470,7 @@ export function ShipmentBookingForm() {
                           )}
                         />
                         <FormField
-                          control={form.control}
+                          control={form.control as any}
                           name="dimensions_json.height"
                           render={({ field }) => (
                             <FormItem>
@@ -447,6 +484,7 @@ export function ShipmentBookingForm() {
                 </div>
               )}
 
+              {/* Step 4: Vehicle */}
               {step === 4 && (
                 <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
                   <div className="space-y-2">
@@ -454,7 +492,7 @@ export function ShipmentBookingForm() {
                     <p className="text-muted-foreground">What kind of truck does this load require?</p>
                   </div>
                   <FormField
-                    control={form.control}
+                    control={form.control as any}
                     name="preferred_vehicle_type"
                     render={({ field }) => (
                       <FormItem className="space-y-4">
@@ -497,17 +535,170 @@ export function ShipmentBookingForm() {
                 </div>
               )}
 
+              {/* Step 5: Bidding Configuration (NEW) */}
               {step === 5 && (
-                <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+                <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
                   <div className="space-y-2">
-                    <h2 className="text-2xl font-bold">Final Requirements</h2>
-                    <p className="text-muted-foreground">Last few details before we post your load.</p>
+                    <h2 className="text-2xl font-bold">Bidding & Pricing</h2>
+                    <p className="text-muted-foreground">Configure how carriers will bid on your shipment.</p>
                   </div>
 
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control as any}
+                      name="auction_type"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Auction Type</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="h-12">
+                                <SelectValue placeholder="Select auction type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {AUCTION_TYPES.map(type => (
+                                <SelectItem key={type.id} value={type.id}>
+                                  {type.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormDescription>{AUCTION_TYPES.find(t => t.id === field.value)?.desc}</FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control as any}
+                      name="marketplace_visibility"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Marketplace Visibility</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="h-12">
+                                <SelectValue placeholder="Select visibility" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="public">Public (Open to all verified carriers)</SelectItem>
+                              <SelectItem value="private">Private (Invite-only)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormDescription>
+                            {field.value === 'public' ? "Visible to all verified carriers." : "Only visible to carriers you invite."}
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {auctionType !== 'buy_it_now' && (
+                    <Card className="p-4 bg-muted/20 border-dashed animate-in fade-in duration-300">
+                      <CardTitle className="text-lg mb-4">Bidding Rules</CardTitle>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <FormField
+                          control={form.control as any}
+                          name="bidding_duration_minutes"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Bidding Duration (Minutes)</FormLabel>
+                              <FormControl>
+                                <Input type="number" placeholder="e.g. 60 (1 hour)" className="h-10" {...field} />
+                              </FormControl>
+                              <FormDescription>How long the auction will remain open.</FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control as any}
+                          name="min_bid_increment"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Minimum Bid Increment (XAF)</FormLabel>
+                              <FormControl>
+                                <Input type="number" placeholder="e.g. 1000" className="h-10" {...field} />
+                              </FormControl>
+                              <FormDescription>Minimum amount a carrier must lower the previous bid by.</FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control as any}
+                          name="reserve_price"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Reserve Price (XAF, Optional)</FormLabel>
+                              <FormControl>
+                                <Input type="number" placeholder="Minimum acceptable price" className="h-10" {...field} />
+                              </FormControl>
+                              <FormDescription>If the lowest bid doesn't meet this, you don't have to award it.</FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </Card>
+                  )}
+
+                  {auctionType === 'buy_it_now' && (
+                    <Card className="p-4 bg-primary/10 border-primary/50 border-dashed animate-in fade-in duration-300">
+                      <CardTitle className="text-lg mb-4 text-primary">Instant Acceptance Price</CardTitle>
+                      <FormField
+                        control={form.control as any}
+                        name="buy_it_now_price"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Buy It Now Price (XAF)</FormLabel>
+                            <FormControl>
+                              <Input type="number" placeholder="Fixed price for instant award" className="h-10" {...field} />
+                            </FormControl>
+                            <FormDescription>The first carrier to bid this price wins instantly.</FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </Card>
+                  )}
+                </div>
+              )}
+
+              {/* Step 6: Review & Post (Updated) */}
+              {step === 6 && (
+                <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+                  <div className="space-y-2">
+                    <h2 className="text-2xl font-bold">Review & Finalize</h2>
+                    <p className="text-muted-foreground">Confirm all details and post your shipment to the marketplace.</p>
+                  </div>
+
+                  {/* Summary Card (Placeholder for detailed review) */}
+                  <Card className="border-primary/20 bg-primary/5 shadow-lg">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-primary">
+                        <Eye className="h-5 w-5" /> Shipment Summary
+                      </CardTitle>
+                      <CardDescription>Quick overview of your booking details.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-2 gap-4 text-sm">
+                      <p><strong>Pickup:</strong> {form.getValues("pickup_location")}</p>
+                      <p><strong>Delivery:</strong> {form.getValues("delivery_location")}</p>
+                      <p><strong>Freight Type:</strong> {form.getValues("freight_type")}</p>
+                      <p><strong>Weight:</strong> {form.getValues("weight_kg")} kg</p>
+                      <p><strong>Auction Type:</strong> <span className="capitalize">{auctionType.replace('_', ' ')}</span></p>
+                      <p><strong>Visibility:</strong> <span className="capitalize">{form.getValues("marketplace_visibility")}</span></p>
+                    </CardContent>
+                  </Card>
+
+                  {/* Old Step 5 Content (Additional Requirements) */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-6">
                       <FormField
-                        control={form.control}
+                        control={form.control as any}
                         name="insurance_required"
                         render={({ field }) => (
                           <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-xl border p-4 shadow-sm">
@@ -524,9 +715,9 @@ export function ShipmentBookingForm() {
                         )}
                       />
 
-                      {form.watch("insurance_required") && (
+                      {insuranceRequired && (
                         <FormField
-                          control={form.control}
+                          control={form.control as any}
                           name="insurance_value"
                           render={({ field }) => (
                             <FormItem className="animate-in zoom-in-95 duration-300">
@@ -545,7 +736,7 @@ export function ShipmentBookingForm() {
                           <Save className="w-4 h-4" /> Save Preferences
                         </div>
                         <FormField
-                          control={form.control}
+                          control={form.control as any}
                           name="save_as_template"
                           render={({ field }) => (
                             <FormItem className="flex flex-row items-start space-x-3 space-y-0">
@@ -558,9 +749,9 @@ export function ShipmentBookingForm() {
                             </FormItem>
                           )}
                         />
-                        {form.watch("save_as_template") && (
+                        {saveAsTemplate && (
                           <FormField
-                            control={form.control}
+                            control={form.control as any}
                             name="template_name"
                             render={({ field }) => (
                               <FormItem className="animate-in slide-in-from-top-2 duration-300">
@@ -577,7 +768,7 @@ export function ShipmentBookingForm() {
 
                     <div className="space-y-6">
                       <FormField
-                        control={form.control}
+                        control={form.control as any}
                         name="loading_requirements"
                         render={({ field }) => (
                           <FormItem>
@@ -589,7 +780,7 @@ export function ShipmentBookingForm() {
                         )}
                       />
                       <FormField
-                        control={form.control}
+                        control={form.control as any}
                         name="unloading_requirements"
                         render={({ field }) => (
                           <FormItem>
@@ -632,7 +823,7 @@ export function ShipmentBookingForm() {
                 <Save className="h-4 w-4" /> Save Draft
               </Button>
 
-              {step < 5 ? (
+              {step < 6 ? (
                 <Button type="button" size="lg" onClick={nextStep} className="px-8 shadow-lg transition-all hover:scale-105">
                   Next Step <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
