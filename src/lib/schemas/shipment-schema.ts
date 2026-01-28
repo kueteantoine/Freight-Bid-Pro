@@ -3,6 +3,13 @@ import * as z from "zod";
 export const auctionTypeEnum = z.enum(["standard", "sealed", "dutch", "buy_it_now"]);
 export const visibilityEnum = z.enum(["public", "private"]);
 
+export const autoAcceptCriteriaSchema = z.object({
+  enabled: z.boolean().default(false),
+  max_price: z.coerce.number().min(0).optional(), // Max price shipper is willing to pay
+  min_rating: z.coerce.number().min(1).max(5).optional(), // Minimum carrier rating (1-5)
+  max_delivery_days: z.coerce.number().min(1).optional(), // Maximum delivery time in days
+});
+
 export const bookingSchema = z.object({
   pickup_location: z.string().min(5, { message: "Pickup location is required" }),
   pickup_latitude: z.number().optional(),
@@ -37,6 +44,7 @@ export const bookingSchema = z.object({
   reserve_price: z.coerce.number().min(0).optional(),
   buy_it_now_price: z.coerce.number().min(0).optional(),
   marketplace_visibility: visibilityEnum.default("public"),
+  auto_accept_criteria_json: autoAcceptCriteriaSchema.default({ enabled: false }),
 });
 
 export type BookingFormValues = z.infer<typeof bookingSchema>;
