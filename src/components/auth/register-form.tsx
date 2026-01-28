@@ -83,6 +83,7 @@ export function RegisterForm() {
                     password: values.password,
                     options: {
                         data: {
+                            first_name: values.email.split('@')[0], // Fallback
                             phone_number: values.phone,
                         },
                     },
@@ -96,7 +97,21 @@ export function RegisterForm() {
             }
 
             if (userId) {
-                // 2. Assign initial role
+                // 2. Check if role already exists
+                const { data: existingRole } = await supabase
+                    .from("user_roles")
+                    .select("id")
+                    .eq("user_id", userId)
+                    .eq("role_type", values.role)
+                    .maybeSingle();
+
+                if (existingRole) {
+                    toast.success("Role already active! Redirecting...");
+                    window.location.reload();
+                    return;
+                }
+
+                // 3. Assign initial role
                 const { error: roleError } = await supabase.from("user_roles").insert({
                     user_id: userId,
                     role_type: values.role,
@@ -106,7 +121,7 @@ export function RegisterForm() {
 
                 if (roleError) {
                     console.error("Error assigning role:", roleError);
-                    toast.error("Role assignment failed. Please contact support.");
+                    toast.error(`Role assignment failed: ${roleError.message}`);
                 } else if (!session) {
                     toast.success("Account created successfully! Please check your email for verification.");
                 } else {
@@ -124,7 +139,6 @@ export function RegisterForm() {
     const handleFormSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (session) {
-            // Already logged in, only care about role
             const values = form.getValues();
             if (!values.role) {
                 form.setError("role", { message: "Please select a role" });

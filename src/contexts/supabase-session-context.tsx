@@ -29,12 +29,14 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
   
   const router = useRouter();
   const pathname = usePathname();
-  const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const isFetchingRoles = useRef(false);
 
   const AUTH_ROUTES = ["/login", "/register", "/forgot-password", "/reset-password"];
   const PROTECTED_ROUTE_PREFIXES = ["/shipper", "/carrier", "/driver", "/broker", "/admin"];
 
   const fetchUserRoles = async (userId: string) => {
+    if (isFetchingRoles.current) return;
+    isFetchingRoles.current = true;
     try {
       const { data, error } = await supabase
         .from("user_roles")
@@ -58,6 +60,8 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
       }
     } catch (error) {
       console.error("[SessionContext] Error fetching user roles:", error);
+    } finally {
+      isFetchingRoles.current = false;
     }
   };
 
@@ -68,11 +72,6 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
   };
 
   useEffect(() => {
-    // Safety fallback
-    loadingTimeoutRef.current = setTimeout(() => {
-      setIsLoading(false);
-    }, 3000);
-
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
@@ -88,7 +87,6 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
       }
       
       setIsLoading(false);
-      if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
 
       if (event === "SIGNED_OUT") {
         router.replace("/login");
@@ -105,18 +103,16 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
       }
       
       setIsLoading(false);
-      if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
     };
 
     initSession();
 
     return () => {
       subscription.unsubscribe();
-      if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
     };
   }, []);
 
-  // Centralized Navigation Logic
+  // Navigation Logic
   useEffect(() => {
     if (isLoading) return;
 
@@ -124,19 +120,25 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
     const isProtectedRoute = PROTECTED_ROUTE_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 
     if (session) {
-      // Logged in user on an auth route or root
+      // User has a session but no roles detected yet
+      if (userRoles.length === 0 && !isAuthRoute && pathname !== "/register") {
+          // If we haven't found roles, we might need to fetch them again or wait
+          // But to be safe, if we are on a protected route and have no roles, go to register
+          if (isProtectedRoute) {
+             router.replace("/register");
+          }
+      }
+
       if (isAuthRoute || pathname === "/") {
         if (activeRole) {
           router.replace(`/${activeRole}/dashboard`);
         } else if (userRoles.length > 0) {
           router.replace(`/${userRoles[0]}/dashboard`);
         } else if (pathname !== "/register") {
-          // If logged in but no roles, go to register to pick one
           router.replace("/register");
         }
       }
     } else if (isProtectedRoute) {
-      // Unauthenticated user on protected route
       router.replace("/login");
     }
   }, [isLoading, session, pathname, activeRole, userRoles]);
