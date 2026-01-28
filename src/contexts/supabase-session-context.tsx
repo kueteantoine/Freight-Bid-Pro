@@ -5,6 +5,7 @@ import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { usePathname, useRouter } from "next/navigation";
 import { Toaster, toast } from "sonner";
+import { getLocalStorage, setLocalStorage, removeLocalStorage } from "@/lib/utils";
 
 export type UserRole = "shipper" | "carrier" | "driver" | "broker" | "admin";
 
@@ -46,7 +47,7 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
 
       // Set default active role if not set
       if (roles.length > 0 && !activeRole) {
-        const storedRole = localStorage.getItem("activeRole") as UserRole;
+        const storedRole = getLocalStorage("activeRole") as UserRole;
         if (storedRole && roles.includes(storedRole)) {
           _setActiveRole(storedRole);
         } else {
@@ -60,7 +61,7 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
 
   const setActiveRole = (role: UserRole) => {
     _setActiveRole(role);
-    localStorage.setItem("activeRole", role);
+    setLocalStorage("activeRole", role);
     router.push(`/${role}/dashboard`);
   };
 
@@ -76,7 +77,7 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
       } else {
         setUserRoles([]);
         _setActiveRole(null);
-        localStorage.removeItem("activeRole");
+        removeLocalStorage("activeRole");
       }
 
       setIsLoading(false);
