@@ -15,6 +15,7 @@ import {
   Clock,
   Upload,
   DollarSign,
+  Shield, // Added Shield
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
@@ -38,8 +39,8 @@ import { Step2Delivery } from "./booking-steps/Step2Delivery";
 import { Step3Freight } from "./booking-steps/Step3Freight";
 import { Step4Vehicle } from "./booking-steps/Step4Vehicle";
 import { Step5AdditionalRequirements } from "./booking-steps/Step5AdditionalRequirements";
-import { Step6Bidding } from "./booking-steps/Step5Bidding"; // Re-used/Renamed
-import { Step7ReviewPost } from "./booking-steps/Step6ReviewPost"; // Re-used/Renamed
+import { Step5Bidding as Step6Bidding } from "./booking-steps/Step5Bidding"; // Aliased to match 7-step flow
+import { Step7ReviewPost } from "./booking-steps/Step6ReviewPost";
 
 const STEP_COMPONENTS: Record<number, React.FC<{ form: any }>> = {
   1: Step1Pickup,
