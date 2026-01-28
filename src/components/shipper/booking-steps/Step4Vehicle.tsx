@@ -17,7 +17,7 @@ export function Step4Vehicle({ form }: Step4VehicleProps) {
         <h2 className="text-2xl font-bold">Choose your vehicle</h2>
         <p className="text-muted-foreground">What kind of truck does this load require?</p>
       </div>
-      <FormField
+      <FormField<BookingFormValues, "preferred_vehicle_type">
         control={form.control}
         name="preferred_vehicle_type"
         render={({ field }) => (

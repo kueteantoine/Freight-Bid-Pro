@@ -16,7 +16,7 @@ export function Step3Freight({ form }: Step3FreightProps) {
         <p className="text-muted-foreground">Details about the cargo help us find the right carrier.</p>
       </div>
       <div className="space-y-6">
-        <FormField
+        <FormField<BookingFormValues, "freight_type">
           control={form.control}
           name="freight_type"
           render={({ field }) => (
@@ -30,7 +30,7 @@ export function Step3Freight({ form }: Step3FreightProps) {
           )}
         />
         <div className="grid grid-cols-2 gap-6">
-          <FormField
+          <FormField<BookingFormValues, "weight_kg">
             control={form.control}
             name="weight_kg"
             render={({ field }) => (
@@ -43,7 +43,7 @@ export function Step3Freight({ form }: Step3FreightProps) {
               </FormItem>
             )}
           />
-          <FormField
+          <FormField<BookingFormValues, "quantity">
             control={form.control}
             name="quantity"
             render={({ field }) => (
@@ -60,7 +60,7 @@ export function Step3Freight({ form }: Step3FreightProps) {
         <div className="space-y-4">
           <FormLabel>Dimensions (m)</FormLabel>
           <div className="grid grid-cols-3 gap-4">
-            <FormField
+            <FormField<BookingFormValues, "dimensions_json.length">
               control={form.control}
               name="dimensions_json.length"
               render={({ field }) => (
@@ -69,7 +69,7 @@ export function Step3Freight({ form }: Step3FreightProps) {
                 </FormItem>
               )}
             />
-            <FormField
+            <FormField<BookingFormValues, "dimensions_json.width">
               control={form.control}
               name="dimensions_json.width"
               render={({ field }) => (
@@ -78,7 +78,7 @@ export function Step3Freight({ form }: Step3FreightProps) {
                 </FormItem>
               )}
             />
-            <FormField
+            <FormField<BookingFormValues, "dimensions_json.height">
               control={form.control}
               name="dimensions_json.height"
               render={({ field }) => (

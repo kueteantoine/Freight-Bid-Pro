@@ -59,7 +59,7 @@ export function ShipmentBookingForm() {
   const router = useRouter();
 
   const form = useForm<BookingFormValues>({
-    resolver: zodResolver(bookingSchema),
+    resolver: zodResolver(bookingSchema) as any,
     defaultValues: {
       pickup_location: "",
       delivery_location: "",

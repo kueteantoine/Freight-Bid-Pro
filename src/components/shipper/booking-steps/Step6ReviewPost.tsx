@@ -45,7 +45,7 @@ export function Step6ReviewPost({ form }: Step6ReviewPostProps) {
       {/* Additional Requirements & Templates */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="space-y-6">
-          <FormField
+          <FormField<BookingFormValues, "insurance_required">
             control={form.control}
             name="insurance_required"
             render={({ field }) => (
@@ -64,7 +64,7 @@ export function Step6ReviewPost({ form }: Step6ReviewPostProps) {
           />
 
           {insuranceRequired && (
-            <FormField
+            <FormField<BookingFormValues, "insurance_value">
               control={form.control}
               name="insurance_value"
               render={({ field }) => (
@@ -83,7 +83,7 @@ export function Step6ReviewPost({ form }: Step6ReviewPostProps) {
             <div className="flex items-center gap-2 text-sm font-bold">
               <Save className="w-4 h-4" /> Save Preferences
             </div>
-            <FormField
+            <FormField<BookingFormValues, "save_as_template">
               control={form.control}
               name="save_as_template"
               render={({ field }) => (
@@ -98,7 +98,7 @@ export function Step6ReviewPost({ form }: Step6ReviewPostProps) {
               )}
             />
             {saveAsTemplate && (
-              <FormField
+              <FormField<BookingFormValues, "template_name">
                 control={form.control}
                 name="template_name"
                 render={({ field }) => (
@@ -115,7 +115,7 @@ export function Step6ReviewPost({ form }: Step6ReviewPostProps) {
         </div>
 
         <div className="space-y-6">
-          <FormField
+          <FormField<BookingFormValues, "loading_requirements">
             control={form.control}
             name="loading_requirements"
             render={({ field }) => (
@@ -127,7 +127,7 @@ export function Step6ReviewPost({ form }: Step6ReviewPostProps) {
               </FormItem>
             )}
           />
-          <FormField
+          <FormField<BookingFormValues, "unloading_requirements">
             control={form.control}
             name="unloading_requirements"
             render={({ field }) => (

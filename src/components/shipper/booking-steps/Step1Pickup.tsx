@@ -17,7 +17,7 @@ export function Step1Pickup({ form }: Step1PickupProps) {
         <p className="text-muted-foreground">Provide the full address and scheduled time for pickup.</p>
       </div>
       <div className="grid grid-cols-1 gap-6">
-        <FormField
+        <FormField<BookingFormValues, "pickup_location">
           control={form.control}
           name="pickup_location"
           render={({ field }) => (
@@ -34,7 +34,7 @@ export function Step1Pickup({ form }: Step1PickupProps) {
             </FormItem>
           )}
         />
-        <FormField
+        <FormField<BookingFormValues, "scheduled_pickup_date">
           control={form.control}
           name="scheduled_pickup_date"
           render={({ field }) => (

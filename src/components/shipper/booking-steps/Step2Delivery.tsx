@@ -17,7 +17,7 @@ export function Step2Delivery({ form }: Step2DeliveryProps) {
         <p className="text-muted-foreground">Enter the destination and expected delivery date.</p>
       </div>
       <div className="grid grid-cols-1 gap-6">
-        <FormField
+        <FormField<BookingFormValues, "delivery_location">
           control={form.control}
           name="delivery_location"
           render={({ field }) => (
@@ -33,7 +33,7 @@ export function Step2Delivery({ form }: Step2DeliveryProps) {
             </FormItem>
           )}
         />
-        <FormField
+        <FormField<BookingFormValues, "scheduled_delivery_date">
           control={form.control}
           name="scheduled_delivery_date"
           render={({ field }) => (

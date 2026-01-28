@@ -22,7 +22,7 @@ export function Step5Bidding({ form }: Step5BiddingProps) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <FormField
+        <FormField<BookingFormValues, "auction_type">
           control={form.control}
           name="auction_type"
           render={({ field }) => (
@@ -48,7 +48,7 @@ export function Step5Bidding({ form }: Step5BiddingProps) {
           )}
         />
 
-        <FormField
+        <FormField<BookingFormValues, "marketplace_visibility">
           control={form.control}
           name="marketplace_visibility"
           render={({ field }) => (
@@ -78,7 +78,7 @@ export function Step5Bidding({ form }: Step5BiddingProps) {
         <Card className="p-4 bg-muted/20 border-dashed animate-in fade-in duration-300">
           <CardTitle className="text-lg mb-4">Bidding Rules</CardTitle>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FormField
+            <FormField<BookingFormValues, "bidding_duration_minutes">
               control={form.control}
               name="bidding_duration_minutes"
               render={({ field }) => (
@@ -92,7 +92,7 @@ export function Step5Bidding({ form }: Step5BiddingProps) {
                 </FormItem>
               )}
             />
-            <FormField
+            <FormField<BookingFormValues, "min_bid_increment">
               control={form.control}
               name="min_bid_increment"
               render={({ field }) => (
@@ -106,7 +106,7 @@ export function Step5Bidding({ form }: Step5BiddingProps) {
                 </FormItem>
               )}
             />
-            <FormField
+            <FormField<BookingFormValues, "reserve_price">
               control={form.control}
               name="reserve_price"
               render={({ field }) => (
@@ -127,7 +127,7 @@ export function Step5Bidding({ form }: Step5BiddingProps) {
       {auctionType === 'buy_it_now' && (
         <Card className="p-4 bg-primary/10 border-primary/50 border-dashed animate-in fade-in duration-300">
           <CardTitle className="text-lg mb-4 text-primary">Instant Acceptance Price</CardTitle>
-          <FormField
+          <FormField<BookingFormValues, "buy_it_now_price">
             control={form.control}
             name="buy_it_now_price"
             render={({ field }) => (
