@@ -18,15 +18,12 @@ import {
   TrendingUp,
   Wallet,
   Globe,
-  ChevronRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { RoleSwitcher } from "@/components/dashboard/role-switcher";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
@@ -179,10 +176,10 @@ function Sidebar() {
           </Avatar>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-white truncate">
-              {user?.user_metadata?.full_name || "John Doe"}
+              {user?.user_metadata?.full_name || "User"}
             </p>
             <p className="text-xs text-slate-500 truncate capitalize">
-              {activeRole} Admin
+              {activeRole} Workspace
             </p>
           </div>
           <Settings className="h-4 w-4 text-slate-500 hover:text-white cursor-pointer" />
@@ -193,10 +190,7 @@ function Sidebar() {
 }
 
 function Header() {
-  const { activeRole } = useSession();
   const pathname = usePathname();
-
-  // Dynamic title based on pathname
   const pageTitle = pathname.split("/").pop()?.replace(/-/g, " ") || "Dashboard";
 
   return (
@@ -233,7 +227,7 @@ function Header() {
         </div>
         <Button variant="ghost" size="icon" className="relative h-11 w-11 rounded-xl bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-all">
           <Bell className="h-5 w-5 text-slate-600" />
-          <span className="absolute top-2 right-2 h-2.5 w-2.5 bg-red-500 border-2 border-white rounded-fullShadow-sm"></span>
+          <span className="absolute top-2 right-2 h-2.5 w-2.5 bg-red-500 border-2 border-white rounded-full shadow-sm"></span>
         </Button>
         <Avatar className="h-11 w-11 rounded-xl ring-2 ring-primary/5 cursor-pointer hover:ring-primary/20 transition-all">
           <AvatarImage src="https://github.com/shadcn.png" />
@@ -259,7 +253,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="flex min-h-screen w-full bg-slate-50/50">
-      {/* Sidebar for Desktop */}
       <aside className="hidden md:flex flex-col w-72 lg:w-80 h-screen sticky top-0">
         <Sidebar />
       </aside>
@@ -272,12 +265,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
         </main>
 
-        {/* Simple Footer if needed */}
         <footer className="p-6 border-t bg-white flex justify-between items-center text-xs text-slate-400">
           <p>© 2026 FreightBid Marketplace. All rights reserved.</p>
           <div className="flex gap-4">
-            <Link href="/terms" className="hover:text-primary transition-colors">Terms of Service</Link>
-            <Link href="/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link>
+            <Link href="#" className="hover:text-primary transition-colors">Terms of Service</Link>
+            <Link href="#" className="hover:text-primary transition-colors">Privacy Policy</Link>
           </div>
         </footer>
       </div>

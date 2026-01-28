@@ -1,26 +1,20 @@
 "use client";
 
 import React, { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
     Camera,
     CheckCircle2,
-    MapPin,
-    Clock,
-    Box,
     ChevronLeft,
-    Upload,
     User,
     ShieldCheck,
-    AlertCircle,
-    FileText
+    AlertCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { Toaster, toast } from "sonner";
+import { toast } from "sonner";
 
 export default function ProofOfDeliveryPage() {
     const [step, setStep] = useState(1);
@@ -32,12 +26,10 @@ export default function ProofOfDeliveryPage() {
 
     const handleSubmit = () => {
         toast.success("Shipment #CM-8812 Delivered Successfully!");
-        // In a real app, redirect after success
     };
 
     return (
         <div className="max-w-lg mx-auto space-y-8 pb-10">
-            {/* Header */}
             <div className="flex items-center justify-between">
                 <Link href="/driver/dashboard">
                     <Button variant="ghost" size="icon" className="rounded-2xl bg-white border border-slate-100 shadow-sm">
@@ -50,7 +42,6 @@ export default function ProofOfDeliveryPage() {
                 </div>
             </div>
 
-            {/* Progress Steps */}
             <div className="flex items-center justify-between px-10 relative">
                 <div className="absolute top-1/2 left-10 right-10 h-0.5 bg-slate-100 -translate-y-1/2 z-0"></div>
                 <StepCircle num={1} active={step >= 1} done={step > 1} />
@@ -97,7 +88,6 @@ export default function ProofOfDeliveryPage() {
                             <h3 className="text-xl font-black text-slate-900">Delivery Photo</h3>
                             <span className="text-[10px] font-bold text-slate-400 uppercase">Min. 1 Required</span>
                         </div>
-
                         <div className="grid grid-cols-2 gap-4">
                             <div className="aspect-square bg-slate-50 border-2 border-dashed border-slate-200 rounded-[32px] flex flex-col items-center justify-center gap-3 group cursor-pointer hover:border-primary/40 hover:bg-primary/5 transition-all">
                                 <div className="h-12 w-12 rounded-2xl bg-white shadow-sm flex items-center justify-center text-slate-400 group-hover:text-primary">
@@ -105,21 +95,10 @@ export default function ProofOfDeliveryPage() {
                                 </div>
                                 <span className="text-[10px] font-black uppercase text-slate-400">Take Photo</span>
                             </div>
-                            <div className="aspect-square bg-slate-100 rounded-[32px] relative overflow-hidden ring-4 ring-white shadow-lg">
-                                <img src="https://images.unsplash.com/photo-1586528116311-ad86d7c7173a?q=80&w=400&auto=format&fit=crop" className="h-full w-full object-cover" />
-                                <div className="absolute top-3 right-3 h-6 w-6 bg-emerald-500 rounded-full flex items-center justify-center text-white shadow-lg">
-                                    <CheckCircle2 className="h-3 w-3" />
-                                </div>
-                            </div>
                         </div>
-
-                        <Button
-                            onClick={() => setStep(3)}
-                            className="w-full h-16 rounded-[24px] bg-primary text-white font-black text-lg shadow-xl shadow-primary/20 transition-all active:scale-95"
-                        >
+                        <Button onClick={() => setStep(3)} className="w-full h-16 rounded-[24px] bg-primary text-white font-black text-lg shadow-xl shadow-primary/20">
                             Continue to Signature
                         </Button>
-                        <Button variant="ghost" onClick={() => setStep(1)} className="w-full font-bold text-slate-400">Back</Button>
                     </div>
                 )}
 
@@ -137,23 +116,17 @@ export default function ProofOfDeliveryPage() {
                                     </div>
                                 </div>
                                 <div className="h-60 bg-slate-50 relative flex items-center justify-center group overflow-hidden">
-                                    <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest pointer-events-none group-hover:opacity-0 transition-opacity">Sign Here</p>
-                                    <div className="absolute bottom-4 right-4 flex gap-2">
-                                        <Button variant="outline" size="sm" className="h-8 rounded-lg bg-white border-slate-100 text-xs font-bold">Clear</Button>
-                                    </div>
-                                    {/* Placeholder for Signature Canvas */}
+                                    <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest pointer-events-none">Sign Here</p>
                                 </div>
                             </CardContent>
                         </Card>
-
                         <Button
                             onClick={handleSubmit}
-                            className="w-full h-16 rounded-[24px] bg-emerald-600 text-white font-black text-lg shadow-xl shadow-emerald-200 transition-all active:scale-95 flex items-center justify-center gap-3"
+                            className="w-full h-16 rounded-[24px] bg-emerald-600 text-white font-black text-lg shadow-xl shadow-emerald-200 flex items-center justify-center gap-3"
                         >
                             <ShieldCheck className="h-6 w-6" />
                             Complete Delivery
                         </Button>
-                        <Button variant="ghost" onClick={() => setStep(2)} className="w-full font-bold text-slate-400">Back</Button>
                     </div>
                 )}
             </div>
@@ -161,10 +134,9 @@ export default function ProofOfDeliveryPage() {
             <div className="bg-amber-50 rounded-3xl p-6 flex gap-4 border border-amber-100">
                 <AlertCircle className="h-5 w-5 text-amber-500 shrink-0" />
                 <p className="text-[11px] text-amber-700 font-medium leading-relaxed">
-                    Ensure the POD is clear and the recipient's name matches our records to avoid payment delays.
+                    Ensure the POD is clear and the recipient&apos;s name matches our records to avoid payment delays.
                 </p>
             </div>
-            <Toaster richColors position="bottom-center" />
         </div>
     );
 }

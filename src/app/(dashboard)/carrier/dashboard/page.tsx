@@ -8,12 +8,8 @@ import {
   Hourglass,
   Wrench,
   Search,
-  MapPin,
   Download,
-  Plus,
   Share2,
-  ChevronRight,
-  Map as MapIcon,
   Maximize2,
   CheckCircle2,
   AlertCircle,
@@ -37,20 +33,18 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 
 export default function CarrierDashboardPage() {
   return (
     <div className="space-y-10 pb-10">
-      {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-slate-900">
             Welcome back, TransCam Logistics
           </h2>
           <p className="text-slate-500 mt-1">
-            Here is what's happening with your fleet and bids today.
+            Here is what&apos;s happening with your fleet and bids today.
           </p>
         </div>
         <Button variant="outline" className="rounded-xl h-11 px-6 border-slate-200 hover:bg-slate-50 group transition-all">
@@ -59,7 +53,6 @@ export default function CarrierDashboardPage() {
         </Button>
       </div>
 
-      {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatsCard
           title="Total Fleet"
@@ -102,10 +95,8 @@ export default function CarrierDashboardPage() {
         />
       </div>
 
-      {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
-          {/* Quick Load Search */}
           <Card className="rounded-3xl border-slate-100 shadow-sm overflow-hidden">
             <CardHeader className="pb-4">
               <CardTitle className="text-lg font-bold">Quick Load Search</CardTitle>
@@ -134,11 +125,9 @@ export default function CarrierDashboardPage() {
             </CardContent>
           </Card>
 
-          {/* Active Bid Standings */}
           <Card className="rounded-3xl border-slate-100 shadow-sm overflow-hidden">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-lg font-bold">Active Bid Standings</CardTitle>
-              <Button variant="link" className="text-primary font-bold">View All Bids</Button>
             </CardHeader>
             <CardContent className="p-0">
               <Table>
@@ -160,48 +149,24 @@ export default function CarrierDashboardPage() {
                     myBid="450,000"
                     topBid="435,000"
                   />
-                  <BidRow
-                    id="#CM-9902"
-                    route="Kribi → Bertoua"
-                    rank="1st"
-                    rankColor="bg-emerald-50 text-emerald-600"
-                    myBid="620,000"
-                    topBid="620,000"
-                    winning
-                  />
-                  <BidRow
-                    id="#CM-7740"
-                    route="Garoua → Maroua"
-                    rank="3rd"
-                    rankColor="bg-orange-50 text-orange-600"
-                    myBid="180,000"
-                    topBid="165,000"
-                  />
                 </TableBody>
               </Table>
             </CardContent>
           </Card>
         </div>
 
-        {/* Sidebar Section */}
         <div className="space-y-8">
-          {/* Map Preview */}
           <Card className="rounded-3xl border-slate-100 shadow-sm overflow-hidden">
             <CardHeader className="flex flex-row items-center justify-between pb-4">
               <CardTitle className="text-lg font-bold">Live Fleet Map</CardTitle>
               <Maximize2 className="h-4 w-4 text-slate-400 cursor-pointer" />
             </CardHeader>
             <CardContent className="p-0 relative">
-              <div className="h-[280px] bg-slate-100 bg-[url('https://maps.googleapis.com/maps/api/staticmap?center=4.0511,9.7679&zoom=8&size=600x400&key=AIzaSy...')] bg-cover bg-center">
-                {/* Mock map overlay */}
-                <div className="absolute inset-0 bg-emerald-500/10 backdrop-blur-[2px] pointer-events-none"></div>
-                <div className="absolute top-1/2 left-1/3 h-3 w-3 bg-primary border-2 border-white rounded-full shadow-lg"></div>
-                <div className="absolute top-1/4 right-1/4 h-3 w-3 bg-amber-500 border-2 border-white rounded-full shadow-lg animate-pulse"></div>
+              <div className="h-[280px] bg-slate-100 bg-[url('https://maps.googleapis.com/maps/api/staticmap?center=4.0511,9.7679&zoom=8&size=600x400&key=...')] bg-cover bg-center">
               </div>
             </CardContent>
           </Card>
 
-          {/* Recent Activity */}
           <Card className="rounded-3xl border-slate-100 shadow-sm overflow-hidden pb-4">
             <CardHeader className="pb-4">
               <CardTitle className="text-lg font-bold">Recent Activity</CardTitle>
@@ -223,17 +188,6 @@ export default function CarrierDashboardPage() {
                 sub="You are no longer leading on #CM-8821"
                 time="4 hours ago"
               />
-              <ActivityItem
-                icon={CheckCircle2}
-                iconBg="bg-blue-50"
-                iconColor="text-blue-600"
-                title="Trip Completed"
-                sub="Driver Moussa finished delivery to Bamenda"
-                time="Yesterday"
-              />
-              <Button variant="outline" className="w-full mt-4 rounded-xl border-slate-100 text-primary font-bold hover:bg-slate-50">
-                View Activity Log
-              </Button>
             </CardContent>
           </Card>
         </div>
@@ -253,23 +207,16 @@ function StatsCard({ title, value, trend, icon: Icon, trendColor, iconBg, iconCo
           {statusDot && <span className={cn("h-2 w-2 rounded-full", statusDot)}></span>}
         </div>
         <div>
-          <p className="text-slate-400 text-sm font-medium mb-1 flex items-center gap-2">
-            {title}
-          </p>
-          <h3 className="text-3xl font-extrabold tracking-tight text-slate-900 mb-2">
-            {value}
-          </h3>
-          <p className={cn("text-xs font-semibold", trendColor)}>
-            {trend.includes("+") && <ArrowUpRight className="inline h-3 w-3 mr-1" />}
-            {trend}
-          </p>
+          <p className="text-slate-400 text-sm font-medium mb-1">{title}</p>
+          <h3 className="text-3xl font-extrabold tracking-tight text-slate-900 mb-2">{value}</h3>
+          <p className={cn("text-xs font-semibold", trendColor)}>{trend}</p>
         </div>
       </CardContent>
     </Card>
   );
 }
 
-function BidRow({ id, route, rank, rankColor, myBid, topBid, winning }: any) {
+function BidRow({ id, route, rank, rankColor, myBid, topBid }: any) {
   return (
     <TableRow className="border-slate-100 hover:bg-slate-50/50 transition-colors group">
       <TableCell className="px-6 py-5">
@@ -286,11 +233,7 @@ function BidRow({ id, route, rank, rankColor, myBid, topBid, winning }: any) {
       <TableCell className="text-right font-bold text-slate-700">{myBid}</TableCell>
       <TableCell className="text-right font-black text-slate-900">{topBid}</TableCell>
       <TableCell className="px-6 text-right">
-        {winning ? (
-          <span className="text-sm font-bold text-slate-300">Winning</span>
-        ) : (
-          <Button variant="link" className="text-primary font-bold h-auto p-0 hover:underline">Update Bid</Button>
-        )}
+        <Button variant="link" className="text-primary font-bold h-auto p-0 hover:underline">Update Bid</Button>
       </TableCell>
     </TableRow>
   );
