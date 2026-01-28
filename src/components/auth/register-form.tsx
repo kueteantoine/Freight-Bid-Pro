@@ -74,17 +74,16 @@ export function RegisterForm() {
     async function onSubmit(values: RegisterFormValues) {
         setIsLoading(true);
         try {
-            let userId = session?.user?.id;
-
-            if (!userId) {
-                // 1. Sign up user only if not already logged in
-                const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+            if (!session) {
+                // NEW USER FLOW: Role is handled by the DB trigger via metadata
+                const { error: signUpError } = await supabase.auth.signUp({
                     email: values.email,
                     password: values.password,
                     options: {
                         data: {
-                            first_name: values.email.split('@')[0], // Fallback
+                            first_name: values.email.split('@')[0],
                             phone_number: values.phone,
+                            initial_role: values.role, // Trigger will use this
                         },
                     },
                 });
@@ -93,11 +92,13 @@ export function RegisterForm() {
                     toast.error(signUpError.message);
                     return;
                 }
-                userId = signUpData.user?.id;
-            }
+                
+                toast.success("Account created successfully! Please check your email for verification.");
+            } else {
+                // LOGGED IN USER FLOW: Adding an additional role
+                const userId = session.user.id;
 
-            if (userId) {
-                // 2. Check if role already exists
+                // 1. Check if role already exists
                 const { data: existingRole } = await supabase
                     .from("user_roles")
                     .select("id")
@@ -111,7 +112,7 @@ export function RegisterForm() {
                     return;
                 }
 
-                // 3. Assign initial role
+                // 2. Assign the new role (RLS will pass because we have an active session)
                 const { error: roleError } = await supabase.from("user_roles").insert({
                     user_id: userId,
                     role_type: values.role,
@@ -122,14 +123,13 @@ export function RegisterForm() {
                 if (roleError) {
                     console.error("Error assigning role:", roleError);
                     toast.error(`Role assignment failed: ${roleError.message}`);
-                } else if (!session) {
-                    toast.success("Account created successfully! Please check your email for verification.");
                 } else {
-                    toast.success("Role assigned successfully! Redirecting...");
+                    toast.success("New role assigned successfully!");
                     window.location.reload();
                 }
             }
         } catch (error) {
+            console.error("Registration error:", error);
             toast.error("An unexpected error occurred.");
         } finally {
             setIsLoading(false);
@@ -138,15 +138,16 @@ export function RegisterForm() {
 
     const handleFormSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (session) {
-            const values = form.getValues();
-            if (!values.role) {
-                form.setError("role", { message: "Please select a role" });
-                return;
-            }
-            await onSubmit(values);
+        const values = form.getValues();
+        if (step === 2 && !values.role) {
+            form.setError("role", { message: "Please select a role" });
+            return;
+        }
+        
+        if (step === 1 && !session) {
+            nextStep();
         } else {
-            form.handleSubmit(onSubmit)(e);
+            await onSubmit(values);
         }
     };
 
@@ -247,7 +248,7 @@ export function RegisterForm() {
                                                             <RadioGroupItem value={role.value} className="sr-only" />
                                                         </FormControl>
                                                         <FormLabel
-                                                            className={`flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer ${field.value === role.value ? "border-primary" : ""
+                                                            className={`flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer transition-all ${field.value === role.value ? "border-primary bg-primary/5" : ""
                                                                 }`}
                                                         >
                                                             <span className="font-semibold">{role.label}</span>
