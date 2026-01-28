@@ -1,19 +1,19 @@
 import React from "react";
 import { UseFormReturn } from "react-hook-form";
-import { Shield, Save, Eye } from "lucide-react";
+import { Shield, Save, Eye, MapPin } from "lucide-react";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { BookingFormValues } from "@/lib/schemas/shipment-schema";
+import { cn } from "@/lib/utils";
 
 interface Step6ReviewPostProps {
   form: UseFormReturn<BookingFormValues>;
 }
 
-export function Step6ReviewPost({ form }: Step6ReviewPostProps) {
-  const insuranceRequired = form.watch("insurance_required");
+export function Step7ReviewPost({ form }: Step6ReviewPostProps) {
   const saveAsTemplate = form.watch("save_as_template");
   const values = form.getValues();
 
@@ -21,126 +21,100 @@ export function Step6ReviewPost({ form }: Step6ReviewPostProps) {
     <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
       <div className="space-y-2">
         <h2 className="text-2xl font-bold">Review & Finalize</h2>
-        <p className="text-muted-foreground">Confirm all details and post your shipment to the marketplace.</p>
+        <p className="text-muted-foreground">Confirm all details before posting to the marketplace.</p>
       </div>
 
-      {/* Summary Card */}
-      <Card className="border-primary/20 bg-primary/5 shadow-lg">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-primary">
-            <Eye className="h-5 w-5" /> Shipment Summary
-          </CardTitle>
-          <CardDescription>Quick overview of your booking details.</CardDescription>
-        </CardHeader>
-        <CardContent className="grid grid-cols-2 gap-4 text-sm">
-          <p><strong>Pickup:</strong> {values.pickup_location}</p>
-          <p><strong>Delivery:</strong> {values.delivery_location}</p>
-          <p><strong>Freight Type:</strong> {values.freight_type}</p>
-          <p><strong>Weight:</strong> {values.weight_kg} kg</p>
-          <p><strong>Auction Type:</strong> <span className="capitalize">{values.auction_type.replace('_', ' ')}</span></p>
-          <p><strong>Visibility:</strong> <span className="capitalize">{values.marketplace_visibility}</span></p>
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Logistics Summary */}
+        <Card className="border-primary/20 bg-primary/5 shadow-md">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-bold flex items-center gap-2">
+              <MapPin className="h-4 w-4" /> Logistics
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            <div>
+              <p className="text-muted-foreground text-[10px] uppercase font-bold">Pickup</p>
+              <p className="font-semibold line-clamp-1">{values.pickup_location}</p>
+              <p className="text-xs text-muted-foreground">{new Date(values.scheduled_pickup_date).toLocaleString()}</p>
+            </div>
+            <div>
+              <p className="text-muted-foreground text-[10px] uppercase font-bold">Delivery</p>
+              <p className="font-semibold line-clamp-1">{values.delivery_location}</p>
+              {values.scheduled_delivery_date && (
+                <p className="text-xs text-muted-foreground">{new Date(values.scheduled_delivery_date).toLocaleString()}</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
-      {/* Additional Requirements & Templates */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div className="space-y-6">
-          <FormField<BookingFormValues, "insurance_required">
+        {/* Cargo Summary */}
+        <Card className="border-muted shadow-md">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-bold flex items-center gap-2">
+              <Eye className="h-4 w-4" /> Cargo & Bidding
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Freight:</span>
+              <span className="font-semibold">{values.freight_type}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Weight/Qty:</span>
+              <span className="font-semibold">{values.weight_kg}kg / {values.quantity} units</span>
+            </div>
+            <div className="flex justify-between border-t pt-2">
+              <span className="text-muted-foreground">Auction:</span>
+              <span className="font-semibold capitalize">{values.auction_type.replace('_', ' ')}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Insurance:</span>
+              <span className={cn("font-bold", values.insurance_required ? "text-blue-600" : "text-muted-foreground")}>
+                {values.insurance_required ? `XAF ${values.insurance_value.toLocaleString()}` : "Not Required"}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Save Template Section */}
+      <Card className="border-dashed bg-muted/20">
+        <CardContent className="pt-6 space-y-4">
+          <FormField<BookingFormValues, "save_as_template">
             control={form.control}
-            name="insurance_required"
+            name="save_as_template"
             render={({ field }) => (
-              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-xl border p-4 shadow-sm">
+              <FormItem className="flex flex-row items-center space-x-3 space-y-0">
                 <FormControl>
                   <Checkbox checked={field.value} onCheckedChange={field.onChange} />
                 </FormControl>
-                <div className="space-y-1 leading-none">
-                  <FormLabel className="flex items-center gap-2">
-                    <Shield className="w-4 h-4 text-blue-500" /> Freight Insurance Required
+                <div className="space-y-1">
+                  <FormLabel className="text-base font-bold flex items-center gap-2">
+                    <Save className="w-4 h-4 text-primary" /> Save as reusable template
                   </FormLabel>
-                  <p className="text-xs text-muted-foreground">Protect your goods against damage or loss.</p>
                 </div>
               </FormItem>
             )}
           />
 
-          {insuranceRequired && (
-            <FormField<BookingFormValues, "insurance_value">
+          {saveAsTemplate && (
+            <FormField<BookingFormValues, "template_name">
               control={form.control}
-              name="insurance_value"
+              name="template_name"
               render={({ field }) => (
-                <FormItem className="animate-in zoom-in-95 duration-300">
-                  <FormLabel>Cargo Declared Value (XAF)</FormLabel>
+                <FormItem className="animate-in slide-in-from-top-2 duration-300">
+                  <FormLabel>Template Name</FormLabel>
                   <FormControl>
-                    <Input type="number" className="h-10" {...field} />
+                    <Input placeholder="e.g. Weekly Cocoa Delivery" className="h-11 bg-background" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
           )}
-
-          <div className="p-4 rounded-xl border bg-muted/20 space-y-4">
-            <div className="flex items-center gap-2 text-sm font-bold">
-              <Save className="w-4 h-4" /> Save Preferences
-            </div>
-            <FormField<BookingFormValues, "save_as_template">
-              control={form.control}
-              name="save_as_template"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                  <FormControl>
-                    <Checkbox checked={field.value} onCheckedChange={field.onChange} />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>Save as reusable template</FormLabel>
-                  </div>
-                </FormItem>
-              )}
-            />
-            {saveAsTemplate && (
-              <FormField<BookingFormValues, "template_name">
-                control={form.control}
-                name="template_name"
-                render={({ field }) => (
-                  <FormItem className="animate-in slide-in-from-top-2 duration-300">
-                    <FormControl>
-                      <Input placeholder="e.g. Weekly Cocoa Delivery" size={1} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
-          </div>
-        </div>
-
-        <div className="space-y-6">
-          <FormField<BookingFormValues, "loading_requirements">
-            control={form.control}
-            name="loading_requirements"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Loading Instructions</FormLabel>
-                <FormControl>
-                  <Textarea placeholder="Specific loading requirements..." className="min-h-[80px]" {...field} />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-          <FormField<BookingFormValues, "unloading_requirements">
-            control={form.control}
-            name="unloading_requirements"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Unloading Instructions</FormLabel>
-                <FormControl>
-                  <Textarea placeholder="Specific unloading requirements..." className="min-h-[80px]" {...field} />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

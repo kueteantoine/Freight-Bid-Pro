@@ -4,6 +4,8 @@ import { MapPin, CalendarIcon } from "lucide-react";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { BookingFormValues } from "@/lib/schemas/shipment-schema";
+import { LocationAutocomplete } from "./LocationAutocomplete";
+import { getCoordinates } from "@/lib/google-maps";
 
 interface Step2DeliveryProps {
   form: UseFormReturn<BookingFormValues>;
@@ -24,10 +26,23 @@ export function Step2Delivery({ form }: Step2DeliveryProps) {
             <FormItem>
               <FormLabel>Delivery Address</FormLabel>
               <FormControl>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-3 h-4 w-4 text-red-500" />
-                  <Input placeholder="Enter destination (e.g. Bastos, Yaoundé)" className="pl-10 h-12 text-lg" {...field} />
-                </div>
+                <LocationAutocomplete
+                  value={field.value}
+                  onChange={field.onChange}
+                  icon={<MapPin className="h-4 w-4 text-red-500" />}
+                  onSelect={async (place) => {
+                    field.onChange(place.description);
+                    try {
+                      const coords = await getCoordinates(place.place_id);
+                      form.setValue("delivery_latitude", coords.lat);
+                      form.setValue("delivery_longitude", coords.lng);
+                    } catch (err) {
+                      console.error("Failed to get coordinates:", err);
+                    }
+                  }}
+                  placeholder="Enter destination (e.g. Bastos, Yaoundé)"
+                  className="h-12 text-lg"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

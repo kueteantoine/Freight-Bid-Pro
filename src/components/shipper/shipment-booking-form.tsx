@@ -37,17 +37,22 @@ import { Step1Pickup } from "./booking-steps/Step1Pickup";
 import { Step2Delivery } from "./booking-steps/Step2Delivery";
 import { Step3Freight } from "./booking-steps/Step3Freight";
 import { Step4Vehicle } from "./booking-steps/Step4Vehicle";
-import { Step5Bidding } from "./booking-steps/Step5Bidding";
-import { Step6ReviewPost } from "./booking-steps/Step6ReviewPost";
+import { Step5AdditionalRequirements } from "./booking-steps/Step5AdditionalRequirements";
+import { Step6Bidding } from "./booking-steps/Step5Bidding"; // Re-used/Renamed
+import { Step7ReviewPost } from "./booking-steps/Step6ReviewPost"; // Re-used/Renamed
 
 const STEP_COMPONENTS: Record<number, React.FC<{ form: any }>> = {
   1: Step1Pickup,
   2: Step2Delivery,
   3: Step3Freight,
   4: Step4Vehicle,
-  5: Step5Bidding,
-  6: Step6ReviewPost,
+  5: Step5AdditionalRequirements,
+  6: Step6Bidding,
+  7: Step7ReviewPost,
 };
+
+// Import Bulk Upload Modal
+import { BulkUploadModal } from "./BulkUploadModal";
 
 export function ShipmentBookingForm() {
   const [step, setStep] = useState(1);
@@ -62,7 +67,11 @@ export function ShipmentBookingForm() {
     resolver: zodResolver(bookingSchema) as any,
     defaultValues: {
       pickup_location: "",
+      pickup_latitude: undefined,
+      pickup_longitude: undefined,
       delivery_location: "",
+      delivery_latitude: undefined,
+      delivery_longitude: undefined,
       scheduled_pickup_date: "",
       scheduled_delivery_date: "",
       freight_type: "",
@@ -70,6 +79,7 @@ export function ShipmentBookingForm() {
       quantity: 1,
       dimensions_json: { length: 0, width: 0, height: 0 },
       preferred_vehicle_type: "box_van",
+      special_equipment_needs: "",
       special_handling_requirements: "",
       insurance_required: false,
       insurance_value: 0,
@@ -131,9 +141,10 @@ export function ShipmentBookingForm() {
     if (step === 2) fields = ["delivery_location"];
     if (step === 3) fields = ["freight_type", "weight_kg", "quantity"];
     if (step === 4) fields = ["preferred_vehicle_type"];
-    if (step === 5) fields = ["auction_type"];
+    if (step === 5) fields = ["insurance_required", "insurance_value"];
+    if (step === 6) fields = ["auction_type"];
 
-    const isValid = await form.trigger(fields);
+    const isValid = await form.trigger(fields as any);
     if (isValid) setStep((s) => s + 1);
   };
 
@@ -223,8 +234,9 @@ export function ShipmentBookingForm() {
           { icon: MapPin, label: "Delivery" },
           { icon: Package, label: "Freight" },
           { icon: Truck, label: "Vehicle" },
+          { icon: Shield, label: "Addons" },
           { icon: DollarSign, label: "Bidding" },
-          { icon: CheckCircle2, label: "Review & Post" }
+          { icon: CheckCircle2, label: "Post" }
         ].map((item, i) => (
           <div key={i} className="relative z-10 flex flex-col items-center">
             <div className={cn(
@@ -276,7 +288,7 @@ export function ShipmentBookingForm() {
                 <Save className="h-4 w-4" /> Save Draft
               </Button>
 
-              {step < 6 ? (
+              {step < 7 ? (
                 <Button type="button" size="lg" onClick={nextStep} className="px-8 shadow-lg transition-all hover:scale-105">
                   Next Step <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
@@ -294,16 +306,10 @@ export function ShipmentBookingForm() {
         </form>
       </Form>
 
-      {/* Bulk Upload Trigger */}
+      {/* Bulk Upload Section */}
       <div className="mt-16 pt-8 border-t flex flex-col items-center space-y-4">
         <p className="text-sm text-muted-foreground">Have many loads to post?</p>
-        <Button variant="outline" className="gap-2 border-dashed border-2 px-8 py-6 h-auto">
-          <Upload className="h-5 w-5 text-primary" />
-          <div className="text-left">
-            <div className="font-bold">Bulk Shipment Upload</div>
-            <div className="text-xs text-muted-foreground">Import from CSV or Excel</div>
-          </div>
-        </Button>
+        <BulkUploadModal />
       </div>
     </div>
   );

@@ -58,6 +58,24 @@ export function Step4Vehicle({ form }: Step4VehicleProps) {
           </FormItem>
         )}
       />
+
+      <FormField<BookingFormValues, "special_equipment_needs">
+        control={form.control}
+        name="special_equipment_needs"
+        render={({ field }) => (
+          <FormItem className="bg-muted/30 p-4 rounded-xl border border-dashed animate-in slide-in-from-top-2 duration-700">
+            <h3 className="text-sm font-bold mb-2">Special Equipment Needs</h3>
+            <FormControl>
+              <textarea
+                {...field}
+                className="w-full min-h-[80px] bg-background border rounded-md p-3 text-sm focus:ring-2 focus:ring-primary outline-none transition-all"
+                placeholder="e.g. Lift gate, Pallet jack, Straps, Refrigeration specifics..."
+              />
+            </FormControl>
+            <p className="text-[10px] text-muted-foreground mt-2 uppercase font-bold tracking-widest">Optional requirements for the carrier</p>
+          </FormItem>
+        )}
+      />
     </div>
   );
 }

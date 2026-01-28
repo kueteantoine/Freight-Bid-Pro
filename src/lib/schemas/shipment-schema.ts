@@ -5,7 +5,11 @@ export const visibilityEnum = z.enum(["public", "private"]);
 
 export const bookingSchema = z.object({
   pickup_location: z.string().min(5, { message: "Pickup location is required" }),
+  pickup_latitude: z.number().optional(),
+  pickup_longitude: z.number().optional(),
   delivery_location: z.string().min(5, { message: "Delivery location is required" }),
+  delivery_latitude: z.number().optional(),
+  delivery_longitude: z.number().optional(),
   scheduled_pickup_date: z.string().min(1, { message: "Pickup date is required" }),
   scheduled_delivery_date: z.string().optional(),
   freight_type: z.string().min(2, { message: "Freight type is required" }),
@@ -17,6 +21,7 @@ export const bookingSchema = z.object({
     height: z.coerce.number().min(0),
   }),
   preferred_vehicle_type: z.string().min(1, { message: "Preferred vehicle type is required" }),
+  special_equipment_needs: z.string().optional(),
   special_handling_requirements: z.string().optional(),
   insurance_required: z.boolean().default(false),
   insurance_value: z.coerce.number().default(0),

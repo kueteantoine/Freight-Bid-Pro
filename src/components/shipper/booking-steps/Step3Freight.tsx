@@ -35,9 +35,15 @@ export function Step3Freight({ form }: Step3FreightProps) {
             name="weight_kg"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Total Weight (kg)</FormLabel>
+                <FormLabel>Total Weight</FormLabel>
                 <FormControl>
-                  <Input type="number" className="h-12" {...field} />
+                  <div className="relative">
+                    <Input type="number" className="h-12 pr-16" {...field} />
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1 bg-muted p-1 rounded-md text-[10px] font-bold">
+                      <span className="px-1.5 py-0.5 bg-background rounded shadow-sm text-primary">KG</span>
+                      <span className="px-1.5 py-0.5 text-muted-foreground/50">LBS</span>
+                    </div>
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>

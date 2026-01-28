@@ -4,6 +4,8 @@ import { MapPin, CalendarIcon } from "lucide-react";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { BookingFormValues } from "@/lib/schemas/shipment-schema";
+import { LocationAutocomplete } from "./LocationAutocomplete";
+import { getCoordinates } from "@/lib/google-maps";
 
 interface Step1PickupProps {
   form: UseFormReturn<BookingFormValues>;
@@ -24,13 +26,26 @@ export function Step1Pickup({ form }: Step1PickupProps) {
             <FormItem>
               <FormLabel>Pickup Address</FormLabel>
               <FormControl>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-3 h-4 w-4 text-primary" />
-                  <Input placeholder="Enter pickup location (e.g. Akwa, Douala)" className="pl-10 h-12 text-lg" {...field} />
-                </div>
+                <LocationAutocomplete
+                  value={field.value}
+                  onChange={field.onChange}
+                  icon={<MapPin className="h-4 w-4 text-primary" />}
+                  onSelect={async (place) => {
+                    field.onChange(place.description);
+                    try {
+                      const coords = await getCoordinates(place.place_id);
+                      form.setValue("pickup_latitude", coords.lat);
+                      form.setValue("pickup_longitude", coords.lng);
+                    } catch (err) {
+                      console.error("Failed to get coordinates:", err);
+                    }
+                  }}
+                  placeholder="Enter pickup location (e.g. Akwa, Douala)"
+                  className="h-12 text-lg"
+                />
               </FormControl>
               <FormMessage />
-              <FormDescription>Use Google Maps autocomplete for better accuracy.</FormDescription>
+              <FormDescription>Start typing to see suggestions in Cameroon.</FormDescription>
             </FormItem>
           )}
         />
