@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, useRef } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { usePathname, useRouter } from "next/navigation";
@@ -26,8 +26,10 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
   const [isLoading, setIsLoading] = useState(true);
   const [userRoles, setUserRoles] = useState<UserRole[]>([]);
   const [activeRole, _setActiveRole] = useState<UserRole | null>(null);
+  
   const router = useRouter();
   const pathname = usePathname();
+  const loadingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const AUTH_ROUTES = ["/login", "/register", "/forgot-password", "/reset-password"];
   const PROTECTED_ROUTE_PREFIXES = ["/shipper", "/carrier", "/driver", "/broker", "/admin"];
@@ -42,10 +44,9 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
 
       if (error) throw error;
 
-      const roles = data.map((r) => r.role_type as UserRole);
+      const roles = data?.map((r) => r.role_type as UserRole) || [];
       setUserRoles(roles);
 
-      // Set default active role if not set (Client-only logic)
       if (roles.length > 0 && !activeRole) {
         const storedRole = getLocalStorage("activeRole") as UserRole;
         if (storedRole && roles.includes(storedRole)) {
@@ -55,7 +56,7 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
         }
       }
     } catch (error) {
-      console.error("Error fetching user roles:", error);
+      console.error("[SessionContext] Error fetching user roles:", error);
     }
   };
 
@@ -66,25 +67,31 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
   };
 
   useEffect(() => {
-    // 1. Handle auth state changes
+    // Safety fallback: Force isLoading to false after 5 seconds
+    loadingTimeoutRef.current = setTimeout(() => {
+      setIsLoading(false);
+    }, 5000);
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
 
-      // Synchronization of session with cookies for middleware
-      if (currentSession) {
-        document.cookie = `sb-access-token=${currentSession.access_token}; path=/; max-age=${currentSession.expires_in}; SameSite=Lax; Secure`;
-        await fetchUserRoles(currentSession.user.id);
-      } else {
-        document.cookie = `sb-access-token=; path=/; max-age=0; SameSite=Lax; Secure`;
-        setUserRoles([]);
-        _setActiveRole(null);
-        removeLocalStorage("activeRole");
+      try {
+        if (currentSession) {
+          document.cookie = `sb-access-token=${currentSession.access_token}; path=/; max-age=${currentSession.expires_in}; SameSite=Lax; Secure`;
+          await fetchUserRoles(currentSession.user.id);
+        } else {
+          document.cookie = `sb-access-token=; path=/; max-age=0; SameSite=Lax; Secure`;
+          setUserRoles([]);
+          _setActiveRole(null);
+          removeLocalStorage("activeRole");
+        }
+      } finally {
+        setIsLoading(false);
+        if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
       }
-
-      setIsLoading(false);
 
       const isProtectedRoute = PROTECTED_ROUTE_PREFIXES.some((prefix) =>
         pathname.startsWith(prefix)
@@ -96,24 +103,31 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
       }
     });
 
-    // 2. Fetch initial session and handle role recovery from storage (Client-side)
     const initSession = async () => {
-      const { data: { session: initialSession } } = await supabase.auth.getSession();
-      setSession(initialSession);
-      setUser(initialSession?.user ?? null);
+      try {
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        setSession(initialSession);
+        setUser(initialSession?.user ?? null);
 
-      if (initialSession?.user) {
-        await fetchUserRoles(initialSession.user.id);
+        if (initialSession?.user) {
+          await fetchUserRoles(initialSession.user.id);
+        }
+      } catch (err) {
+        console.error("[SessionContext] Init error:", err);
+      } finally {
+        setIsLoading(false);
+        if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
       }
-      setIsLoading(false);
     };
 
     initSession();
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      if (loadingTimeoutRef.current) clearTimeout(loadingTimeoutRef.current);
+    };
   }, [pathname, router]);
 
-  // Handle redirection based on session and roles
   useEffect(() => {
     if (!isLoading) {
       const isAuthRoute = AUTH_ROUTES.some((route) => pathname.startsWith(route));
@@ -129,7 +143,6 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
         } else if (pathname.startsWith("/login")) {
           router.replace("/register");
         }
-        // If no roles and on another auth route (like /register), the page itself will handle showing the registration form
       } else if (!session && isProtectedRoute) {
         router.replace("/login");
       }
