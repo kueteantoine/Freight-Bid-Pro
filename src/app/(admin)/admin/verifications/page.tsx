@@ -14,7 +14,8 @@ import {
   Search,
   ExternalLink,
   ShieldCheck,
-  AlertCircle
+  AlertCircle,
+  FileText, // <-- Added FileText import
 } from "lucide-react";
 import { 
   Table, 
@@ -35,6 +36,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { Input } from "@/components/ui/input"; // <-- Added Input import
 
 interface PendingVerification {
   id: string;

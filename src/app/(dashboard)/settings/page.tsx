@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Shield, Package, Truck, Users, CheckCircle2, AlertCircle, Plus, ArrowRight, ShieldAlert } from "lucide-react";
+import { Shield, Package, Truck, Users, CheckCircle2, AlertCircle, Plus, ArrowRight, ShieldAlert, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import Link from "next/link";
