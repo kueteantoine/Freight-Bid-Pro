@@ -4,41 +4,12 @@ import { createClient } from '@supabase/supabase-js';
 const SUPABASE_URL = "https://twzufrpmaynyqwgfkalc.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3enVmcnBtYXlueXF3Z2ZrYWxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkwOTI1NjcsImV4cCI6MjA4NDY2ODU2N30.O4ZVMyYCmIXDxB85HBH-nQ-P4PBhA947gD4TJQxGjlM";
 
-/**
- * Custom storage adapter that uses cookies for server-side compatibility (middleware).
- */
-const cookieStorage = {
-  getItem: (key: string) => {
-    if (typeof document === 'undefined') return null;
-    const name = `${key}=`;
-    const decodedCookie = decodeURIComponent(document.cookie);
-    const ca = decodedCookie.split(';');
-    for (let i = 0; i < ca.length; i++) {
-      let c = ca[i];
-      while (c.charAt(0) === ' ') c = c.substring(1);
-      if (c.indexOf(name) === 0) return c.substring(name.length, c.length);
-    }
-    return null;
-  },
-  setItem: (key: string, value: string) => {
-    if (typeof document === 'undefined') return;
-    // Set cookie with 7 day expiry
-    const d = new Date();
-    d.setTime(d.getTime() + (7 * 24 * 60 * 60 * 1000));
-    const expires = "expires=" + d.toUTCString();
-    document.cookie = `${key}=${value};${expires};path=/;SameSite=Lax;Secure`;
-  },
-  removeItem: (key: string) => {
-    if (typeof document === 'undefined') return;
-    document.cookie = `${key}=;expires=Thu, 01 Jan 1970 00:00:00 UTC;path=/;`;
-  }
-};
-
+// For the client-side client, we use standard browser persistence (localStorage).
+// The middleware will still handle cookies for server-side logic using @supabase/ssr.
 export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
     auth: {
         persistSession: true,
         detectSessionInUrl: true,
-        storage: cookieStorage,
         autoRefreshToken: true,
     },
 });
