@@ -4,12 +4,37 @@ import { createClient } from '@supabase/supabase-js';
 const SUPABASE_URL = "https://twzufrpmaynyqwgfkalc.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3enVmcnBtYXlueXF3Z2ZrYWxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkwOTI1NjcsImV4cCI6MjA4NDY2ODU2N30.O4ZVMyYCmIXDxB85HBH-nQ-P4PBhA947gD4TJQxGjlM";
 
-// Import the supabase client like this:
-// import { supabase } from "@/integrations/supabase/client";
+/**
+ * Custom storage adapter to prevent SSR crashes.
+ * It strictly returns null/noop on the server or in non-browser environments.
+ */
+const customStorage = {
+  getItem: (key: string) => {
+    if (typeof window === "undefined") return null;
+    try {
+      return window.localStorage.getItem(key);
+    } catch {
+      return null;
+    }
+  },
+  setItem: (key: string, value: string) => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(key, value);
+    } catch {}
+  },
+  removeItem: (key: string) => {
+    if (typeof window === "undefined") return;
+    try {
+      window.localStorage.removeItem(key);
+    } catch {}
+  }
+};
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
     auth: {
         persistSession: typeof window !== "undefined",
         detectSessionInUrl: typeof window !== "undefined",
+        storage: customStorage,
     },
 });

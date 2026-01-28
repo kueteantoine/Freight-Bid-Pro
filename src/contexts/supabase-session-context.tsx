@@ -45,7 +45,7 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
       const roles = data.map((r) => r.role_type as UserRole);
       setUserRoles(roles);
 
-      // Set default active role if not set
+      // Set default active role if not set (Client-only logic)
       if (roles.length > 0 && !activeRole) {
         const storedRole = getLocalStorage("activeRole") as UserRole;
         if (storedRole && roles.includes(storedRole)) {
@@ -66,6 +66,7 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
   };
 
   useEffect(() => {
+    // 1. Handle auth state changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
@@ -87,27 +88,26 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
         pathname.startsWith(prefix)
       );
 
-      if (event === "SIGNED_IN" || event === "INITIAL_SESSION") {
-        if (currentSession && isAuthRoute) {
-          // Default redirect will wait for role check in the other useEffect
-        }
-      } else if (event === "SIGNED_OUT") {
-        if (isProtectedRoute) {
-          router.push("/login");
-          toast.info("You have been signed out.");
-        }
+      if (event === "SIGNED_OUT" && isProtectedRoute) {
+        router.push("/login");
+        toast.info("You have been signed out.");
       }
     });
 
-    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
+    // 2. Fetch initial session and handle role recovery from storage (Client-side)
+    const initSession = async () => {
+      const { data: { session: initialSession } } = await supabase.auth.getSession();
       setSession(initialSession);
       setUser(initialSession?.user ?? null);
+      
       if (initialSession?.user) {
-        fetchUserRoles(initialSession.user.id);
+        await fetchUserRoles(initialSession.user.id);
       } else {
         setIsLoading(false);
       }
-    });
+    };
+
+    initSession();
 
     return () => subscription.unsubscribe();
   }, [pathname, router]);
@@ -126,8 +126,6 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
         } else if (userRoles.length > 0) {
           router.replace(`/${userRoles[0]}/dashboard`);
         } else {
-          // If authenticated but no roles found (shouldn't happen with trigger)
-          // maybe they need to complete profile/role selection
           router.replace("/register");
         }
       } else if (!session && isProtectedRoute) {
