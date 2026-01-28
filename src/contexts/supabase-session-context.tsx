@@ -26,7 +26,7 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
   const [isLoading, setIsLoading] = useState(true);
   const [userRoles, setUserRoles] = useState<UserRole[]>([]);
   const [activeRole, _setActiveRole] = useState<UserRole | null>(null);
-  
+
   const router = useRouter();
   const pathname = usePathname();
   const isFetchingRoles = useRef(false);
@@ -34,7 +34,7 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
   // Helper to sync session with cookies for middleware
   const syncCookies = (currentSession: Session | null) => {
     if (typeof document === 'undefined') return;
-    
+
     if (currentSession) {
       // Basic approach: Set a short-lived cookie that matches what middleware expects
       // Note: Ideally we'd use @supabase/ssr helpers here, but manual sync is a reliable bridge
@@ -85,44 +85,47 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
   };
 
   useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
+    let isMounted = true;
+
+    const handleAuthChange = async (event: string, currentSession: Session | null) => {
+      if (!isMounted) return;
+
+      console.log(`[SessionContext] Auth Event: ${event}`);
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       syncCookies(currentSession);
 
-      if (currentSession) {
+      if (currentSession?.user) {
         await fetchUserRoles(currentSession.user.id);
       } else {
         setUserRoles([]);
         _setActiveRole(null);
         removeLocalStorage("activeRole");
       }
-      
+
       setIsLoading(false);
 
       if (event === "SIGNED_OUT") {
         router.replace("/login");
       }
-    });
+    };
 
+    // Initial session check
     const initSession = async () => {
       const { data: { session: initialSession } } = await supabase.auth.getSession();
-      setSession(initialSession);
-      setUser(initialSession?.user ?? null);
-      syncCookies(initialSession);
-
-      if (initialSession?.user) {
-        await fetchUserRoles(initialSession.user.id);
-      }
-      
-      setIsLoading(false);
+      await handleAuthChange("INITIAL_SESSION", initialSession);
     };
 
     initSession();
 
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, currentSession) => {
+      handleAuthChange(event, currentSession);
+    });
+
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
     };
   }, []);
@@ -140,27 +143,27 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
 
     if (session) {
       // 1. Logged in but has no roles: Must go to register
-      if (userRoles.length === 0 && !isRegisterRoute && pathname !== "/") {
-          if (isProtectedRoute) {
-             router.replace("/register");
-          }
+      if (userRoles.length === 0) {
+        if (!isRegisterRoute && pathname !== "/") {
+          router.replace("/register");
+        }
+        return;
       }
 
-      // 2. On / or an Auth Route: Redirect to active workspace or register
+      // 2. On / or an Auth Route: Redirect to active workspace or first role
       if (isAuthRoute || pathname === "/") {
-        if (activeRole) {
-          router.replace(`/${activeRole}/dashboard`);
-        } else if (userRoles.length > 0) {
-          router.replace(`/${userRoles[0]}/dashboard`);
+        const targetRole = activeRole || userRoles[0];
+        if (targetRole) {
+          router.replace(`/${targetRole}/dashboard`);
         } else if (!isRegisterRoute) {
           router.replace("/register");
         }
       }
     } else if (isProtectedRoute) {
-      // 3. Not logged in: Redirect to login (Double-check for middleware fallback)
+      // 3. Not logged in but on protected route: Redirect to login
       router.replace("/login");
     }
-  }, [isLoading, session, pathname, activeRole, userRoles]);
+  }, [isLoading, session, pathname, activeRole, userRoles, router]);
 
   return (
     <SessionContext.Provider

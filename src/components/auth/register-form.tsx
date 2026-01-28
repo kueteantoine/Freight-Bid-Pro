@@ -47,25 +47,69 @@ export function RegisterForm() {
     const form = useForm<RegisterFormValues>({
         resolver: zodResolver(registerSchema),
         defaultValues: {
-            email: "",
+            email: session?.user?.email || "",
             password: "",
-            phone: "",
+            phone: session?.user?.user_metadata?.phone_number as string || "",
             role: "shipper",
         },
     });
 
     useEffect(() => {
         if (session && step === 1) {
-            setStep(2);
-        }
-        if (session?.user?.email) {
-            form.setValue("email", session.user.email);
+            // Pre-fill email and phone from session data
+            form.setValue("email", session.user.email || "");
+            const phone = session.user.user_metadata?.phone_number as string | undefined;
+            if (phone) {
+                form.setValue("phone", phone);
+            }
+            
+            // If logged in and already has a phone number, skip to role selection (Step 2)
+            if (phone) {
+                setStep(2);
+            }
         }
     }, [session, step, form]);
 
     const nextStep = async () => {
-        const fieldsToValidate = step === 1 ? ["email", "password", "phone"] : ["role"];
+        let fieldsToValidate: (keyof RegisterFormValues)[] = [];
+        
+        if (step === 1) {
+            // If logged in, we only need to validate the phone number
+            if (session) {
+                fieldsToValidate = ["phone"];
+            } else {
+                // New user signup requires all fields
+                fieldsToValidate = ["email", "password", "phone"];
+            }
+        } else if (step === 2) {
+            fieldsToValidate = ["role"];
+        }
+
         const isValid = await form.trigger(fieldsToValidate as any);
+        
+        // If logged in and Step 1 is valid, update the phone number before moving on.
+        if (isValid && step === 1 && session) {
+            const phoneValue = form.getValues("phone");
+            if (phoneValue !== session.user.user_metadata?.phone_number) {
+                setIsLoading(true);
+                try {
+                    // Update phone number in auth metadata
+                    await supabase.auth.updateUser({
+                        data: { phone_number: phoneValue }
+                    });
+                    // Update phone number in profiles table
+                    await supabase.from('profiles').update({ phone_number: phoneValue }).eq('id', session.user.id);
+                    toast.success("Phone number updated.");
+                } catch (error: any) {
+                    toast.error("Failed to update phone number: " + error.message);
+                    setIsLoading(false);
+                    return;
+                } finally {
+                    setIsLoading(false);
+                }
+            }
+        }
+
         if (isValid) setStep((s) => s + 1);
     };
 
@@ -92,19 +136,29 @@ export function RegisterForm() {
                     toast.error(signUpError.message);
                     return;
                 }
-                
+
                 toast.success("Account created successfully! Please check your email for verification.");
             } else {
                 // LOGGED IN USER FLOW: Adding an additional role
                 const userId = session.user.id;
+                console.log("[RegisterForm] Assigning role:", values.role, "to user:", userId);
+
+                if (!userId) {
+                    toast.error("User session is invalid. Please sign in again.");
+                    return;
+                }
 
                 // 1. Check if role already exists
-                const { data: existingRole } = await supabase
+                const { data: existingRole, error: checkError } = await supabase
                     .from("user_roles")
                     .select("id")
                     .eq("user_id", userId)
                     .eq("role_type", values.role)
                     .maybeSingle();
+
+                if (checkError) {
+                    console.error("[RegisterForm] Error checking existing role:", checkError);
+                }
 
                 if (existingRole) {
                     toast.success("Role already active! Redirecting...");
@@ -112,7 +166,7 @@ export function RegisterForm() {
                     return;
                 }
 
-                // 2. Assign the new role (RLS will pass because we have an active session)
+                // 2. Assign the new role
                 const { error: roleError } = await supabase.from("user_roles").insert({
                     user_id: userId,
                     role_type: values.role,
@@ -121,7 +175,7 @@ export function RegisterForm() {
                 });
 
                 if (roleError) {
-                    console.error("Error assigning role:", roleError);
+                    console.error("[RegisterForm] Role assignment failed:", roleError);
                     toast.error(`Role assignment failed: ${roleError.message}`);
                 } else {
                     toast.success("New role assigned successfully!");
@@ -139,15 +193,15 @@ export function RegisterForm() {
     const handleFormSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const values = form.getValues();
-        if (step === 2 && !values.role) {
-            form.setError("role", { message: "Please select a role" });
-            return;
-        }
         
-        if (step === 1 && !session) {
-            nextStep();
-        } else {
+        if (step === 2) {
+            if (!values.role) {
+                form.setError("role", { message: "Please select a role" });
+                return;
+            }
             await onSubmit(values);
+        } else if (step === 1) {
+            await nextStep();
         }
     };
 
@@ -175,35 +229,40 @@ export function RegisterForm() {
                 <form onSubmit={handleFormSubmit} className="space-y-4">
                     {step === 1 && (
                         <>
-                            <FormField
-                                control={form.control}
-                                name="email"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Email Address</FormLabel>
-                                        <FormControl>
-                                            <Input placeholder="name@example.com" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            <FormField
-                                control={form.control}
-                                name="password"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Password</FormLabel>
-                                        <FormControl>
-                                            <Input type="password" placeholder="••••••••" {...field} />
-                                        </FormControl>
-                                        <FormDescription>
-                                            Min 8 characters, with upper, lower, number, and special character.
-                                        </FormDescription>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
+                            {!session && (
+                                <>
+                                    <FormField
+                                        control={form.control}
+                                        name="email"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Email Address</FormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="name@example.com" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                    <FormField
+                                        control={form.control}
+                                        name="password"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Password</FormLabel>
+                                                <FormControl>
+                                                    <Input type="password" placeholder="••••••••" {...field} />
+                                                </FormControl>
+                                                <FormDescription>
+                                                    Min 8 characters, with upper, lower, number, and special character.
+                                                </FormDescription>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                </>
+                            )}
+                            
                             <FormField
                                 control={form.control}
                                 name="phone"
@@ -211,14 +270,17 @@ export function RegisterForm() {
                                     <FormItem>
                                         <FormLabel>Phone Number</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="+237 6XX XXX XXX" {...field} />
+                                            <Input placeholder="+237 6XX XXX XXX" {...field} disabled={isLoading} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
                                 )}
                             />
-                            <Button type="button" className="w-full mt-4" onClick={nextStep}>
-                                Next <ArrowRight className="ml-2 h-4 w-4" />
+                            
+                            <Button type="submit" className="w-full mt-4" disabled={isLoading}>
+                                {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : (
+                                    <>Next <ArrowRight className="ml-2 h-4 w-4" /></>
+                                )}
                             </Button>
                         </>
                     )}
@@ -265,7 +327,7 @@ export function RegisterForm() {
                                 )}
                             />
                             <div className="flex gap-4 mt-6">
-                                <Button type="button" variant="outline" className="flex-1" onClick={prevStep}>
+                                <Button type="button" variant="outline" className="flex-1" onClick={prevStep} disabled={isLoading}>
                                     <ArrowLeft className="mr-2 h-4 w-4" /> Back
                                 </Button>
                                 <Button type="submit" className="flex-1" disabled={isLoading}>

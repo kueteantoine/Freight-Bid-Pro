@@ -28,6 +28,10 @@ CREATE POLICY "Users can update their own profile"
     ON public.profiles FOR UPDATE
     USING (auth.uid() = id);
 
+CREATE POLICY "Users can insert their own profile"
+    ON public.profiles FOR INSERT
+    WITH CHECK (auth.uid() = id);
+
 -- Trigger for update_updated_at_column
 CREATE TRIGGER update_profiles_updated_at
     BEFORE UPDATE ON public.profiles
@@ -38,7 +42,7 @@ CREATE TRIGGER update_profiles_updated_at
 CREATE TABLE IF NOT EXISTS public.user_roles (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-    role_type TEXT NOT NULL CHECK (role_type IN ('shipper', 'carrier', 'driver', 'broker')),
+    role_type TEXT NOT NULL CHECK (role_type IN ('shipper', 'carrier', 'driver', 'broker', 'admin')),
     is_active BOOLEAN DEFAULT true,
     verification_status TEXT DEFAULT 'pending' CHECK (verification_status IN ('pending', 'verified', 'rejected')),
     verification_documents JSONB DEFAULT '[]',
@@ -53,6 +57,14 @@ ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view their own roles"
     ON public.user_roles FOR SELECT
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert their own roles"
+    ON public.user_roles FOR INSERT
+    WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own roles"
+    ON public.user_roles FOR UPDATE
     USING (auth.uid() = user_id);
 
 -- USER_PREFERENCES table
@@ -92,6 +104,18 @@ BEGIN
     
     INSERT INTO public.user_preferences (user_id)
     VALUES (NEW.id);
+
+    -- Automatically assign initial role if provided in metadata
+    IF NEW.raw_user_meta_data->>'initial_role' IS NOT NULL THEN
+        INSERT INTO public.user_roles (user_id, role_type, is_active, verification_status)
+        VALUES (
+            NEW.id,
+            NEW.raw_user_meta_data->>'initial_role',
+            true,
+            'pending'
+        )
+        ON CONFLICT (user_id, role_type) DO NOTHING;
+    END IF;
     
     RETURN NEW;
 END;
