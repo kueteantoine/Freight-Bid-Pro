@@ -41,7 +41,8 @@ type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export function RegisterForm() {
     const { session } = useSession();
-    const [step, setStep] = useState(session ? 2 : 1);
+    // Start at step 1 always, let useEffect handle skipping if logged in and phone is present
+    const [step, setStep] = useState(1); 
     const [isLoading, setIsLoading] = useState(false);
 
     const form = useForm<RegisterFormValues>({
@@ -55,20 +56,25 @@ export function RegisterForm() {
     });
 
     useEffect(() => {
-        if (session && step === 1) {
+        if (session) {
             // Pre-fill email and phone from session data
             form.setValue("email", session.user.email || "");
             const phone = session.user.user_metadata?.phone_number as string | undefined;
+            
             if (phone) {
                 form.setValue("phone", phone);
-            }
-            
-            // If logged in and already has a phone number, skip to role selection (Step 2)
-            if (phone) {
-                setStep(2);
+                // If logged in and already has a phone number, skip to role selection (Step 2)
+                if (step === 1) {
+                    setStep(2);
+                }
+            } else {
+                // Logged in but missing phone, stay on step 1
+                if (step === 2) {
+                    setStep(1);
+                }
             }
         }
-    }, [session, step, form]);
+    }, [session, form, step]);
 
     const nextStep = async () => {
         let fieldsToValidate: (keyof RegisterFormValues)[] = [];
@@ -192,9 +198,9 @@ export function RegisterForm() {
 
     const handleFormSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        const values = form.getValues();
         
         if (step === 2) {
+            const values = form.getValues();
             if (!values.role) {
                 form.setError("role", { message: "Please select a role" });
                 return;
