@@ -39,10 +39,10 @@ const bookingSchema = z.object({
   freight_type: z.string().min(2, { message: "Freight type is required" }),
   weight_kg: z.coerce.number().min(1, { message: "Weight must be at least 1kg" }),
   quantity: z.coerce.number().min(1, { message: "Quantity must be at least 1" }),
-  preferred_vehicle_type: z.string().default("General Truck"),
-  special_handling_requirements: z.string().default(""),
-  insurance_required: z.boolean().default(false),
-  insurance_value: z.coerce.number().default(0),
+  preferred_vehicle_type: z.string().min(1, { message: "Preferred vehicle type is required" }),
+  special_handling_requirements: z.string(),
+  insurance_required: z.boolean(),
+  insurance_value: z.coerce.number(),
 });
 
 type BookingFormValues = z.infer<typeof bookingSchema>;
@@ -112,7 +112,6 @@ export function ShipmentBookingForm() {
 
   return (
     <div className="max-w-3xl mx-auto py-8">
-      {/* Progress Stepper */}
       <div className="flex justify-between mb-12 relative px-4">
         <div className="absolute top-1/2 left-0 w-full h-0.5 bg-muted -translate-y-1/2 z-0" />
         {[
