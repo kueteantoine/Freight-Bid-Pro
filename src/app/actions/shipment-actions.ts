@@ -1,0 +1,130 @@
+"use server";
+
+import { createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
+import { revalidatePath } from "next/cache";
+
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+async function getSupabase() {
+    const cookieStore = await cookies();
+    return createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+        cookies: {
+            get(name: string) {
+                return cookieStore.get(name)?.value;
+            },
+            set(name: string, value: string, options: any) {
+                cookieStore.set({ name, value, ...options });
+            },
+            remove(name: string, options: any) {
+                cookieStore.delete({ name, ...options });
+            },
+        },
+    });
+}
+
+export async function createShipment(formData: any) {
+    const supabase = await getSupabase();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) throw new Error("Unauthorized");
+
+    const { data, error } = await supabase.from("shipments").insert({
+        shipper_user_id: user.id,
+        ...formData,
+        status: "open_for_bidding",
+    }).select().single();
+
+    if (error) throw error;
+
+    revalidatePath("/shipper/dashboard");
+    revalidatePath("/shipper/shipments");
+
+    return data;
+}
+
+export async function saveShipmentDraft(formData: any) {
+    const supabase = await getSupabase();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return;
+
+    const { error } = await supabase.from("shipment_drafts").upsert({
+        user_id: user.id,
+        form_data: formData,
+        last_saved_at: new Date().toISOString(),
+    });
+
+    if (error) console.error("Error saving draft:", error);
+}
+
+export async function getShipmentDraft() {
+    const supabase = await getSupabase();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return null;
+
+    const { data, error } = await supabase
+        .from("shipment_drafts")
+        .select("form_data")
+        .eq("user_id", user.id)
+        .single();
+
+    if (error) return null;
+    return data.form_data;
+}
+
+export async function saveShipmentTemplate(templateData: any) {
+    const supabase = await getSupabase();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) throw new Error("Unauthorized");
+
+    const { data, error } = await supabase.from("shipment_templates").insert({
+        user_id: user.id,
+        ...templateData,
+    }).select().single();
+
+    if (error) throw error;
+
+    return data;
+}
+
+export async function getShipmentTemplates() {
+    const supabase = await getSupabase();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return [];
+
+    const { data, error } = await supabase
+        .from("shipment_templates")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    return data;
+}
+
+export async function bulkCreateShipments(shipments: any[]) {
+    const supabase = await getSupabase();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) throw new Error("Unauthorized");
+
+    const shipmentsWithUser = shipments.map(s => ({
+        ...s,
+        shipper_user_id: user.id,
+        status: "open_for_bidding"
+    }));
+
+    const { data, error } = await supabase.from("shipments").insert(shipmentsWithUser).select();
+
+    if (error) throw error;
+
+    revalidatePath("/shipper/dashboard");
+    revalidatePath("/shipper/shipments");
+
+    return data;
+}
