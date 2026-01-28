@@ -3,6 +3,17 @@
  * It verifies environment, availability, and API functional integrity.
  */
 
+// This fix ensures that in environments where localStorage is incorrectly defined 
+// on the server (e.g., some sandbox environments), it is cleared to prevent crashes.
+if (typeof window === "undefined") {
+  if (
+    typeof (globalThis as any).localStorage !== "undefined" &&
+    typeof (globalThis as any).localStorage.getItem !== "function"
+  ) {
+    delete (globalThis as any).localStorage
+  }
+}
+
 export const safeGetItem = (key: string): string | null => {
   if (typeof window === "undefined") return null;
   
