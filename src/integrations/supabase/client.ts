@@ -4,8 +4,11 @@ import { createClient } from '@supabase/supabase-js';
 const SUPABASE_URL = "https://twzufrpmaynyqwgfkalc.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3enVmcnBtYXlueXF3Z2ZrYWxjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkwOTI1NjcsImV4cCI6MjA4NDY2ODU2N30.O4ZVMyYCmIXDxB85HBH-nQ-P4PBhA947gD4TJQxGjlM";
 
-// For the client-side client, we use standard browser persistence (localStorage).
-// The middleware will still handle cookies for server-side logic using @supabase/ssr.
+/**
+ * Standard client for browser use.
+ * It uses localStorage for persistence, but we handle cookie sync 
+ * in the SessionContextProvider to satisfy Next.js middleware.
+ */
 export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
     auth: {
         persistSession: true,

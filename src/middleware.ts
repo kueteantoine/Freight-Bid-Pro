@@ -68,17 +68,18 @@ export async function middleware(request: NextRequest) {
 
     const isAuthRoute =
         request.nextUrl.pathname.startsWith("/login") ||
-        request.nextUrl.pathname.startsWith("/register") ||
         request.nextUrl.pathname.startsWith("/forgot-password") ||
         request.nextUrl.pathname.startsWith("/reset-password");
+
+    // We allow authenticated users on /register so they can complete onboarding/pick a role
+    const isRegisterRoute = request.nextUrl.pathname.startsWith("/register");
 
     if (isProtectedRoute && !user) {
         return NextResponse.redirect(new URL("/login", request.url));
     }
 
     if (isAuthRoute && user) {
-        // If logged in and hitting an auth route, redirect to root
-        // The client-side logic will refine this based on roles
+        // Redirect already logged-in users away from login/forgot pages
         return NextResponse.redirect(new URL("/", request.url));
     }
 

@@ -31,8 +31,21 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
   const pathname = usePathname();
   const isFetchingRoles = useRef(false);
 
-  const AUTH_ROUTES = ["/login", "/register", "/forgot-password", "/reset-password"];
-  const PROTECTED_ROUTE_PREFIXES = ["/shipper", "/carrier", "/driver", "/broker", "/admin"];
+  // Helper to sync session with cookies for middleware
+  const syncCookies = (currentSession: Session | null) => {
+    if (typeof document === 'undefined') return;
+    
+    if (currentSession) {
+      // Basic approach: Set a short-lived cookie that matches what middleware expects
+      // Note: Ideally we'd use @supabase/ssr helpers here, but manual sync is a reliable bridge
+      const maxAge = currentSession.expires_in || 3600;
+      document.cookie = `sb-access-token=${currentSession.access_token}; path=/; max-age=${maxAge}; SameSite=Lax`;
+      document.cookie = `sb-refresh-token=${currentSession.refresh_token}; path=/; max-age=${maxAge}; SameSite=Lax`;
+    } else {
+      document.cookie = 'sb-access-token=; path=/; max-age=0';
+      document.cookie = 'sb-refresh-token=; path=/; max-age=0';
+    }
+  };
 
   const fetchUserRoles = async (userId: string) => {
     if (isFetchingRoles.current) return;
@@ -77,6 +90,7 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
     } = supabase.auth.onAuthStateChange(async (event, currentSession) => {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
+      syncCookies(currentSession);
 
       if (currentSession) {
         await fetchUserRoles(currentSession.user.id);
@@ -97,6 +111,7 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
       const { data: { session: initialSession } } = await supabase.auth.getSession();
       setSession(initialSession);
       setUser(initialSession?.user ?? null);
+      syncCookies(initialSession);
 
       if (initialSession?.user) {
         await fetchUserRoles(initialSession.user.id);
@@ -116,29 +131,33 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
   useEffect(() => {
     if (isLoading) return;
 
+    const AUTH_ROUTES = ["/login", "/forgot-password", "/reset-password"];
+    const PROTECTED_PREFIXES = ["/shipper", "/carrier", "/driver", "/broker", "/admin"];
+
     const isAuthRoute = AUTH_ROUTES.some((route) => pathname.startsWith(route));
-    const isProtectedRoute = PROTECTED_ROUTE_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+    const isProtectedRoute = PROTECTED_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+    const isRegisterRoute = pathname.startsWith("/register");
 
     if (session) {
-      // User has a session but no roles detected yet
-      if (userRoles.length === 0 && !isAuthRoute && pathname !== "/register") {
-          // If we haven't found roles, we might need to fetch them again or wait
-          // But to be safe, if we are on a protected route and have no roles, go to register
+      // 1. Logged in but has no roles: Must go to register
+      if (userRoles.length === 0 && !isRegisterRoute && pathname !== "/") {
           if (isProtectedRoute) {
              router.replace("/register");
           }
       }
 
+      // 2. On / or an Auth Route: Redirect to active workspace or register
       if (isAuthRoute || pathname === "/") {
         if (activeRole) {
           router.replace(`/${activeRole}/dashboard`);
         } else if (userRoles.length > 0) {
           router.replace(`/${userRoles[0]}/dashboard`);
-        } else if (pathname !== "/register") {
+        } else if (!isRegisterRoute) {
           router.replace("/register");
         }
       }
     } else if (isProtectedRoute) {
+      // 3. Not logged in: Redirect to login (Double-check for middleware fallback)
       router.replace("/login");
     }
   }, [isLoading, session, pathname, activeRole, userRoles]);
