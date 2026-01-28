@@ -17,12 +17,10 @@ export default function LoginPage() {
     );
   }
 
+  // If session exists and we are done loading, the SessionContextProvider 
+  // should handle the redirect to the dashboard. We return null here.
   if (session) {
-    return (
-      <Card className="w-full max-w-md shadow-xl border-primary/20">
-        <AuthLoading />
-      </Card>
-    );
+    return null;
   }
 
   return (

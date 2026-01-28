@@ -73,6 +73,9 @@ export const SessionContextProvider = ({ children }: { children: React.ReactNode
       }
     } catch (error) {
       console.error("[SessionContext] Error fetching user roles:", error);
+      // Ensure state is reset if fetching fails, preventing navigation issues
+      setUserRoles([]);
+      _setActiveRole(null);
     } finally {
       isFetchingRoles.current = false;
     }
