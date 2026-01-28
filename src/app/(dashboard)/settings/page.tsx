@@ -8,18 +8,39 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Shield, Package, Truck, Users, CheckCircle2, AlertCircle, Plus, ArrowRight, ShieldAlert, Loader2 } from "lucide-react";
+import { Shield, Package, Truck, Users, CheckCircle2, AlertCircle, Plus, ArrowRight, ShieldAlert, Loader2, UserCircle, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { useUserData } from "@/hooks/use-user-data";
+import { AuthLoading } from "@/components/auth/auth-loading";
+import { AvatarUpload } from "@/components/profile/avatar-upload";
+import { GlobalProfileForm } from "@/components/profile/global-profile-form";
+import { RoleProfileForm } from "@/components/profile/role-profile-form";
+
+const roleIconMap: Record<UserRole, any> = {
+  shipper: Package,
+  carrier: Truck,
+  driver: Users,
+  broker: Shield,
+  admin: ShieldAlert,
+};
+
+const statusConfig: Record<string, { label: string; color: string; icon: any }> = {
+  verified: { label: "Verified", color: "bg-green-50 text-green-700 border-green-200", icon: CheckCircle2 },
+  pending: { label: "Pending Review", color: "bg-yellow-50 text-yellow-700 border-yellow-200", icon: Clock },
+  rejected: { label: "Rejected", color: "bg-red-50 text-red-700 border-red-200", icon: AlertCircle },
+};
 
 export default function SettingsPage() {
   const { user, userRoles, activeRole } = useSession();
+  const { profile, roles: allRoles, isLoading: isDataLoading } = useUserData();
   const [isActivating, setIsActivating] = useState<UserRole | null>(null);
 
   const availableRoles: UserRole[] = ["shipper", "carrier", "driver", "broker"];
-  const inactiveRoles = availableRoles.filter(r => !userRoles.includes(r));
+  const activeRoleTypes = allRoles.map(r => r.role_type);
+  const inactiveRoles = availableRoles.filter(r => !activeRoleTypes.includes(r));
 
   const handleActivateRole = async (role: UserRole) => {
     if (!user) return;
@@ -42,6 +63,14 @@ export default function SettingsPage() {
     }
   };
 
+  if (isDataLoading) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <AuthLoading />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       <div className="flex flex-col gap-1">
@@ -49,13 +78,50 @@ export default function SettingsPage() {
         <p className="text-muted-foreground">Manage your credentials, role authorizations, and personal data.</p>
       </div>
 
-      <Tabs defaultValue="roles" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-8 bg-muted/30 p-1 h-12 rounded-xl">
-          <TabsTrigger value="roles" className="rounded-lg data-[state=active]:shadow-md">Workspaces & Roles</TabsTrigger>
+      <Tabs defaultValue="profile" className="w-full">
+        <TabsList className="grid w-full grid-cols-4 mb-8 bg-muted/30 p-1 h-12 rounded-xl">
           <TabsTrigger value="profile" className="rounded-lg data-[state=active]:shadow-md">Personal Info</TabsTrigger>
+          <TabsTrigger value="roles" className="rounded-lg data-[state=active]:shadow-md">Workspaces & Roles</TabsTrigger>
+          {activeRoleTypes.map(role => (
+            <TabsTrigger key={role} value={role} className="rounded-lg data-[state=active]:shadow-md capitalize">
+              {role} Profile
+            </TabsTrigger>
+          ))}
           <TabsTrigger value="preferences" className="rounded-lg data-[state=active]:shadow-md">Global Prefs</TabsTrigger>
         </TabsList>
 
+        {/* Personal Info Tab */}
+        <TabsContent value="profile" className="space-y-8">
+          <Card className="border-border shadow-md">
+            <CardHeader className="bg-muted/10 border-b">
+              <CardTitle>Global Identity</CardTitle>
+              <CardDescription>Primary information used to verify your identity across the platform.</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-6 space-y-6">
+              <div className="flex flex-col items-center space-y-4">
+                <AvatarUpload />
+                <p className="text-sm font-medium text-foreground">
+                  {profile?.first_name} {profile?.last_name}
+                </p>
+              </div>
+              
+              <GlobalProfileForm 
+                initialData={{
+                  first_name: profile?.first_name || "",
+                  last_name: profile?.last_name || "",
+                  phone_number: profile?.phone_number || "",
+                }}
+              />
+              
+              <div className="space-y-2 pt-4 border-t">
+                <Label htmlFor="email" className="font-bold">Registered Email</Label>
+                <Input id="email" value={user?.email || ""} disabled className="bg-muted border-muted-foreground/10 font-medium" />
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Roles Tab */}
         <TabsContent value="roles" className="space-y-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Active Roles Section */}
@@ -65,40 +131,45 @@ export default function SettingsPage() {
                 Active Roles
               </h3>
               <div className="grid gap-4">
-                {userRoles.map((role) => (
-                  <Card key={role} className={cn(
-                    "border-border shadow-sm overflow-hidden transition-all hover:shadow-md",
-                    role === activeRole && "ring-2 ring-primary ring-offset-2 ring-offset-background"
-                  )}>
-                    <CardContent className="flex items-center justify-between p-5">
-                      <div className="flex items-center gap-4">
-                        <div className="p-3 rounded-xl bg-muted/50 border shadow-inner">
-                          {role === 'shipper' && <Package className="h-6 w-6 text-blue-600" />}
-                          {role === 'carrier' && <Truck className="h-6 w-6 text-green-600" />}
-                          {role === 'driver' && <Users className="h-6 w-6 text-orange-600" />}
-                          {role === 'broker' && <Shield className="h-6 w-6 text-purple-600" />}
-                          {role === 'admin' && <ShieldAlert className="h-6 w-6 text-red-600" />}
-                        </div>
-                        <div>
-                          <p className="font-bold text-lg capitalize flex items-center gap-2">
-                            {role}
-                            {role === activeRole && (
-                              <Badge variant="outline" className="text-[10px] bg-primary/5 text-primary border-primary/20">Active Workspace</Badge>
-                            )}
-                          </p>
-                          <div className="flex items-center gap-1.5 mt-1">
-                            <Badge variant="outline" className="text-[10px] uppercase font-bold tracking-tighter bg-green-50 text-green-700 border-green-200">Verified</Badge>
+                {allRoles.map((roleData) => {
+                  const role = roleData.role_type;
+                  const RoleIcon = roleIconMap[role];
+                  const status = statusConfig[roleData.verification_status] || statusConfig.pending;
+                  
+                  return (
+                    <Card key={role} className={cn(
+                      "border-border shadow-sm overflow-hidden transition-all hover:shadow-md",
+                      role === activeRole && "ring-2 ring-primary ring-offset-2 ring-offset-background"
+                    )}>
+                      <CardContent className="flex items-center justify-between p-5">
+                        <div className="flex items-center gap-4">
+                          <div className="p-3 rounded-xl bg-muted/50 border shadow-inner">
+                            <RoleIcon className={cn("h-6 w-6", status.color.includes("green") ? "text-green-600" : "text-primary")} />
+                          </div>
+                          <div>
+                            <p className="font-bold text-lg capitalize flex items-center gap-2">
+                              {role}
+                              {role === activeRole && (
+                                <Badge variant="outline" className="text-[10px] bg-primary/5 text-primary border-primary/20">Active Workspace</Badge>
+                              )}
+                            </p>
+                            <div className="flex items-center gap-1.5 mt-1">
+                              <Badge variant="outline" className={cn("text-[10px] uppercase font-bold tracking-tighter", status.color)}>
+                                <status.icon className="h-3 w-3 mr-1" />
+                                {status.label}
+                              </Badge>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      <Button asChild variant="ghost" className="rounded-full text-muted-foreground hover:text-primary">
-                        <Link href={`/settings/verification/${role}`}>
-                          Verification <ArrowRight className="ml-2 h-4 w-4" />
-                        </Link>
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
+                        <Button asChild variant="ghost" className="rounded-full text-muted-foreground hover:text-primary">
+                          <Link href={`/settings/verification/${role}`}>
+                            {roleData.verification_status === 'pending' ? 'View Status' : 'Manage Docs'} <ArrowRight className="ml-2 h-4 w-4" />
+                          </Link>
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             </div>
 
@@ -117,62 +188,50 @@ export default function SettingsPage() {
                     </CardContent>
                   </Card>
                 ) : (
-                  inactiveRoles.map((role) => (
-                    <Card key={role} className="border-border hover:border-primary/30 transition-colors">
-                      <CardContent className="flex items-center justify-between p-5">
-                        <div className="flex items-center gap-4">
-                          <div className="p-3 rounded-xl bg-muted/20 grayscale opacity-60">
-                            {role === 'shipper' && <Package className="h-6 w-6" />}
-                            {role === 'carrier' && <Truck className="h-6 w-6" />}
-                            {role === 'driver' && <Users className="h-6 w-6" />}
-                            {role === 'broker' && <Shield className="h-6 w-6" />}
+                  inactiveRoles.map((role) => {
+                    const RoleIcon = roleIconMap[role];
+                    return (
+                      <Card key={role} className="border-border hover:border-primary/30 transition-colors">
+                        <CardContent className="flex items-center justify-between p-5">
+                          <div className="flex items-center gap-4">
+                            <div className="p-3 rounded-xl bg-muted/20 grayscale opacity-60">
+                              <RoleIcon className="h-6 w-6" />
+                            </div>
+                            <div>
+                              <p className="font-bold text-lg capitalize">{role}</p>
+                              <p className="text-xs text-muted-foreground">Requires document submission</p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-bold text-lg capitalize">{role}</p>
-                            <p className="text-xs text-muted-foreground">Requires document submission</p>
-                          </div>
-                        </div>
-                        <Button 
-                          variant="secondary" 
-                          className="rounded-full font-bold px-6"
-                          onClick={() => handleActivateRole(role)}
-                          disabled={isActivating === role}
-                        >
-                          {isActivating === role ? <Loader2 className="h-4 w-4 animate-spin" /> : "Activate"}
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  ))
+                          <Button 
+                            variant="secondary" 
+                            className="rounded-full font-bold px-6"
+                            onClick={() => handleActivateRole(role)}
+                            disabled={isActivating === role}
+                          >
+                            {isActivating === role ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Activate"}
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    );
+                  })
                 )}
               </div>
             </div>
           </div>
         </TabsContent>
+        
+        {/* Role Specific Profile Tabs */}
+        {allRoles.map((roleData) => (
+          <TabsContent key={roleData.role_type} value={roleData.role_type}>
+            <RoleProfileForm 
+              role={roleData.role_type} 
+              initialData={roleData.role_specific_profile}
+              verificationStatus={roleData.verification_status}
+            />
+          </TabsContent>
+        ))}
 
-        <TabsContent value="profile">
-          <Card className="border-border shadow-md">
-            <CardHeader className="bg-muted/10 border-b">
-              <CardTitle>Global Identity</CardTitle>
-              <CardDescription>Primary information used to verify your identity across the platform.</CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6 space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label htmlFor="email" className="font-bold">Registered Email</Label>
-                  <Input id="email" value={user?.email || ""} disabled className="bg-muted border-muted-foreground/10 font-medium" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone" className="font-bold">Primary Phone</Label>
-                  <Input id="phone" placeholder="+237 ..." defaultValue={user?.user_metadata?.phone_number} className="font-medium" />
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter className="bg-muted/5 border-t py-4">
-              <Button className="rounded-full px-8 shadow-lg">Save Changes</Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-
+        {/* Global Preferences Tab */}
         <TabsContent value="preferences">
           <Card className="border-border shadow-md">
             <CardHeader className="bg-muted/10 border-b">
