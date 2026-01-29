@@ -18,6 +18,7 @@ import {
   TrendingUp,
   Wallet,
   Globe,
+  DollarSign,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -33,6 +34,7 @@ const roleNavLinks: Record<string, any[]> = {
     {
       group: "MAIN", items: [
         { href: "/shipper/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+        { href: "/shipper/bidding", icon: DollarSign, label: "Live Bidding" },
         { href: "/shipper/shipments", icon: Package, label: "My Shipments" },
         { href: "/shipper/analytics", icon: TrendingUp, label: "Spending Analytics" },
         { href: "/shipper/tracking", icon: Globe, label: "Live Tracking" },

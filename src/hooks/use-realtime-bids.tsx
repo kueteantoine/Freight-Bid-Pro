@@ -1,0 +1,156 @@
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useSession } from "@/contexts/supabase-session-context";
+import { toast } from "sonner";
+import { Shipment, Bid, Profile } from "@/lib/types/database";
+
+interface RealtimeBidsHook {
+  activeShipments: Shipment[];
+  isLoading: boolean;
+  error: string | null;
+  refetch: () => void;
+}
+
+// Helper to calculate bid expiry time
+const calculateExpiry = (shipment: any): string | null => {
+  if (shipment.auction_type === 'standard' && shipment.bidding_duration_minutes) {
+    const created = new Date(shipment.created_at).getTime();
+    const durationMs = shipment.bidding_duration_minutes * 60 * 1000;
+    const expiryTime = created + durationMs;
+    return new Date(expiryTime).toISOString();
+  }
+  return null;
+};
+
+export function useRealtimeBids(): RealtimeBidsHook {
+  const { user } = useSession();
+  const [activeShipments, setActiveShipments] = useState<Shipment[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchActiveShipments = useCallback(async () => {
+    if (!user) {
+      setActiveShipments([]);
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const { data: shipmentsData, error: shipmentError } = await supabase
+        .from("shipments")
+        .select(`
+          *,
+          bids (
+            *,
+            profiles (first_name, last_name, avatar_url)
+          )
+        `)
+        .eq("shipper_user_id", user.id)
+        .eq("status", "open_for_bidding")
+        .order("created_at", { ascending: false });
+
+      if (shipmentError) throw shipmentError;
+
+      const processedShipments: Shipment[] = (shipmentsData || []).map((s: any) => ({
+        ...s,
+        bids: s.bids.filter((b: Bid) => b.bid_status === 'active').sort((a: Bid, b: Bid) => a.bid_amount - b.bid_amount),
+        bid_expires_at: calculateExpiry(s),
+      }));
+
+      setActiveShipments(processedShipments);
+    } catch (err: any) {
+      setError(err.message);
+      toast.error("Failed to load active shipments.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    fetchActiveShipments();
+  }, [fetchActiveShipments]);
+
+  // Realtime Subscription Logic
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase.channel(`shipper_bidding_${user.id}`);
+
+    // Handle new bids
+    channel.on(
+      'postgres_changes',
+      { 
+        event: 'INSERT', 
+        schema: 'public', 
+        table: 'bids',
+        filter: `shipment_id=in.(${activeShipments.map(s => s.id).join(',')})`
+      },
+      (payload) => {
+        const newBid = payload.new as Bid;
+        
+        // Fetch the carrier profile for the new bid
+        supabase.from('profiles').select('first_name, last_name, avatar_url').eq('id', newBid.carrier_user_id).single()
+          .then(({ data: profileData }) => {
+            if (profileData) {
+              const bidWithProfile = { ...newBid, profiles: profileData as Profile };
+              
+              setActiveShipments(prevShipments => {
+                const shipmentIndex = prevShipments.findIndex(s => s.id === newBid.shipment_id);
+                if (shipmentIndex === -1) return prevShipments;
+
+                const updatedShipments = [...prevShipments];
+                const currentShipment = updatedShipments[shipmentIndex];
+                
+                // Check if this bid is already present (e.g., from initial fetch)
+                if (currentShipment.bids.some((b: Bid) => b.id === newBid.id)) return prevShipments;
+
+                const newBids = [...currentShipment.bids, bidWithProfile].sort((a, b) => a.bid_amount - b.bid_amount);
+                
+                updatedShipments[shipmentIndex] = {
+                  ...currentShipment,
+                  bids: newBids,
+                };
+                
+                toast.info(`New bid received for ${currentShipment.shipment_number || currentShipment.id.slice(0, 8)}!`, {
+                    description: `Carrier ${profileData.first_name} bid XAF ${newBid.bid_amount.toLocaleString()}.`,
+                });
+
+                return updatedShipments;
+              });
+            }
+          });
+      }
+    ).subscribe();
+
+    // Handle shipment status changes (e.g., awarded, cancelled)
+    channel.on(
+        'postgres_changes',
+        { 
+            event: 'UPDATE', 
+            schema: 'public', 
+            table: 'shipments',
+            filter: `shipper_user_id=eq.${user.id}`
+        },
+        (payload) => {
+            const updatedShipment = payload.new as Shipment;
+            if (updatedShipment.status !== 'open_for_bidding') {
+                toast.success(`Shipment ${updatedShipment.shipment_number || updatedShipment.id.slice(0, 8)} status updated to ${updatedShipment.status}.`);
+                // Refetch all to clean up the list
+                fetchActiveShipments();
+            }
+        }
+    ).subscribe();
+
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, activeShipments, fetchActiveShipments]);
+
+  return { activeShipments, isLoading, error, refetch: fetchActiveShipments };
+}
