@@ -1,14 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
-import { UserRole, useSession } from "@/contexts/supabase-session-context";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { FileUpload } from "./file-upload";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase/client";
 import { Loader2, CheckCircle2, ShieldCheck, AlertTriangle } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { UserRole } from "@/hooks/use-user-data";
+import { User } from "@supabase/supabase-js";
 
 interface RoleVerificationFormProps {
   role: UserRole;
@@ -19,7 +20,7 @@ const roleDocs: Record<UserRole, { label: string; desc: string; key: string }[]>
     { label: "Business Registration", desc: "Company registration certificate or equivalent", key: "business_reg" },
     { label: "Tax Identification", desc: "Proof of tax registration (e.g. NIU)", key: "tax_id" }
   ],
-  carrier: [
+  transporter: [
     { label: "Transport License", desc: "Official license to operate as a transporter", key: "transport_license" },
     { label: "Insurance Certificate", desc: "Commercial vehicle insurance for your fleet", key: "fleet_insurance" },
     { label: "Business Registration", desc: "Official business registration documents", key: "business_reg" }
@@ -37,10 +38,16 @@ const roleDocs: Record<UserRole, { label: string; desc: string; key: string }[]>
 };
 
 export function RoleVerificationForm({ role }: RoleVerificationFormProps) {
-  const { user } = useSession();
+  const [user, setUser] = useState<User | null>(null);
   const [documents, setDocuments] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user);
+    });
+  }, []);
 
   const requiredDocs = roleDocs[role] || [];
   const isComplete = requiredDocs.every(doc => documents[doc.key]);
@@ -56,7 +63,7 @@ export function RoleVerificationForm({ role }: RoleVerificationFormProps) {
     try {
       if (role === 'driver') {
         // Driver specific table storage
-        const docPromises = Object.entries(documents).map(([type, url]) => 
+        const docPromises = Object.entries(documents).map(([type, url]) =>
           supabase.from('driver_documents').insert({
             driver_user_id: user.id,
             document_type: type as any,
@@ -124,8 +131,8 @@ export function RoleVerificationForm({ role }: RoleVerificationFormProps) {
         </div>
 
         <div className="flex flex-col gap-4">
-          <Button 
-            size="lg" 
+          <Button
+            size="lg"
             className="w-full h-12 text-lg font-bold rounded-xl shadow-lg"
             disabled={!isComplete || isSubmitting}
             onClick={handleSubmit}

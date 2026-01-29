@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Loader2, ArrowRight, ArrowLeft } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
     Form,
@@ -20,7 +20,8 @@ import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import Link from "next/link";
-import { useSession } from "@/contexts/supabase-session-context";
+import { useRouter } from "next/navigation";
+import { User, Session } from "@supabase/supabase-js";
 
 const registerSchema = z.object({
     email: z.string().email({ message: "Invalid email address" }),
@@ -32,7 +33,7 @@ const registerSchema = z.object({
         .regex(/[0-9]/, { message: "Must contain at least one number" })
         .regex(/[^A-Za-z0-9]/, { message: "Must contain at least one special character" }),
     phone: z.string().min(8, { message: "Invalid phone number" }),
-    role: z.enum(["shipper", "carrier", "driver", "broker"], {
+    role: z.enum(["shipper", "transporter", "driver", "broker"], {
         required_error: "Please select an initial role",
     }),
 });
@@ -40,45 +41,52 @@ const registerSchema = z.object({
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export function RegisterForm() {
-    const { session } = useSession();
-    // Start at step 1 always, let useEffect handle skipping if logged in and phone is present
-    const [step, setStep] = useState(1); 
+    const [session, setSession] = useState<Session | null>(null);
+    const router = useRouter();
+    const [step, setStep] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
 
     const form = useForm<RegisterFormValues>({
         resolver: zodResolver(registerSchema),
         defaultValues: {
-            email: session?.user?.email || "",
+            email: "",
             password: "",
-            phone: session?.user?.user_metadata?.phone_number as string || "",
+            phone: "",
             role: "shipper",
         },
     });
 
     useEffect(() => {
-        if (session) {
-            // Pre-fill email and phone from session data
-            form.setValue("email", session.user.email || "");
-            const phone = session.user.user_metadata?.phone_number as string | undefined;
-            
-            if (phone) {
-                form.setValue("phone", phone);
-                // If logged in and already has a phone number, skip to role selection (Step 2)
-                if (step === 1) {
+        // Initial session check
+        supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
+            setSession(initialSession);
+            if (initialSession) {
+                form.setValue("email", initialSession.user.email || "");
+                const phone = initialSession.user.user_metadata?.phone_number;
+                if (phone) {
+                    form.setValue("phone", phone);
                     setStep(2);
                 }
-            } else {
-                // Logged in but missing phone, stay on step 1
-                if (step === 2) {
-                    setStep(1);
+            }
+        });
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, currentSession) => {
+            setSession(currentSession);
+            if (currentSession) {
+                form.setValue("email", currentSession.user.email || "");
+                const phone = currentSession.user.user_metadata?.phone_number;
+                if (phone) {
+                    form.setValue("phone", phone);
                 }
             }
-        }
-    }, [session, form, step]);
+        });
+
+        return () => subscription.unsubscribe();
+    }, [form]);
 
     const nextStep = async () => {
         let fieldsToValidate: (keyof RegisterFormValues)[] = [];
-        
+
         if (step === 1) {
             // If logged in, we only need to validate the phone number
             if (session) {
@@ -92,7 +100,7 @@ export function RegisterForm() {
         }
 
         const isValid = await form.trigger(fieldsToValidate as any);
-        
+
         // If logged in and Step 1 is valid, update the phone number before moving on.
         if (isValid && step === 1 && session) {
             const phoneValue = form.getValues("phone");
@@ -168,7 +176,7 @@ export function RegisterForm() {
 
                 if (existingRole) {
                     toast.success("Role already active! Redirecting...");
-                    window.location.reload();
+                    router.push("/");
                     return;
                 }
 
@@ -185,7 +193,7 @@ export function RegisterForm() {
                     toast.error(`Role assignment failed: ${roleError.message}`);
                 } else {
                     toast.success("New role assigned successfully!");
-                    window.location.reload();
+                    router.push("/");
                 }
             }
         } catch (error) {
@@ -198,7 +206,7 @@ export function RegisterForm() {
 
     const handleFormSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         if (step === 2) {
             const values = form.getValues();
             if (!values.role) {
@@ -268,7 +276,7 @@ export function RegisterForm() {
                                     />
                                 </>
                             )}
-                            
+
                             <FormField
                                 control={form.control}
                                 name="phone"
@@ -282,7 +290,7 @@ export function RegisterForm() {
                                     </FormItem>
                                 )}
                             />
-                            
+
                             <Button type="submit" className="w-full mt-4" disabled={isLoading}>
                                 {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : (
                                     <>Next <ArrowRight className="ml-2 h-4 w-4" /></>
@@ -307,7 +315,7 @@ export function RegisterForm() {
                                             >
                                                 {[
                                                     { value: "shipper", label: "Shipper", desc: "I have freight to move" },
-                                                    { value: "carrier", label: "Carrier", desc: "I own a transport business" },
+                                                    { value: "transporter", label: "Transporter", desc: "I own a transport business" },
                                                     { value: "driver", label: "Driver", desc: "I operate freight vehicles" },
                                                     { value: "broker", label: "Broker", desc: "I coordinate freight moves" },
                                                 ].map((role) => (

@@ -17,7 +17,7 @@ export default function BrokerDashboardPage() {
           <CardContent>
             <div className="text-3xl font-extrabold text-primary">18 Shippers</div>
             <p className="text-sm text-muted-foreground mt-1">
-              +5 new carriers this month
+              +5 new transporters this month
             </p>
           </CardContent>
         </Card>
@@ -52,7 +52,7 @@ export default function BrokerDashboardPage() {
       </div>
       <div className="p-8 bg-card rounded-xl shadow-2xl border border-border">
         <h3 className="text-2xl font-bold mb-4 text-primary">Mediation & Optimization</h3>
-        <p className="text-lg text-muted-foreground">Manage your shipper and carrier networks efficiently.</p>
+        <p className="text-lg text-muted-foreground">Manage your shipper and transporter networks efficiently.</p>
       </div>
     </div>
   );

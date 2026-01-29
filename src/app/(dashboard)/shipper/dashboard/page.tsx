@@ -131,7 +131,7 @@ export default function ShipperDashboardPage() {
                 <TableHeader className="bg-slate-50/50">
                   <TableRow className="hover:bg-transparent border-slate-100">
                     <TableHead className="px-6 font-bold text-slate-400 text-[10px] uppercase py-4">Ref / Route</TableHead>
-                    <TableHead className="font-bold text-slate-400 text-[10px] uppercase">Carrier</TableHead>
+                    <TableHead className="font-bold text-slate-400 text-[10px] uppercase">Transporter</TableHead>
                     <TableHead className="font-bold text-slate-400 text-[10px] uppercase text-center">Status</TableHead>
                     <TableHead className="px-6 text-right font-bold text-slate-400 text-[10px] uppercase">Est. Arrival</TableHead>
                   </TableRow>
@@ -140,7 +140,7 @@ export default function ShipperDashboardPage() {
                   <ShipmentRow
                     id="#CM-8812"
                     route="Douala → Garoua"
-                    carrier="TransCam Logistics"
+                    transporter="TransCam Logistics"
                     status="In-Transit"
                     statusColor="bg-blue-100 text-blue-700"
                     progress={65}
@@ -149,7 +149,7 @@ export default function ShipperDashboardPage() {
                   <ShipmentRow
                     id="#CM-7721"
                     route="Kribi → Yaoundé"
-                    carrier="DHL Afrique"
+                    transporter="DHL Afrique"
                     status="Delivered"
                     statusColor="bg-emerald-100 text-emerald-700"
                     progress={100}
@@ -158,7 +158,7 @@ export default function ShipperDashboardPage() {
                   <ShipmentRow
                     id="#CM-9011"
                     route="Douala → Bamenda"
-                    carrier="Moussa Log."
+                    transporter="Moussa Log."
                     status="Delayed"
                     statusColor="bg-rose-100 text-rose-700"
                     progress={40}
@@ -215,7 +215,7 @@ function ActionButton({ icon: Icon, label, color }: any) {
   );
 }
 
-function ShipmentRow({ id, route, carrier, status, statusColor, progress, eta }: any) {
+function ShipmentRow({ id, route, transporter, status, statusColor, progress, eta }: any) {
   return (
     <TableRow className="border-slate-50 hover:bg-slate-50/50 transition-colors group">
       <TableCell className="px-6 py-5">
@@ -227,9 +227,9 @@ function ShipmentRow({ id, route, carrier, status, statusColor, progress, eta }:
       <TableCell>
         <div className="flex items-center gap-2">
           <div className="h-7 w-7 rounded-lg bg-slate-100 flex items-center justify-center text-[10px] font-black text-slate-400">
-            {carrier[0]}
+            {transporter[0]}
           </div>
-          <span className="text-sm font-bold text-slate-700">{carrier}</span>
+          <span className="text-sm font-bold text-slate-700">{transporter}</span>
         </div>
       </TableCell>
       <TableCell className="text-center">

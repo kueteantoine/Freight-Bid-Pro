@@ -1,29 +1,29 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { 
-  CheckCircle2, 
-  XCircle, 
-  Eye, 
-  Loader2, 
-  Clock, 
+import {
+  CheckCircle2,
+  XCircle,
+  Eye,
+  Loader2,
+  Clock,
   Search,
   ExternalLink,
   ShieldCheck,
   AlertCircle,
   FileText, // <-- Added FileText import
 } from "lucide-react";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from "@/components/ui/table";
 import {
   Dialog,
@@ -98,9 +98,9 @@ export default function AdminVerificationsPage() {
         .update({
           verification_status: status,
           activated_at: status === 'verified' ? new Date().toISOString() : null,
-          role_specific_profile: { 
-            review_note: reviewNote, 
-            reviewed_at: new Date().toISOString() 
+          role_specific_profile: {
+            review_note: reviewNote,
+            reviewed_at: new Date().toISOString()
           }
         })
         .eq('id', selectedVer.id);
@@ -204,9 +204,9 @@ export default function AdminVerificationsPage() {
                       </div>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button 
-                        size="sm" 
-                        variant="ghost" 
+                      <Button
+                        size="sm"
+                        variant="ghost"
                         onClick={() => setSelectedVer(ver)}
                         className="rounded-full hover:bg-red-50 hover:text-red-700"
                       >
@@ -262,7 +262,7 @@ export default function AdminVerificationsPage() {
                 <AlertCircle className="h-4 w-4 text-muted-foreground" />
                 Review Notes / Feedback
               </label>
-              <Textarea 
+              <Textarea
                 placeholder="Internal notes or rejection reason to show to the user..."
                 value={reviewNote}
                 onChange={(e) => setReviewNote(e.target.value)}
@@ -272,15 +272,15 @@ export default function AdminVerificationsPage() {
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               className="rounded-full px-8 text-red-600 hover:bg-red-50 hover:text-red-700"
               disabled={processing}
               onClick={() => handleProcess('rejected')}
             >
               <XCircle className="mr-2 h-4 w-4" /> Reject
             </Button>
-            <Button 
+            <Button
               className="rounded-full px-8 bg-green-600 hover:bg-green-700"
               disabled={processing}
               onClick={() => handleProcess('verified')}

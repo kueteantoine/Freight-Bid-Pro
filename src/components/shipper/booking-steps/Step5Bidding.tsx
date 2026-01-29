@@ -24,7 +24,7 @@ export function Step5Bidding({ form }: Step5BiddingProps) {
     <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
       <div className="space-y-2">
         <h2 className="text-2xl font-bold">Bidding & Pricing</h2>
-        <p className="text-muted-foreground">Configure how carriers will bid on your shipment.</p>
+        <p className="text-muted-foreground">Configure how transporters will bid on your shipment.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -67,12 +67,12 @@ export function Step5Bidding({ form }: Step5BiddingProps) {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="public">Public (Open to all verified carriers)</SelectItem>
+                  <SelectItem value="public">Public (Open to all verified transporters)</SelectItem>
                   <SelectItem value="private">Private (Invite-only)</SelectItem>
                 </SelectContent>
               </Select>
               <FormDescription>
-                {field.value === 'public' ? "Visible to all verified carriers." : "Only visible to carriers you invite."}
+                {field.value === 'public' ? "Visible to all verified transporters." : "Only visible to transporters you invite."}
               </FormDescription>
               <FormMessage />
             </FormItem>
@@ -107,7 +107,7 @@ export function Step5Bidding({ form }: Step5BiddingProps) {
                   <FormControl>
                     <Input type="number" placeholder="e.g. 1000" className="h-10" {...field} />
                   </FormControl>
-                  <FormDescription>Minimum amount a carrier must lower the previous bid by.</FormDescription>
+                  <FormDescription>Minimum amount a transporter must lower the previous bid by.</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -142,7 +142,7 @@ export function Step5Bidding({ form }: Step5BiddingProps) {
                 <FormControl>
                   <Input type="number" placeholder="Fixed price for instant award" className="h-10" {...field} />
                 </FormControl>
-                <FormDescription>The first carrier to bid this price wins instantly.</FormDescription>
+                <FormDescription>The first transporter to bid this price wins instantly.</FormDescription>
                 <FormMessage />
               </FormItem>
             )}
@@ -169,7 +169,7 @@ export function Step5Bidding({ form }: Step5BiddingProps) {
                 <div className="space-y-0.5">
                   <FormLabel className="text-base">Enable Auto-Accept</FormLabel>
                   <FormDescription>
-                    Automatically award the bid if a carrier meets your predefined criteria.
+                    Automatically award the bid if a transporter meets your predefined criteria.
                   </FormDescription>
                 </div>
                 <FormControl>
@@ -203,11 +203,11 @@ export function Step5Bidding({ form }: Step5BiddingProps) {
                 name="auto_accept_criteria_json.min_rating"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="flex items-center gap-1">Min Carrier Rating <Star className="h-3 w-3 fill-amber-400 text-amber-400" /></FormLabel>
+                    <FormLabel className="flex items-center gap-1">Min Transporter Rating <Star className="h-3 w-3 fill-amber-400 text-amber-400" /></FormLabel>
                     <FormControl>
                       <Input type="number" placeholder="e.g. 4.5" step="0.1" min="1" max="5" className="h-10" {...field} />
                     </FormControl>
-                    <FormDescription>Award if carrier rating is above this.</FormDescription>
+                    <FormDescription>Award if transporter rating is above this.</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

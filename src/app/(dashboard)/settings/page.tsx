@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
-import { useSession, UserRole } from "@/contexts/supabase-session-context";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,18 +9,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Shield, Package, Truck, Users, CheckCircle2, AlertCircle, Plus, ArrowRight, ShieldAlert, Loader2, UserCircle, Clock } from "lucide-react";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase/client";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { useUserData } from "@/hooks/use-user-data";
+import { useUserData, UserRole } from "@/hooks/use-user-data";
 import { AuthLoading } from "@/components/auth/auth-loading";
 import { AvatarUpload } from "@/components/profile/avatar-upload";
 import { GlobalProfileForm } from "@/components/profile/global-profile-form";
 import { RoleProfileForm } from "@/components/profile/role-profile-form";
+import { User } from "@supabase/supabase-js";
 
 const roleIconMap: Record<UserRole, any> = {
   shipper: Package,
-  carrier: Truck,
+  transporter: Truck,
   driver: Users,
   broker: Shield,
   admin: ShieldAlert,
@@ -34,11 +34,17 @@ const statusConfig: Record<string, { label: string; color: string; icon: any }> 
 };
 
 export default function SettingsPage() {
-  const { user, userRoles, activeRole } = useSession();
+  const [user, setUser] = useState<User | null>(null);
   const { profile, roles: allRoles, isLoading: isDataLoading } = useUserData();
   const [isActivating, setIsActivating] = useState<UserRole | null>(null);
 
-  const availableRoles: UserRole[] = ["shipper", "carrier", "driver", "broker"];
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user);
+    });
+  }, []);
+
+  const availableRoles: UserRole[] = ["shipper", "transporter", "driver", "broker"];
   const activeRoleTypes = allRoles.map(r => r.role_type);
   const inactiveRoles = availableRoles.filter(r => !activeRoleTypes.includes(r));
 
@@ -55,7 +61,7 @@ export default function SettingsPage() {
 
       if (error) throw error;
       toast.success(`${role} role activated! Please complete verification.`);
-      window.location.reload(); 
+      window.location.reload();
     } catch (err) {
       toast.error("Failed to activate role.");
     } finally {
@@ -104,15 +110,15 @@ export default function SettingsPage() {
                   {profile?.first_name} {profile?.last_name}
                 </p>
               </div>
-              
-              <GlobalProfileForm 
+
+              <GlobalProfileForm
                 initialData={{
                   first_name: profile?.first_name || "",
                   last_name: profile?.last_name || "",
                   phone_number: profile?.phone_number || "",
                 }}
               />
-              
+
               <div className="space-y-2 pt-4 border-t">
                 <Label htmlFor="email" className="font-bold">Registered Email</Label>
                 <Input id="email" value={user?.email || ""} disabled className="bg-muted border-muted-foreground/10 font-medium" />
@@ -135,11 +141,11 @@ export default function SettingsPage() {
                   const role = roleData.role_type;
                   const RoleIcon = roleIconMap[role];
                   const status = statusConfig[roleData.verification_status] || statusConfig.pending;
-                  
+
                   return (
                     <Card key={role} className={cn(
                       "border-border shadow-sm overflow-hidden transition-all hover:shadow-md",
-                      role === activeRole && "ring-2 ring-primary ring-offset-2 ring-offset-background"
+                      roleData.is_active && "ring-2 ring-primary ring-offset-2 ring-offset-background"
                     )}>
                       <CardContent className="flex items-center justify-between p-5">
                         <div className="flex items-center gap-4">
@@ -149,8 +155,8 @@ export default function SettingsPage() {
                           <div>
                             <p className="font-bold text-lg capitalize flex items-center gap-2">
                               {role}
-                              {role === activeRole && (
-                                <Badge variant="outline" className="text-[10px] bg-primary/5 text-primary border-primary/20">Active Workspace</Badge>
+                              {roleData.is_active && (
+                                <Badge variant="outline" className="text-[10px] bg-primary/5 text-primary border-primary/20">Active</Badge>
                               )}
                             </p>
                             <div className="flex items-center gap-1.5 mt-1">
@@ -202,8 +208,8 @@ export default function SettingsPage() {
                               <p className="text-xs text-muted-foreground">Requires document submission</p>
                             </div>
                           </div>
-                          <Button 
-                            variant="secondary" 
+                          <Button
+                            variant="secondary"
                             className="rounded-full font-bold px-6"
                             onClick={() => handleActivateRole(role)}
                             disabled={isActivating === role}
@@ -219,12 +225,12 @@ export default function SettingsPage() {
             </div>
           </div>
         </TabsContent>
-        
+
         {/* Role Specific Profile Tabs */}
         {allRoles.map((roleData) => (
           <TabsContent key={roleData.role_type} value={roleData.role_type}>
-            <RoleProfileForm 
-              role={roleData.role_type} 
+            <RoleProfileForm
+              role={roleData.role_type}
               initialData={roleData.role_specific_profile}
               verificationStatus={roleData.verification_status}
             />

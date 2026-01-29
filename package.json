@@ -63,6 +63,7 @@
   },
   "devDependencies": {
     "@dyad-sh/nextjs-webpack-component-tagger": "^0.8.0",
+    "@playwright/test": "^1.58.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",

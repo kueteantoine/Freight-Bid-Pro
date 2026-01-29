@@ -13,7 +13,7 @@ export function Step3Freight({ form }: Step3FreightProps) {
     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
       <div className="space-y-2">
         <h2 className="text-2xl font-bold">What are we shipping?</h2>
-        <p className="text-muted-foreground">Details about the cargo help us find the right carrier.</p>
+        <p className="text-muted-foreground">Details about the cargo help us find the right transporter.</p>
       </div>
       <div className="space-y-6">
         <FormField<BookingFormValues, "freight_type">

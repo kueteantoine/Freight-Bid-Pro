@@ -16,8 +16,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-import { useSession } from "@/contexts/supabase-session-context";
+import { supabase } from "@/lib/supabase/client";
+import { User } from "@supabase/supabase-js";
 
 const globalProfileSchema = z.object({
   first_name: z.string().min(1, "First name is required."),
@@ -36,8 +36,14 @@ interface GlobalProfileFormProps {
 }
 
 export function GlobalProfileForm({ initialData }: GlobalProfileFormProps) {
-  const { user } = useSession();
+  const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user);
+    });
+  }, []);
 
   const form = useForm<GlobalProfileValues>({
     resolver: zodResolver(globalProfileSchema),
@@ -77,14 +83,13 @@ export function GlobalProfileForm({ initialData }: GlobalProfileFormProps) {
       // Optionally update auth.users metadata (for phone number consistency)
       const { error: authError } = await supabase.auth.updateUser({
         data: {
-            first_name: values.first_name,
-            last_name: values.last_name,
-            phone_number: values.phone_number,
+          first_name: values.first_name,
+          last_name: values.last_name,
+          phone_number: values.phone_number,
         }
       });
 
       if (authError) console.warn("Failed to update auth metadata:", authError.message);
-
 
       toast.success("Personal information updated successfully!");
     } catch (error: any) {

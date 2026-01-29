@@ -18,9 +18,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
-import { useSession, UserRole } from "@/contexts/supabase-session-context";
+import { supabase } from "@/lib/supabase/client";
+import { UserRole } from "@/hooks/use-user-data";
 import { cn } from "@/lib/utils";
+import { User } from "@supabase/supabase-js";
 
 // --- Zod Schemas ---
 const shipperProfileSchema = z.object({
@@ -31,7 +32,7 @@ const shipperProfileSchema = z.object({
   billing_address: z.string().min(10, "Billing address is required."),
 });
 
-const carrierProfileSchema = z.object({
+const transporterProfileSchema = z.object({
   company_name: z.string().min(2, "Company name is required."),
   fleet_size: z.coerce.number().min(1, "Fleet size must be at least 1."),
   business_license_number: z.string().min(5, "License number is required."),
@@ -53,12 +54,11 @@ const brokerProfileSchema = z.object({
   service_areas: z.string().min(2, "Service areas are required."),
 });
 
-// Define a union of all possible field names used across all role schemas
-type RoleProfileKey = 
-  | 'company_name' 
-  | 'business_reg_number' 
-  | 'tax_id' 
-  | 'industry_type' 
+type RoleProfileKey =
+  | 'company_name'
+  | 'business_reg_number'
+  | 'tax_id'
+  | 'industry_type'
   | 'billing_address'
   | 'fleet_size'
   | 'business_license_number'
@@ -73,17 +73,16 @@ type RoleProfileKey =
   | 'commission_rates'
   | 'service_areas';
 
-// Define a generic type for the form values that includes all possible keys
-type ProfileValues = Partial<Record<RoleProfileKey, string | number>>; 
+type ProfileValues = Partial<Record<RoleProfileKey, string | number>>;
 
 type ProfileSchema = z.ZodObject<any>;
 
 const schemaMap: Record<UserRole, ProfileSchema> = {
   shipper: shipperProfileSchema,
-  carrier: carrierProfileSchema,
+  transporter: transporterProfileSchema,
   driver: driverProfileSchema,
   broker: brokerProfileSchema,
-  admin: z.object({}), // Admin role doesn't have a specific profile form here
+  admin: z.object({}),
 };
 
 const fieldConfig: Record<UserRole, { name: RoleProfileKey; label: string; type?: string; placeholder?: string }[]> = {
@@ -94,7 +93,7 @@ const fieldConfig: Record<UserRole, { name: RoleProfileKey; label: string; type?
     { name: "industry_type", label: "Industry Type", placeholder: "e.g., Manufacturing, Retail" },
     { name: "billing_address", label: "Billing Address", type: "textarea" },
   ],
-  carrier: [
+  transporter: [
     { name: "company_name", label: "Company Name" },
     { name: "fleet_size", label: "Fleet Size (Number of Vehicles)", type: "number" },
     { name: "business_license_number", label: "Business License Number" },
@@ -118,7 +117,7 @@ const fieldConfig: Record<UserRole, { name: RoleProfileKey; label: string; type?
 
 const roleIconMap: Record<UserRole, any> = {
   shipper: Package,
-  carrier: Truck,
+  transporter: Truck,
   driver: Users,
   broker: Shield,
   admin: Shield,
@@ -131,11 +130,17 @@ interface RoleProfileFormProps {
 }
 
 export function RoleProfileForm({ role, initialData, verificationStatus }: RoleProfileFormProps) {
-  const { user } = useSession();
+  const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const CurrentSchema = schemaMap[role];
   const fields = fieldConfig[role];
   const RoleIcon = roleIconMap[role];
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user);
+    });
+  }, []);
 
   const form = useForm<ProfileValues>({
     resolver: zodResolver(CurrentSchema),
@@ -208,13 +213,13 @@ export function RoleProfileForm({ role, initialData, verificationStatus }: RoleP
       </CardHeader>
       <CardContent className="pt-6">
         <div className="mb-6 p-4 border rounded-lg flex justify-between items-center bg-background shadow-inner">
-            <div className="space-y-1">
-                <p className="text-sm font-semibold">Profile Completeness</p>
-                <p className="text-xs text-muted-foreground">Fill out all fields to ensure maximum visibility and trust.</p>
-            </div>
-            <div className="text-2xl font-bold text-primary">{completeness}%</div>
+          <div className="space-y-1">
+            <p className="text-sm font-semibold">Profile Completeness</p>
+            <p className="text-xs text-muted-foreground">Fill out all fields to ensure maximum visibility and trust.</p>
+          </div>
+          <div className="text-2xl font-bold text-primary">{completeness}%</div>
         </div>
-        
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -228,34 +233,34 @@ export function RoleProfileForm({ role, initialData, verificationStatus }: RoleP
                       <FormLabel>{field.label}</FormLabel>
                       <FormControl>
                         {field.type === "textarea" ? (
-                          <Textarea 
-                            placeholder={field.placeholder} 
+                          <Textarea
+                            placeholder={field.placeholder}
                             className="min-h-[100px]"
-                            {...formField} 
+                            {...formField}
                           />
                         ) : field.type === "date" ? (
                           <div className="relative">
                             <CalendarIcon className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                            <Input 
-                                type="date" 
-                                className="pl-10" 
-                                {...formField} 
-                                value={formField.value ? String(formField.value).split('T')[0] : ''}
-                                onChange={(e) => formField.onChange(e.target.value)}
+                            <Input
+                              type="date"
+                              className="pl-10"
+                              {...formField}
+                              value={formField.value ? String(formField.value).split('T')[0] : ''}
+                              onChange={(e) => formField.onChange(e.target.value)}
                             />
                           </div>
                         ) : (
-                          <Input 
-                            type={field.type || "text"} 
-                            placeholder={field.placeholder} 
-                            {...formField} 
+                          <Input
+                            type={field.type || "text"}
+                            placeholder={field.placeholder}
+                            {...formField}
                             value={formField.value === 0 && field.type === 'number' ? '' : formField.value}
                             onChange={(e) => {
-                                if (field.type === 'number') {
-                                    formField.onChange(e.target.value === '' ? 0 : Number(e.target.value));
-                                } else {
-                                    formField.onChange(e.target.value);
-                                }
+                              if (field.type === 'number') {
+                                formField.onChange(e.target.value === '' ? 0 : Number(e.target.value));
+                              } else {
+                                formField.onChange(e.target.value);
+                              }
                             }}
                           />
                         )}

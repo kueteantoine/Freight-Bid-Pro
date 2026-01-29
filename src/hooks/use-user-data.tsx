@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSession, UserRole } from "@/contexts/supabase-session-context";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase/client";
 import { toast } from "sonner";
+
+export type UserRole = "shipper" | "transporter" | "driver" | "broker" | "admin";
 
 interface ProfileData {
   first_name: string | null;
@@ -27,18 +28,21 @@ interface UserData {
 }
 
 export function useUserData(): UserData {
-  const { user, isLoading: isSessionLoading } = useSession();
   const [data, setData] = useState<UserData>({ profile: null, roles: [], isLoading: true });
 
   useEffect(() => {
-    if (isSessionLoading || !user) {
-      setData({ profile: null, roles: [], isLoading: isSessionLoading });
-      return;
-    }
+    let isMounted = true;
 
     const fetchUserData = async () => {
-      setData(prev => ({ ...prev, isLoading: true }));
-      
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        if (isMounted) {
+          setData({ profile: null, roles: [], isLoading: false });
+        }
+        return;
+      }
+
       try {
         // 1. Fetch Global Profile Data
         const { data: profileData, error: profileError } = await supabase
@@ -47,7 +51,7 @@ export function useUserData(): UserData {
           .eq('id', user.id)
           .single();
 
-        if (profileError && profileError.code !== 'PGRST116') throw profileError; // PGRST116 means no rows found
+        if (profileError && profileError.code !== 'PGRST116') throw profileError;
 
         // 2. Fetch Role Data
         const { data: rolesData, error: rolesError } = await supabase
@@ -56,21 +60,37 @@ export function useUserData(): UserData {
 
         if (rolesError) throw rolesError;
 
-        setData({
-          profile: profileData || null,
-          roles: rolesData as RoleData[],
-          isLoading: false,
-        });
-
+        if (isMounted) {
+          setData({
+            profile: profileData || null,
+            roles: rolesData as RoleData[],
+            isLoading: false,
+          });
+        }
       } catch (error) {
         console.error("Error fetching user data:", error);
-        setData(prev => ({ ...prev, isLoading: false }));
-        toast.error("Failed to load user data.");
+        if (isMounted) {
+          setData(prev => ({ ...prev, isLoading: false }));
+          toast.error("Failed to load user data.");
+        }
       }
     };
 
     fetchUserData();
-  }, [user, isSessionLoading]);
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+        fetchUserData();
+      } else if (event === 'SIGNED_OUT') {
+        setData({ profile: null, roles: [], isLoading: false });
+      }
+    });
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
 
   return data;
 }

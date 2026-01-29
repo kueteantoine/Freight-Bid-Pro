@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useSession } from "@/contexts/supabase-session-context";
+import { supabase } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { Shipment, Bid, Profile } from "@/lib/types/database";
+import { User } from "@supabase/supabase-js";
 
 interface RealtimeBidsHook {
   activeShipments: Shipment[];
@@ -25,15 +25,20 @@ const calculateExpiry = (shipment: any): string | null => {
 };
 
 export function useRealtimeBids(): RealtimeBidsHook {
-  const { user } = useSession();
+  const [user, setUser] = useState<User | null>(null);
   const [activeShipments, setActiveShipments] = useState<Shipment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user);
+    });
+  }, []);
+
   const fetchActiveShipments = useCallback(async () => {
     if (!user) {
-      setActiveShipments([]);
-      setIsLoading(false);
+      if (!isLoading) setIsLoading(true); // Ensure loading is true if user is missing but we're starting
       return;
     }
 
@@ -72,52 +77,61 @@ export function useRealtimeBids(): RealtimeBidsHook {
   }, [user]);
 
   useEffect(() => {
-    fetchActiveShipments();
-  }, [fetchActiveShipments]);
+    if (user) {
+      fetchActiveShipments();
+    } else {
+      // If we've checked for user and none is found, stop loading
+      supabase.auth.getUser().then(({ data: { user: currentUser } }) => {
+        if (!currentUser) {
+          setIsLoading(false);
+        }
+      });
+    }
+  }, [user, fetchActiveShipments]);
 
   // Realtime Subscription Logic
   useEffect(() => {
-    if (!user) return;
+    if (!user || activeShipments.length === 0) return;
 
     const channel = supabase.channel(`shipper_bidding_${user.id}`);
 
     // Handle new bids
     channel.on(
       'postgres_changes',
-      { 
-        event: 'INSERT', 
-        schema: 'public', 
+      {
+        event: 'INSERT',
+        schema: 'public',
         table: 'bids',
         filter: `shipment_id=in.(${activeShipments.map(s => s.id).join(',')})`
       },
       (payload) => {
         const newBid = payload.new as Bid;
-        
-        // Fetch the carrier profile for the new bid
-        supabase.from('profiles').select('first_name, last_name, avatar_url').eq('id', newBid.carrier_user_id).single()
+
+        // Fetch the transporter profile for the new bid
+        supabase.from('profiles').select('first_name, last_name, avatar_url').eq('id', newBid.transporter_user_id).single()
           .then(({ data: profileData }) => {
             if (profileData) {
               const bidWithProfile = { ...newBid, profiles: profileData as Profile };
-              
+
               setActiveShipments(prevShipments => {
                 const shipmentIndex = prevShipments.findIndex(s => s.id === newBid.shipment_id);
                 if (shipmentIndex === -1) return prevShipments;
 
                 const updatedShipments = [...prevShipments];
                 const currentShipment = updatedShipments[shipmentIndex];
-                
+
                 // Check if this bid is already present (e.g., from initial fetch)
                 if (currentShipment.bids.some((b: Bid) => b.id === newBid.id)) return prevShipments;
 
                 const newBids = [...currentShipment.bids, bidWithProfile].sort((a, b) => a.bid_amount - b.bid_amount);
-                
+
                 updatedShipments[shipmentIndex] = {
                   ...currentShipment,
                   bids: newBids,
                 };
-                
+
                 toast.info(`New bid received for ${currentShipment.shipment_number || currentShipment.id.slice(0, 8)}!`, {
-                    description: `Carrier ${profileData.first_name} bid XAF ${newBid.bid_amount.toLocaleString()}.`,
+                  description: `Transporter ${profileData.first_name} bid XAF ${newBid.bid_amount.toLocaleString()}.`,
                 });
 
                 return updatedShipments;
@@ -129,21 +143,21 @@ export function useRealtimeBids(): RealtimeBidsHook {
 
     // Handle shipment status changes (e.g., awarded, cancelled)
     channel.on(
-        'postgres_changes',
-        { 
-            event: 'UPDATE', 
-            schema: 'public', 
-            table: 'shipments',
-            filter: `shipper_user_id=eq.${user.id}`
-        },
-        (payload) => {
-            const updatedShipment = payload.new as Shipment;
-            if (updatedShipment.status !== 'open_for_bidding') {
-                toast.success(`Shipment ${updatedShipment.shipment_number || updatedShipment.id.slice(0, 8)} status updated to ${updatedShipment.status}.`);
-                // Refetch all to clean up the list
-                fetchActiveShipments();
-            }
+      'postgres_changes',
+      {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'shipments',
+        filter: `shipper_user_id=eq.${user.id}`
+      },
+      (payload) => {
+        const updatedShipment = payload.new as Shipment;
+        if (updatedShipment.status !== 'open_for_bidding') {
+          toast.success(`Shipment ${updatedShipment.shipment_number || updatedShipment.id.slice(0, 8)} status updated to ${updatedShipment.status}.`);
+          // Refetch all to clean up the list
+          fetchActiveShipments();
         }
+      }
     ).subscribe();
 
 

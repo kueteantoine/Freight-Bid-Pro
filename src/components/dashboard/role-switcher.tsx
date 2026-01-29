@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { useSession, UserRole } from "@/contexts/supabase-session-context";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,21 +12,36 @@ import {
 import { Button } from "@/components/ui/button";
 import { ChevronDown, Check, UserCircle, Shield, Truck, Package, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
+
+import { useActiveRole } from "@/hooks/use-active-role";
+
+export type UserRole = "shipper" | "transporter" | "driver" | "broker" | "admin";
 
 const roleConfig: Record<UserRole, { label: string; icon: any; color: string }> = {
   shipper: { label: "Shipper", icon: Package, color: "text-blue-600" },
-  carrier: { label: "Carrier", icon: Truck, color: "text-green-600" },
+  transporter: { label: "Transporter", icon: Truck, color: "text-green-600" },
   driver: { label: "Driver", icon: Users, color: "text-orange-600" },
   broker: { label: "Broker", icon: Shield, color: "text-purple-600" },
   admin: { label: "Administrator", icon: Shield, color: "text-red-600" },
 };
 
-export function RoleSwitcher() {
-  const { userRoles, activeRole, setActiveRole } = useSession();
+export function RoleSwitcher({
+  currentRole,
+  availableRoles
+}: {
+  currentRole: UserRole | null,
+  availableRoles: UserRole[]
+}) {
+  const { switchRole } = useActiveRole();
 
-  // If the user only has one role, just show it as a badge
-  if (userRoles.length <= 1) {
-    const role = activeRole || userRoles[0];
+  const handleRoleSwitch = async (role: UserRole) => {
+    await switchRole(role);
+  };
+
+  if (availableRoles.length <= 1) {
+    const role = currentRole || availableRoles[0];
     if (!role) return null;
     const config = roleConfig[role];
     return (
@@ -38,7 +52,7 @@ export function RoleSwitcher() {
     );
   }
 
-  const activeConfig = activeRole ? roleConfig[activeRole] : null;
+  const activeConfig = currentRole ? roleConfig[currentRole] : null;
 
   return (
     <DropdownMenu>
@@ -54,13 +68,13 @@ export function RoleSwitcher() {
           Switch Workspace
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {userRoles.map((role) => {
+        {availableRoles.map((role) => {
           const config = roleConfig[role];
-          const isActive = activeRole === role;
+          const isActive = currentRole === role;
           return (
             <DropdownMenuItem
               key={role}
-              onClick={() => setActiveRole(role)}
+              onClick={() => handleRoleSwitch(role)}
               className={cn(
                 "flex items-center justify-between gap-2 p-2 rounded-md cursor-pointer mb-1 last:mb-0",
                 isActive ? "bg-primary/5 text-primary font-medium" : "hover:bg-muted"

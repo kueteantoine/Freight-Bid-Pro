@@ -6,7 +6,7 @@ export const visibilityEnum = z.enum(["public", "private"]);
 export const autoAcceptCriteriaSchema = z.object({
   enabled: z.boolean().default(false),
   max_price: z.coerce.number().min(0).optional(), // Max price shipper is willing to pay
-  min_rating: z.coerce.number().min(1).max(5).optional(), // Minimum carrier rating (1-5)
+  min_rating: z.coerce.number().min(1).max(5).optional(), // Minimum transporter rating (1-5)
   max_delivery_days: z.coerce.number().min(1).optional(), // Maximum delivery time in days
 });
 

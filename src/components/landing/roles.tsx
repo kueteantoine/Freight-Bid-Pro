@@ -38,12 +38,12 @@ export const LandingRoles = () => {
             features={["Live Load Tendering", "Analytics Dashboard"]}
           />
           <RoleCard
-            role="Carrier"
+            role="Transporter"
             desc="Maximize your fleet utilization and get paid faster than ever."
             icon={Truck}
             color="text-emerald-600"
             bg="bg-emerald-50"
-            href="/register?role=carrier"
+            href="/register?role=transporter"
             features={["Instant Load Matching", "Fleet Management"]}
           />
           <RoleCard

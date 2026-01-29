@@ -9,7 +9,7 @@ export default function NewBookingPage() {
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold tracking-tight">Create New Shipment</h1>
         <p className="text-muted-foreground">
-          Fill in the details below to post your load to our carrier network.
+          Fill in the details below to post your load to our transporter network.
         </p>
       </div>
       <ShipmentBookingForm />

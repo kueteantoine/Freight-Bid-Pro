@@ -1,28 +1,8 @@
-"use client";
-
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useSession } from "@/contexts/supabase-session-context";
-import { AuthLoading } from "@/components/auth/auth-loading";
 import { LoginForm } from "@/components/auth/login-form";
 
 export default function LoginPage() {
-  const { isLoading, session } = useSession();
-
-  if (isLoading) {
-    return (
-      <Card className="w-full max-w-md shadow-xl border-primary/20">
-        <AuthLoading />
-      </Card>
-    );
-  }
-
-  // If session exists and we are done loading, the SessionContextProvider 
-  // should handle the redirect to the dashboard. We return null here.
-  if (session) {
-    return null;
-  }
-
   return (
     <Card className="w-full max-w-md shadow-xl border-primary/20">
       <CardHeader className="space-y-1">

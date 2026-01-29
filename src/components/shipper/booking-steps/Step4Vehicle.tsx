@@ -72,7 +72,7 @@ export function Step4Vehicle({ form }: Step4VehicleProps) {
                 placeholder="e.g. Lift gate, Pallet jack, Straps, Refrigeration specifics..."
               />
             </FormControl>
-            <p className="text-[10px] text-muted-foreground mt-2 uppercase font-bold tracking-widest">Optional requirements for the carrier</p>
+            <p className="text-[10px] text-muted-foreground mt-2 uppercase font-bold tracking-widest">Optional requirements for the transporter</p>
           </FormItem>
         )}
       />

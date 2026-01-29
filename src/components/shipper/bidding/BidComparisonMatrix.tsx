@@ -16,7 +16,7 @@ interface BidComparisonMatrixProps {
 }
 
 export function BidComparisonMatrix({ selectedBid, shipment }: BidComparisonMatrixProps) {
-  const carrier = selectedBid.profiles;
+  const transporter = selectedBid.profiles;
   const isLowestBid = shipment.bids[0]?.id === selectedBid.id;
 
   return (
@@ -33,14 +33,14 @@ export function BidComparisonMatrix({ selectedBid, shipment }: BidComparisonMatr
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Avatar className="h-14 w-14 border-2 border-white shadow-md">
-                <AvatarImage src={carrier.avatar_url || undefined} />
+                <AvatarImage src={transporter.avatar_url || undefined} />
                 <AvatarFallback className="bg-primary/20 text-primary">
-                  {carrier.first_name?.[0] || <User className="h-6 w-6" />}
+                  {transporter.first_name?.[0] || <User className="h-6 w-6" />}
                 </AvatarFallback>
               </Avatar>
               <div>
                 <CardTitle className="text-lg font-black text-slate-900">
-                  {carrier.first_name} {carrier.last_name}
+                  {transporter.first_name} {transporter.last_name}
                 </CardTitle>
                 <div className="flex items-center gap-1 mt-1">
                   <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
@@ -77,7 +77,7 @@ export function BidComparisonMatrix({ selectedBid, shipment }: BidComparisonMatr
           <Separator className="bg-slate-100" />
 
           <div className="space-y-4">
-            <h4 className="text-sm font-black uppercase tracking-widest text-slate-400">Carrier Details</h4>
+            <h4 className="text-sm font-black uppercase tracking-widest text-slate-400">Transporter Details</h4>
             <div className="grid grid-cols-2 gap-4 text-sm">
               <InfoRow icon={Truck} label="Vehicle Type" value="Flatbed (Verified)" />
               <InfoRow icon={MapPin} label="Distance from Pickup" value="45 km" />
@@ -88,7 +88,7 @@ export function BidComparisonMatrix({ selectedBid, shipment }: BidComparisonMatr
 
           {selectedBid.bid_message && (
             <div className="pt-4 border-t border-slate-100">
-              <h4 className="text-sm font-black uppercase tracking-widest text-slate-400 mb-2">Carrier Message</h4>
+              <h4 className="text-sm font-black uppercase tracking-widest text-slate-400 mb-2">Transporter Message</h4>
               <Card className="p-4 bg-slate-50 border-slate-100 rounded-xl">
                 <p className="text-sm text-slate-700 italic leading-relaxed">
                   &quot;{selectedBid.bid_message}&quot;
@@ -112,13 +112,13 @@ export function BidComparisonMatrix({ selectedBid, shipment }: BidComparisonMatr
 }
 
 function InfoRow({ icon: Icon, label, value }: { icon: any, label: string, value: string }) {
-    return (
-        <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-                <Icon className="h-4 w-4 text-slate-400" />
-                <span className="text-sm font-medium text-slate-500">{label}</span>
-            </div>
-            <span className="text-sm font-bold text-slate-900">{value}</span>
-        </div>
-    );
+  return (
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-2">
+        <Icon className="h-4 w-4 text-slate-400" />
+        <span className="text-sm font-medium text-slate-500">{label}</span>
+      </div>
+      <span className="text-sm font-bold text-slate-900">{value}</span>
+    </div>
+  );
 }

@@ -38,7 +38,7 @@ export default function InvoiceDetailPage() {
             {/* Breadcrumbs & Actions */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div className="flex items-center gap-4">
-                    <Link href="/carrier/payments">
+                    <Link href="/transporter/payments">
                         <Button variant="ghost" size="icon" className="rounded-xl border border-slate-100 bg-white shadow-sm">
                             <ChevronLeft className="h-5 w-5" />
                         </Button>

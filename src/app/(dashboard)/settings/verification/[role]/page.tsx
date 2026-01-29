@@ -2,19 +2,19 @@
 
 import React from "react";
 import { useParams, useRouter } from "next/navigation";
-import { UserRole } from "@/contexts/supabase-session-context";
 import { RoleVerificationForm } from "@/components/verification/role-verification-form";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, HelpCircle } from "lucide-react";
 import Link from "next/link";
+import { UserRole } from "@/hooks/use-user-data";
 
 export default function RoleVerificationPage() {
   const params = useParams();
   const router = useRouter();
   const role = params.role as UserRole;
 
-  const validRoles: UserRole[] = ["shipper", "carrier", "driver", "broker"];
-  
+  const validRoles: UserRole[] = ["shipper", "transporter", "driver", "broker"];
+
   if (!validRoles.includes(role)) {
     return (
       <div className="flex flex-col items-center justify-center py-24 text-center space-y-4">
@@ -31,9 +31,9 @@ export default function RoleVerificationPage() {
     <div className="max-w-4xl mx-auto space-y-8">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button 
-            variant="outline" 
-            size="icon" 
+          <Button
+            variant="outline"
+            size="icon"
             className="rounded-full h-10 w-10 shadow-sm"
             onClick={() => router.back()}
           >
@@ -44,7 +44,7 @@ export default function RoleVerificationPage() {
             <p className="text-muted-foreground">Complete your profile as a <span className="capitalize font-semibold text-foreground">{role}</span>.</p>
           </div>
         </div>
-        
+
         <Button variant="ghost" className="rounded-full gap-2 text-muted-foreground">
           <HelpCircle className="h-5 w-5" />
           <span className="hidden sm:inline">Verification FAQ</span>

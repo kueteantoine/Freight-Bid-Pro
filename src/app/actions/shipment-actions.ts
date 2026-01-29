@@ -1,31 +1,10 @@
 "use server";
 
-import { createServerClient } from "@supabase/ssr";
-import { cookies } from "next/headers";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const SUPABASE_ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-async function getSupabase() {
-    const cookieStore = await cookies();
-    return createServerClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-        cookies: {
-            get(name: string) {
-                return cookieStore.get(name)?.value;
-            },
-            set(name: string, value: string, options: any) {
-                cookieStore.set({ name, value, ...options });
-            },
-            remove(name: string, options: any) {
-                cookieStore.delete({ name, ...options });
-            },
-        },
-    });
-}
-
 export async function createShipment(formData: any) {
-    const supabase = await getSupabase();
+    const supabase = await createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) throw new Error("Unauthorized");
@@ -45,7 +24,7 @@ export async function createShipment(formData: any) {
 }
 
 export async function saveShipmentDraft(formData: any) {
-    const supabase = await getSupabase();
+    const supabase = await createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) return;
@@ -60,7 +39,7 @@ export async function saveShipmentDraft(formData: any) {
 }
 
 export async function getShipmentDraft() {
-    const supabase = await getSupabase();
+    const supabase = await createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) return null;
@@ -76,7 +55,7 @@ export async function getShipmentDraft() {
 }
 
 export async function saveShipmentTemplate(templateData: any) {
-    const supabase = await getSupabase();
+    const supabase = await createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) throw new Error("Unauthorized");
@@ -92,7 +71,7 @@ export async function saveShipmentTemplate(templateData: any) {
 }
 
 export async function getShipmentTemplates() {
-    const supabase = await getSupabase();
+    const supabase = await createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) return [];
@@ -108,7 +87,7 @@ export async function getShipmentTemplates() {
 }
 
 export async function bulkCreateShipments(shipments: any[]) {
-    const supabase = await getSupabase();
+    const supabase = await createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) throw new Error("Unauthorized");

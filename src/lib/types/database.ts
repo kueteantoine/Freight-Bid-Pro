@@ -12,13 +12,14 @@ export interface Profile {
 export interface Bid {
   id: string;
   shipment_id: string;
-  carrier_user_id: string;
+  transporter_user_id: string;
   bid_amount: number;
   estimated_delivery_date: string | null;
   bid_status: BidStatus;
   bid_submitted_at: string;
   bid_expires_at: string | null;
-  profiles: Profile; // Joined profile data of the carrier
+  bid_message: string | null;
+  profiles: Profile; // Joined profile data of the transporter
 }
 
 export interface Shipment {
@@ -32,4 +33,5 @@ export interface Shipment {
   bidding_duration_minutes: number | null;
   created_at: string;
   bids: Bid[]; // Array of associated bids
+  bid_expires_at: string | null;
 }

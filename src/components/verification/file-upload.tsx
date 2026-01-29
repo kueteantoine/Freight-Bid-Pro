@@ -5,7 +5,7 @@ import { Upload, FileText, X, CheckCircle2, Loader2, AlertCircle } from "lucide-
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase/client";
 import { toast } from "sonner";
 
 interface FileUploadProps {
@@ -105,7 +105,7 @@ export function FileUpload({
         )}
       </div>
 
-      <div 
+      <div
         className={cn(
           "relative border-2 border-dashed rounded-xl p-6 transition-all duration-200 flex flex-col items-center justify-center gap-2",
           uploadedUrl ? "border-green-200 bg-green-50/30" : "border-muted hover:border-primary/50 bg-muted/5",
@@ -119,10 +119,10 @@ export function FileUpload({
             </div>
             <p className="text-sm font-medium">Click to upload or drag and drop</p>
             <p className="text-xs text-muted-foreground">PDF, JPG or PNG (max. {maxSizeMB}MB)</p>
-            <input 
-              type="file" 
+            <input
+              type="file"
               ref={fileInputRef}
-              className="absolute inset-0 opacity-0 cursor-pointer" 
+              className="absolute inset-0 opacity-0 cursor-pointer"
               onChange={handleFileChange}
               accept={accept.join(",")}
             />
@@ -144,9 +144,9 @@ export function FileUpload({
               )}
             </div>
             {!uploading && (
-              <Button 
-                variant="ghost" 
-                size="icon" 
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={removeFile}
                 className="rounded-full hover:bg-destructive/10 hover:text-destructive"
               >

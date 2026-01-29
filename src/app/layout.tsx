@@ -1,5 +1,4 @@
 import "./globals.css";
-import { SessionContextProvider } from "@/contexts/supabase-session-context";
 import { ThemeProvider } from "@/components/theme-provider";
 
 export default function RootLayout({
@@ -16,9 +15,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <SessionContextProvider>
-            {children}
-          </SessionContextProvider>
+          {children}
         </ThemeProvider>
       </body>
     </html>

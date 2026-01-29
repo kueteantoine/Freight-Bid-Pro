@@ -37,7 +37,7 @@ export default function ShipperAnalyticsPage() {
                 <div>
                     <h2 className="text-3xl font-bold tracking-tight text-slate-900">Spending Analytics</h2>
                     <p className="text-slate-500 mt-1">
-                        Analyze your freight costs, carrier performance, and route efficiency.
+                        Analyze your freight costs, transporter performance, and route efficiency.
                     </p>
                 </div>
                 <div className="flex gap-3">
@@ -115,7 +115,7 @@ export default function ShipperAnalyticsPage() {
                                 <TrendingDown className="h-5 w-5 text-emerald-500" />
                             </div>
                             <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
-                                Your fuel costs have decreased by <span className="font-bold text-emerald-600">4.2%</span> due to carrier tier optimization.
+                                Your fuel costs have decreased by <span className="font-bold text-emerald-600">4.2%</span> due to transporter tier optimization.
                             </p>
                         </div>
                     </div>

@@ -13,15 +13,14 @@ import {
   ArrowLeft,
   Save,
   Clock,
-  Upload,
   DollarSign,
-  Shield, // Added Shield
+  Shield,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { useSession } from "@/contexts/supabase-session-context";
+import { supabase } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
@@ -32,6 +31,7 @@ import {
   getShipmentTemplates
 } from "@/app/actions/shipment-actions";
 import { bookingSchema, BookingFormValues } from "@/lib/schemas/shipment-schema";
+import { User } from "@supabase/supabase-js";
 
 // Import Step Components
 import { Step1Pickup } from "./booking-steps/Step1Pickup";
@@ -39,7 +39,7 @@ import { Step2Delivery } from "./booking-steps/Step2Delivery";
 import { Step3Freight } from "./booking-steps/Step3Freight";
 import { Step4Vehicle } from "./booking-steps/Step4Vehicle";
 import { Step5AdditionalRequirements } from "./booking-steps/Step5AdditionalRequirements";
-import { Step5Bidding as Step6Bidding } from "./booking-steps/Step5Bidding"; // Aliased to match 7-step flow
+import { Step5Bidding as Step6Bidding } from "./booking-steps/Step5Bidding";
 import { Step7ReviewPost } from "./booking-steps/Step6ReviewPost";
 
 const STEP_COMPONENTS: Record<number, React.FC<{ form: any }>> = {
@@ -56,12 +56,12 @@ const STEP_COMPONENTS: Record<number, React.FC<{ form: any }>> = {
 import { BulkUploadModal } from "./BulkUploadModal";
 
 export function ShipmentBookingForm() {
+  const [user, setUser] = useState<User | null>(null);
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(false);
   const [isDraftLoading, setIsDraftLoading] = useState(true);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [templates, setTemplates] = useState<any[]>([]);
-  const { user } = useSession();
   const router = useRouter();
 
   const form = useForm<BookingFormValues>({
@@ -97,10 +97,16 @@ export function ShipmentBookingForm() {
     },
   });
 
-  // Load draft and templates
+  // Load user, draft and templates
   useEffect(() => {
     async function init() {
-      if (!user) return;
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+
+      if (!user) {
+        setIsDraftLoading(false);
+        return;
+      }
 
       try {
         const [draft, loadedTemplates] = await Promise.all([
@@ -121,7 +127,7 @@ export function ShipmentBookingForm() {
       }
     }
     init();
-  }, [user, form]);
+  }, [form]);
 
   // Auto-save draft every 30 seconds
   useEffect(() => {
@@ -155,10 +161,8 @@ export function ShipmentBookingForm() {
     if (!user) return;
     setIsLoading(true);
     try {
-      // 1. Create Shipment
       await createShipment(values);
 
-      // 2. Save as Template if checked
       if (values.save_as_template && values.template_name) {
         await saveShipmentTemplate({
           template_name: values.template_name,
@@ -307,7 +311,6 @@ export function ShipmentBookingForm() {
         </form>
       </Form>
 
-      {/* Bulk Upload Section */}
       <div className="mt-16 pt-8 border-t flex flex-col items-center space-y-4">
         <p className="text-sm text-muted-foreground">Have many loads to post?</p>
         <BulkUploadModal />
