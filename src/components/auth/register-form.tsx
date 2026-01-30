@@ -41,7 +41,7 @@ const registerSchema = z.object({
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export function RegisterForm() {
-    const [session, setSession] = useState<Session | null>(null);
+    const [user, setUser] = useState<any>(null);
     const router = useRouter();
     const [step, setStep] = useState(1);
     const [isLoading, setIsLoading] = useState(false);
@@ -57,31 +57,18 @@ export function RegisterForm() {
     });
 
     useEffect(() => {
-        // Initial session check
-        supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
-            setSession(initialSession);
-            if (initialSession) {
-                form.setValue("email", initialSession.user.email || "");
-                const phone = initialSession.user.user_metadata?.phone_number;
+        // Check auth once on mount
+        supabase.auth.getUser().then(({ data: { user: currentUser } }) => {
+            setUser(currentUser);
+            if (currentUser) {
+                form.setValue("email", currentUser.user_metadata?.email || currentUser.email || "");
+                const phone = currentUser.user_metadata?.phone_number;
                 if (phone) {
                     form.setValue("phone", phone);
                     setStep(2);
                 }
             }
         });
-
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, currentSession) => {
-            setSession(currentSession);
-            if (currentSession) {
-                form.setValue("email", currentSession.user.email || "");
-                const phone = currentSession.user.user_metadata?.phone_number;
-                if (phone) {
-                    form.setValue("phone", phone);
-                }
-            }
-        });
-
-        return () => subscription.unsubscribe();
     }, [form]);
 
     const nextStep = async () => {
@@ -89,7 +76,7 @@ export function RegisterForm() {
 
         if (step === 1) {
             // If logged in, we only need to validate the phone number
-            if (session) {
+            if (user) {
                 fieldsToValidate = ["phone"];
             } else {
                 // New user signup requires all fields
@@ -102,9 +89,9 @@ export function RegisterForm() {
         const isValid = await form.trigger(fieldsToValidate as any);
 
         // If logged in and Step 1 is valid, update the phone number before moving on.
-        if (isValid && step === 1 && session) {
+        if (isValid && step === 1 && user) {
             const phoneValue = form.getValues("phone");
-            if (phoneValue !== session.user.user_metadata?.phone_number) {
+            if (phoneValue !== user.user_metadata?.phone_number) {
                 setIsLoading(true);
                 try {
                     // Update phone number in auth metadata
@@ -112,7 +99,7 @@ export function RegisterForm() {
                         data: { phone_number: phoneValue }
                     });
                     // Update phone number in profiles table
-                    await supabase.from('profiles').update({ phone_number: phoneValue }).eq('id', session.user.id);
+                    await supabase.from('profiles').update({ phone_number: phoneValue }).eq('id', user.id);
                     toast.success("Phone number updated.");
                 } catch (error: any) {
                     toast.error("Failed to update phone number: " + error.message);
@@ -132,7 +119,7 @@ export function RegisterForm() {
     async function onSubmit(values: RegisterFormValues) {
         setIsLoading(true);
         try {
-            if (!session) {
+            if (!user) {
                 // NEW USER FLOW: Role is handled by the DB trigger via metadata
                 const { error: signUpError } = await supabase.auth.signUp({
                     email: values.email,
@@ -154,7 +141,7 @@ export function RegisterForm() {
                 toast.success("Account created successfully! Please check your email for verification.");
             } else {
                 // LOGGED IN USER FLOW: Adding an additional role
-                const userId = session.user.id;
+                const userId = user.id;
                 console.log("[RegisterForm] Assigning role:", values.role, "to user:", userId);
 
                 if (!userId) {
@@ -176,7 +163,7 @@ export function RegisterForm() {
 
                 if (existingRole) {
                     toast.success("Role already active! Redirecting...");
-                    router.push("/");
+                    window.location.href = "/";
                     return;
                 }
 
@@ -193,7 +180,7 @@ export function RegisterForm() {
                     toast.error(`Role assignment failed: ${roleError.message}`);
                 } else {
                     toast.success("New role assigned successfully!");
-                    router.push("/");
+                    window.location.href = "/";
                 }
             }
         } catch (error) {
@@ -243,7 +230,7 @@ export function RegisterForm() {
                 <form onSubmit={handleFormSubmit} className="space-y-4">
                     {step === 1 && (
                         <>
-                            {!session && (
+                            {!user && (
                                 <>
                                     <FormField
                                         control={form.control}
@@ -346,7 +333,7 @@ export function RegisterForm() {
                                 </Button>
                                 <Button type="submit" className="flex-1" disabled={isLoading}>
                                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                    {session ? "Complete Profile" : "Register"}
+                                    {user ? "Complete Profile" : "Register"}
                                 </Button>
                             </div>
                         </>

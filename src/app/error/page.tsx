@@ -12,13 +12,9 @@ export default function ErrorPage() {
 
     const isRedirectLoop = reason === "redirect_loop";
 
-    const clearAndLogin = () => {
-        // Clear all cookies as a brute force fix for loops
-        document.cookie.split(";").forEach((c) => {
-            document.cookie = c
-                .replace(/^ +/, "")
-                .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
-        });
+    const clearAndLogin = async () => {
+        // Use proper logout API instead of manual cookie clearing
+        await fetch("/api/auth/logout", { method: "POST" });
         window.location.href = "/login";
     };
 

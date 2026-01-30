@@ -3,12 +3,16 @@
 import React, { useState, useMemo } from "react";
 import { useRealtimeBids } from "@/hooks/use-realtime-bids";
 import { Shipment, Bid } from "@/lib/types/database";
-import { Loader2, Package, Search, Filter, ArrowLeft, Zap } from "lucide-react";
+import { Loader2, Package, Search, Filter, ArrowLeft, Zap, BarChart3, MessageSquare, XCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ShipmentBidCard } from "./ShipmentBidCard";
 import { BidList } from "./BidList";
 import { BidComparisonMatrix } from "./BidComparisonMatrix";
+import { BiddingAnalytics } from "./BiddingAnalytics";
+import { CounterOfferDialog } from "./CounterOfferDialog";
+import { BidRejectionDialog } from "./BidRejectionDialog";
+import { AutoAcceptRulesDialog } from "./AutoAcceptRulesDialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
@@ -17,12 +21,16 @@ export function BiddingDashboard() {
   const { activeShipments, isLoading, error } = useRealtimeBids();
   const [selectedShipmentId, setSelectedShipmentId] = useState<string | null>(null);
   const [selectedBid, setSelectedBid] = useState<Bid | null>(null);
+  const [showAnalytics, setShowAnalytics] = useState(false);
+  const [showCounterOffer, setShowCounterOffer] = useState(false);
+  const [showRejection, setShowRejection] = useState(false);
+  const [showAutoAccept, setShowAutoAccept] = useState(false);
 
   const selectedShipment = useMemo(() => {
     const shipment = activeShipments.find(s => s.id === selectedShipmentId);
     if (shipment && !selectedBid && shipment.bids.length > 0) {
-        // Automatically select the lowest bid when a shipment is selected
-        setSelectedBid(shipment.bids[0]);
+      // Automatically select the lowest bid when a shipment is selected
+      setSelectedBid(shipment.bids[0]);
     }
     return shipment;
   }, [activeShipments, selectedShipmentId, selectedBid]);
@@ -53,7 +61,7 @@ export function BiddingDashboard() {
         <h3 className="text-2xl font-bold text-slate-900">No Active Bidding Shipments</h3>
         <p className="text-muted-foreground">Post a new load to start receiving bids in real-time.</p>
         <Button asChild className="mt-4 rounded-xl h-12 px-8">
-            <Link href="/shipper/shipments/new">Create Shipment</Link>
+          <Link href="/shipper/shipments/new">Create Shipment</Link>
         </Button>
       </div>
     );
@@ -88,34 +96,122 @@ export function BiddingDashboard() {
           <div className="flex-1 grid grid-cols-2 overflow-hidden">
             {/* Left Panel: Bid List */}
             <ScrollArea className="p-8 border-r border-slate-100">
-              <BidList 
-                shipment={selectedShipment} 
-                onSelectBid={setSelectedBid} 
+              <BidList
+                shipment={selectedShipment}
+                onSelectBid={setSelectedBid}
               />
             </ScrollArea>
 
-            {/* Right Panel: Comparison / Details */}
-            <ScrollArea className="p-8 bg-slate-50/50">
-              {selectedBid ? (
-                <BidComparisonMatrix selectedBid={selectedBid} shipment={selectedShipment} />
+            {/* Right Column - Bid Details */}
+            <div className="lg:col-span-2 space-y-6">
+              {selectedBid && selectedShipment ? (
+                <>
+                  <BidComparisonMatrix
+                    selectedBid={selectedBid}
+                    shipment={selectedShipment}
+                  />
+
+                  {/* Action Buttons */}
+                  <div className="flex gap-3">
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowCounterOffer(true)}
+                      className="flex-1 rounded-xl gap-2"
+                    >
+                      <MessageSquare className="h-4 w-4" />
+                      Counter Offer
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => setShowRejection(true)}
+                      className="rounded-xl gap-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <XCircle className="h-4 w-4" />
+                      Reject Bid
+                    </Button>
+                  </div>
+
+                  {/* Analytics Panel */}
+                  {showAnalytics && (
+                    <BiddingAnalytics shipmentId={selectedShipment.id} />
+                  )}
+                </>
               ) : (
-                <div className="p-10 text-center bg-white rounded-xl border border-dashed shadow-sm">
-                    <Zap className="h-8 w-8 text-primary mx-auto mb-3" />
-                    <p className="text-sm text-muted-foreground">Select a bid from the left to view details and compare.</p>
+                <div className="flex flex-col items-center justify-center py-20 text-center">
+                  <Package className="h-16 w-16 text-slate-300 mb-4" />
+                  <p className="text-lg font-bold text-slate-900">Select a Bid to View Details</p>
+                  <p className="text-sm text-slate-500 mt-2">
+                    Choose a shipment and bid from the left to see detailed comparison
+                  </p>
                 </div>
               )}
-            </ScrollArea>
+            </div>
           </div>
         ) : (
-          <div className="flex-1 flex items-center justify-center">
-            <div className="text-center space-y-4">
-              <Package className="h-12 w-12 text-muted-foreground/50" />
-              <h3 className="2xl font-bold text-slate-900">Select a Shipment</h3>
-              <p className="text-muted-foreground">Choose an active auction from the left panel to view bids.</p>
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-4">
+              <Link href="/shipper/dashboard">
+                <Button variant="ghost" size="sm" className="gap-2">
+                  <ArrowLeft className="h-4 w-4" />
+                  Back to Dashboard
+                </Button>
+              </Link>
+              <Separator orientation="vertical" className="h-6" />
+              <h1 className="text-3xl font-black text-slate-900">Live Bidding</h1>
+            </div>
+            <div className="flex items-center gap-2">
+              {selectedShipmentId && (
+                <>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowAutoAccept(true)}
+                    className="rounded-xl gap-2"
+                  >
+                    <Zap className="h-4 w-4" />
+                    Auto-Accept Rules
+                  </Button>
+                  <Button
+                    variant={showAnalytics ? "default" : "outline"}
+                    onClick={() => setShowAnalytics(!showAnalytics)}
+                    className="rounded-xl gap-2"
+                  >
+                    <BarChart3 className="h-4 w-4" />
+                    {showAnalytics ? "Hide" : "Show"} Analytics
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         )}
       </main>
+
+      {/* Dialogs */}
+      {selectedBid && (
+        <>
+          <CounterOfferDialog
+            open={showCounterOffer}
+            onOpenChange={setShowCounterOffer}
+            bidId={selectedBid.id}
+            originalAmount={selectedBid.bid_amount}
+            transporterName={`${selectedBid.profiles.first_name} ${selectedBid.profiles.last_name}`}
+          />
+          <BidRejectionDialog
+            open={showRejection}
+            onOpenChange={setShowRejection}
+            bidId={selectedBid.id}
+            transporterName={`${selectedBid.profiles.first_name} ${selectedBid.profiles.last_name}`}
+            bidAmount={selectedBid.bid_amount}
+          />
+        </>
+      )}
+      {selectedShipmentId && (
+        <AutoAcceptRulesDialog
+          open={showAutoAccept}
+          onOpenChange={setShowAutoAccept}
+          shipmentId={selectedShipmentId}
+          activeBidsCount={selectedShipment?.bids.length || 0}
+        />
+      )}
     </div>
   );
 }

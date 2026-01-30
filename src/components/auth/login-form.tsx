@@ -42,22 +42,23 @@ export function LoginForm() {
   async function onSubmit(values: LoginFormValues) {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email: values.email,
         password: values.password,
       });
 
-      console.log('Login result:', data?.session);
-
       if (error) {
         toast.error(error.message);
+        setIsLoading(false);
       } else {
         toast.success("Logged in successfully!");
-        router.push("/");
+        // Force a hard navigation to the root to ensure all server-side
+        // cookies are respected and middleware runs fresh.
+        window.location.href = "/";
       }
     } catch (error) {
+      console.error("Login error:", error);
       toast.error("An unexpected error occurred.");
-    } finally {
       setIsLoading(false);
     }
   }
