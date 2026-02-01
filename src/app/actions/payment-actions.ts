@@ -34,7 +34,7 @@ export async function processPayment(details: PaymentDetails) {
     // 2. Create the transaction record
     const netAmount = details.grossAmount - (details.platformCommission + details.aggregatorFee + details.mobileMoneyFee);
 
-    // Note: Net amount to carrier is bid amount minus platform fees 
+    // Note: Net amount to transporter is bid amount minus platform fees 
     // but the shipper pays totalPayable (bid + all fees).
     // Prompt 17 says: "displays after bid award showing total amount breakdown (base bid amount, insurance costs if applicable, platform commission, aggregator fees, mobile money fees, total payable amount)"
     // And "updates shipment status upon successful payment"
@@ -54,7 +54,7 @@ export async function processPayment(details: PaymentDetails) {
             mobile_money_fee_amount: details.mobileMoneyFee,
             mobile_money_fee_percentage: 1.0,
             total_deductions: details.platformCommission + details.aggregatorFee + details.mobileMoneyFee,
-            net_amount: bid.bid_amount, // The amount the carrier expect is the bid_amount
+            net_amount: bid.bid_amount, // The amount the transporter expect is the bid_amount
             currency: "XAF",
             payment_method: details.paymentMethod,
             payment_status: "completed", // Mocking immediate completion

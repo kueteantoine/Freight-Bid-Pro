@@ -2,7 +2,7 @@
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import { AutoAcceptRules, BidAnalytics, CarrierProfile } from "@/lib/types/database";
+import { AutoAcceptRules, BidAnalytics, TransporterProfile } from "@/lib/types/database";
 
 /**
  * Award a bid to a transporter
@@ -227,9 +227,9 @@ export async function getBidAnalytics(shipmentId: string): Promise<BidAnalytics>
 }
 
 /**
- * Get full carrier profile with ratings and fleet info
+ * Get full transporter profile with ratings and fleet info
  */
-export async function getCarrierProfile(userId: string): Promise<CarrierProfile> {
+export async function getTransporterProfile(userId: string): Promise<TransporterProfile> {
     const supabase = await createSupabaseServerClient();
 
     // Get basic profile
@@ -241,8 +241,8 @@ export async function getCarrierProfile(userId: string): Promise<CarrierProfile>
 
     if (profileError) throw profileError;
 
-    // Get carrier role info
-    const { data: carrierRole } = await supabase
+    // Get transporter role info
+    const { data: transporterRole } = await supabase
         .from("user_roles")
         .select("verification_status, role_specific_profile")
         .eq("user_id", userId)
@@ -265,8 +265,8 @@ export async function getCarrierProfile(userId: string): Promise<CarrierProfile>
         first_name: profile.first_name,
         last_name: profile.last_name,
         avatar_url: profile.avatar_url,
-        company_name: carrierRole?.role_specific_profile?.company_name,
-        verification_status: carrierRole?.verification_status || "pending",
+        company_name: transporterRole?.role_specific_profile?.company_name,
+        verification_status: transporterRole?.verification_status || "pending",
         completed_shipments_count: completedShipmentsCount,
         success_rate: successRate,
         overall_rating: overallRating,
@@ -274,8 +274,8 @@ export async function getCarrierProfile(userId: string): Promise<CarrierProfile>
         rating_communication: ratingCommunication,
         rating_condition: ratingCondition,
         total_reviews: totalReviews,
-        fleet_info: carrierRole?.role_specific_profile?.fleet_info,
-        insurance_info: carrierRole?.role_specific_profile?.insurance_info,
+        fleet_info: transporterRole?.role_specific_profile?.fleet_info,
+        insurance_info: transporterRole?.role_specific_profile?.insurance_info,
     };
 }
 
@@ -341,10 +341,10 @@ export async function evaluateAutoAccept(bidId: string) {
     }
 
     // Check minimum rating (would need to fetch actual rating)
-    const carrierProfile = await getCarrierProfile(bid.transporter_user_id);
+    const transporterProfile = await getTransporterProfile(bid.transporter_user_id);
     if (
         shipment.auto_accept_min_rating &&
-        carrierProfile.overall_rating < shipment.auto_accept_min_rating
+        transporterProfile.overall_rating < shipment.auto_accept_min_rating
     ) {
         return { autoAccepted: false, reason: "Rating below minimum" };
     }

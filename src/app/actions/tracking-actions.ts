@@ -225,15 +225,15 @@ export async function getShipmentDetails(shipmentId: string): Promise<ShipmentWi
     // Fetch tracking events
     const trackingEvents = await getShipmentTracking(shipmentId);
 
-    // Fetch carrier profile if assigned
-    let carrierProfile = null;
-    if (shipment.assigned_carrier_user_id) {
-        const { data: carrier } = await supabase
+    // Fetch transporter profile if assigned
+    let transporterProfile = null;
+    if (shipment.assigned_transporter_user_id) {
+        const { data: transporter } = await supabase
             .from("profiles")
             .select("*")
-            .eq("id", shipment.assigned_carrier_user_id)
+            .eq("id", shipment.assigned_transporter_user_id)
             .single();
-        carrierProfile = carrier;
+        transporterProfile = transporter;
     }
 
     // Fetch driver profile if assigned
@@ -250,7 +250,7 @@ export async function getShipmentDetails(shipmentId: string): Promise<ShipmentWi
     return {
         ...shipment,
         tracking_events: trackingEvents,
-        carrier_profile: carrierProfile,
+        transporter_profile: transporterProfile,
         driver_profile: driverProfile,
     } as ShipmentWithDetails;
 }

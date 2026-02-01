@@ -1,0 +1,5 @@
+--- Investigating Role Type Enum ---
+Test Role [shipper]: FAILED (new row violates row-level security policy for table "user_roles")
+Test Role [transporter]: FAILED (invalid input value for enum role_type_enum: "transporter")
+Test Role [carrier]: FAILED (new row violates row-level security policy for table "user_roles")
+-----------------------------------

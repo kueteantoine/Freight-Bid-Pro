@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Bid, CarrierProfile } from "@/lib/types/database";
+import { Bid, TransporterProfile } from "@/lib/types/database";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +21,7 @@ import {
     Award,
 } from "lucide-react";
 import { format } from "date-fns";
-import { getCarrierProfile } from "@/app/actions/bid-actions";
+import { getTransporterProfile } from "@/app/actions/bid-actions";
 import { Skeleton } from "@/components/ui/skeleton";
 
 interface BidDetailViewProps {
@@ -37,16 +37,16 @@ export function BidDetailView({
     onReject,
     onCounterOffer,
 }: BidDetailViewProps) {
-    const [carrierProfile, setCarrierProfile] = useState<CarrierProfile | null>(null);
+    const [transporterProfile, setTransporterProfile] = useState<TransporterProfile | null>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         async function loadProfile() {
             try {
-                const profile = await getCarrierProfile(bid.transporter_user_id);
-                setCarrierProfile(profile);
+                const profile = await getTransporterProfile(bid.transporter_user_id);
+                setTransporterProfile(profile);
             } catch (error) {
-                console.error("Failed to load carrier profile:", error);
+                console.error("Failed to load transporter profile:", error);
             } finally {
                 setLoading(false);
             }
@@ -58,10 +58,10 @@ export function BidDetailView({
         return <BidDetailSkeleton />;
     }
 
-    if (!carrierProfile) {
+    if (!transporterProfile) {
         return (
             <div className="p-10 text-center">
-                <p className="text-muted-foreground">Failed to load carrier profile</p>
+                <p className="text-muted-foreground">Failed to load transporter profile</p>
             </div>
         );
     }
@@ -71,35 +71,35 @@ export function BidDetailView({
 
     return (
         <div className="space-y-6">
-            {/* Header with Carrier Info */}
+            {/* Header with Transporter Info */}
             <Card className="rounded-3xl border-slate-100 shadow-xl overflow-hidden">
                 <CardHeader className="p-6 border-b bg-gradient-to-br from-primary/5 to-accent/5">
                     <div className="flex items-start justify-between">
                         <div className="flex items-center gap-4">
                             <Avatar className="h-16 w-16 border-4 border-white shadow-lg">
-                                <AvatarImage src={carrierProfile.avatar_url || undefined} />
+                                <AvatarImage src={transporterProfile.avatar_url || undefined} />
                                 <AvatarFallback className="bg-primary/20 text-primary text-xl font-black">
-                                    {carrierProfile.first_name?.[0] || <User className="h-8 w-8" />}
+                                    {transporterProfile.first_name?.[0] || <User className="h-8 w-8" />}
                                 </AvatarFallback>
                             </Avatar>
                             <div>
                                 <CardTitle className="text-2xl font-black text-slate-900">
-                                    {carrierProfile.first_name} {carrierProfile.last_name}
+                                    {transporterProfile.first_name} {transporterProfile.last_name}
                                 </CardTitle>
-                                {carrierProfile.company_name && (
+                                {transporterProfile.company_name && (
                                     <p className="text-sm text-slate-600 font-medium mt-1">
-                                        {carrierProfile.company_name}
+                                        {transporterProfile.company_name}
                                     </p>
                                 )}
                                 <div className="flex items-center gap-2 mt-2">
-                                    <VerificationBadge status={carrierProfile.verification_status} />
+                                    <VerificationBadge status={transporterProfile.verification_status} />
                                     <div className="flex items-center gap-1">
                                         <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
                                         <span className="text-sm font-bold text-slate-900">
-                                            {carrierProfile.overall_rating.toFixed(1)}
+                                            {transporterProfile.overall_rating.toFixed(1)}
                                         </span>
                                         <span className="text-xs text-slate-500">
-                                            ({carrierProfile.total_reviews} reviews)
+                                            ({transporterProfile.total_reviews} reviews)
                                         </span>
                                     </div>
                                 </div>
@@ -110,10 +110,10 @@ export function BidDetailView({
                                 Success Rate
                             </p>
                             <p className="text-3xl font-black text-emerald-600">
-                                {carrierProfile.success_rate.toFixed(1)}%
+                                {transporterProfile.success_rate.toFixed(1)}%
                             </p>
                             <p className="text-xs text-slate-500 mt-1">
-                                {carrierProfile.completed_shipments_count} trips completed
+                                {transporterProfile.completed_shipments_count} trips completed
                             </p>
                         </div>
                     </div>
@@ -219,21 +219,21 @@ export function BidDetailView({
                         <div className="grid grid-cols-3 gap-4">
                             <RatingItem
                                 label="Timeliness"
-                                rating={carrierProfile.rating_timeliness}
+                                rating={transporterProfile.rating_timeliness}
                             />
                             <RatingItem
                                 label="Communication"
-                                rating={carrierProfile.rating_communication}
+                                rating={transporterProfile.rating_communication}
                             />
                             <RatingItem
                                 label="Freight Condition"
-                                rating={carrierProfile.rating_condition}
+                                rating={transporterProfile.rating_condition}
                             />
                         </div>
                     </div>
 
                     {/* Fleet Information */}
-                    {carrierProfile.fleet_info && (
+                    {transporterProfile.fleet_info && (
                         <>
                             <Separator />
                             <div className="space-y-3">
@@ -244,19 +244,19 @@ export function BidDetailView({
                                 <div className="grid grid-cols-2 gap-4">
                                     <InfoItem
                                         label="Total Vehicles"
-                                        value={carrierProfile.fleet_info.total_vehicles.toString()}
+                                        value={transporterProfile.fleet_info.total_vehicles.toString()}
                                     />
                                     <InfoItem
                                         label="Vehicle Types"
-                                        value={carrierProfile.fleet_info.vehicle_types.join(", ")}
+                                        value={transporterProfile.fleet_info.vehicle_types.join(", ")}
                                     />
-                                    {carrierProfile.fleet_info.special_features.length > 0 && (
+                                    {transporterProfile.fleet_info.special_features.length > 0 && (
                                         <div className="col-span-2">
                                             <p className="text-xs font-medium text-slate-500 mb-2">
                                                 Special Features
                                             </p>
                                             <div className="flex flex-wrap gap-2">
-                                                {carrierProfile.fleet_info.special_features.map((feature) => (
+                                                {transporterProfile.fleet_info.special_features.map((feature) => (
                                                     <Badge
                                                         key={feature}
                                                         variant="outline"
@@ -274,7 +274,7 @@ export function BidDetailView({
                     )}
 
                     {/* Insurance Information */}
-                    {carrierProfile.insurance_info && (
+                    {transporterProfile.insurance_info && (
                         <>
                             <Separator />
                             <div className="space-y-3">
@@ -285,20 +285,20 @@ export function BidDetailView({
                                 <div className="grid grid-cols-2 gap-4">
                                     <InfoItem
                                         label="Provider"
-                                        value={carrierProfile.insurance_info.provider}
+                                        value={transporterProfile.insurance_info.provider}
                                     />
                                     <InfoItem
                                         label="Policy Number"
-                                        value={carrierProfile.insurance_info.policy_number}
+                                        value={transporterProfile.insurance_info.policy_number}
                                     />
                                     <InfoItem
                                         label="Coverage Amount"
-                                        value={`XAF ${carrierProfile.insurance_info.coverage_amount.toLocaleString()}`}
+                                        value={`XAF ${transporterProfile.insurance_info.coverage_amount.toLocaleString()}`}
                                     />
                                     <InfoItem
                                         label="Expiry Date"
                                         value={format(
-                                            new Date(carrierProfile.insurance_info.expiry_date),
+                                            new Date(transporterProfile.insurance_info.expiry_date),
                                             "MMM dd, yyyy"
                                         )}
                                     />

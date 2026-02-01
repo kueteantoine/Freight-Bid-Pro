@@ -68,7 +68,7 @@ export interface Shipment {
   auto_accept_min_rating: number | null;
   auto_accept_max_delivery_days: number | null;
   // Tracking fields
-  assigned_carrier_user_id: string | null;
+  assigned_transporter_user_id: string | null;
   assigned_driver_user_id: string | null;
   assigned_vehicle_id: string | null;
   current_latitude: number | null;
@@ -89,7 +89,7 @@ export interface BidBreakdown {
   notes?: string;
 }
 
-export interface CarrierProfile {
+export interface TransporterProfile {
   id: string;
   first_name: string | null;
   last_name: string | null;
@@ -169,6 +169,6 @@ export interface ShipmentTrackingWithUser extends ShipmentTracking {
 
 export interface ShipmentWithDetails extends Shipment {
   tracking_events: ShipmentTrackingWithUser[];
-  carrier_profile: CarrierProfile | null;
+  transporter_profile: TransporterProfile | null;
   driver_profile: Profile | null;
 }

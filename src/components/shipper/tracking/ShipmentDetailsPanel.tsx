@@ -110,42 +110,42 @@ export function ShipmentDetailsPanel({ shipment }: ShipmentDetailsPanelProps) {
                 </CardContent>
             </Card>
 
-            {/* Carrier Information */}
-            {shipment.carrier_profile && (
+            {/* Transporter Information */}
+            {shipment.transporter_profile && (
                 <Card>
                     <CardHeader>
-                        <CardTitle className="text-lg">Carrier Details</CardTitle>
+                        <CardTitle className="text-lg">Transporter Details</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
                         <div className="flex items-center gap-3">
                             <Avatar>
-                                <AvatarImage src={shipment.carrier_profile.avatar_url || undefined} />
+                                <AvatarImage src={shipment.transporter_profile.avatar_url || undefined} />
                                 <AvatarFallback>
-                                    {shipment.carrier_profile.first_name?.[0]}
-                                    {shipment.carrier_profile.last_name?.[0]}
+                                    {shipment.transporter_profile.first_name?.[0]}
+                                    {shipment.transporter_profile.last_name?.[0]}
                                 </AvatarFallback>
                             </Avatar>
                             <div className="flex-1">
                                 <p className="font-medium">
-                                    {shipment.carrier_profile.first_name} {shipment.carrier_profile.last_name}
+                                    {shipment.transporter_profile.first_name} {shipment.transporter_profile.last_name}
                                 </p>
-                                {shipment.carrier_profile.company_name && (
+                                {shipment.transporter_profile.company_name && (
                                     <p className="text-sm text-muted-foreground">
-                                        {shipment.carrier_profile.company_name}
+                                        {shipment.transporter_profile.company_name}
                                     </p>
                                 )}
                             </div>
-                            <Badge variant={shipment.carrier_profile.verification_status === "verified" ? "default" : "secondary"}>
-                                {shipment.carrier_profile.verification_status}
+                            <Badge variant={shipment.transporter_profile.verification_status === "verified" ? "default" : "secondary"}>
+                                {shipment.transporter_profile.verification_status}
                             </Badge>
                         </div>
 
-                        {shipment.carrier_profile.overall_rating > 0 && (
+                        {shipment.transporter_profile.overall_rating > 0 && (
                             <div className="flex items-center gap-2">
                                 <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                                <span className="font-medium">{shipment.carrier_profile.overall_rating.toFixed(1)}</span>
+                                <span className="font-medium">{shipment.transporter_profile.overall_rating.toFixed(1)}</span>
                                 <span className="text-sm text-muted-foreground">
-                                    ({shipment.carrier_profile.total_reviews} reviews)
+                                    ({shipment.transporter_profile.total_reviews} reviews)
                                 </span>
                             </div>
                         )}
