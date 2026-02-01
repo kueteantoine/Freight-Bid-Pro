@@ -1,6 +1,7 @@
 export type ShipmentStatus = "draft" | "open_for_bidding" | "bid_awarded" | "in_transit" | "delivered" | "cancelled";
 export type BidStatus = "active" | "withdrawn" | "outbid" | "awarded" | "rejected" | "expired";
 export type AuctionType = "standard" | "sealed" | "dutch" | "buy_it_now";
+export type TrackingEvent = "shipment_created" | "bid_awarded" | "driver_assigned" | "pickup_started" | "loaded" | "in_transit" | "delivered" | "cancelled";
 
 export interface Profile {
   id: string;
@@ -34,18 +35,46 @@ export interface Shipment {
   id: string;
   shipment_number: string;
   pickup_location: string;
+  pickup_latitude: number | null;
+  pickup_longitude: number | null;
   delivery_location: string;
+  delivery_latitude: number | null;
+  delivery_longitude: number | null;
   scheduled_pickup_date: string;
+  scheduled_delivery_date: string | null;
+  freight_type: string;
+  weight_kg: number;
+  dimensions_json: {
+    length: number;
+    width: number;
+    height: number;
+  };
+  quantity: number;
+  special_handling_requirements: string | null;
+  preferred_vehicle_type: string | null;
+  insurance_required: boolean;
+  insurance_value: number;
+  loading_requirements: string | null;
+  unloading_requirements: string | null;
   status: ShipmentStatus;
   auction_type: AuctionType;
   bidding_duration_minutes: number | null;
   created_at: string;
+  updated_at: string;
   bids: Bid[]; // Array of associated bids
   bid_expires_at: string | null;
   auto_accept_enabled: boolean;
   auto_accept_price_threshold: number | null;
   auto_accept_min_rating: number | null;
   auto_accept_max_delivery_days: number | null;
+  // Tracking fields
+  assigned_carrier_user_id: string | null;
+  assigned_driver_user_id: string | null;
+  assigned_vehicle_id: string | null;
+  current_latitude: number | null;
+  current_longitude: number | null;
+  estimated_arrival: string | null;
+  shipper_user_id: string;
 }
 
 export interface BidBreakdown {
@@ -118,4 +147,28 @@ export interface BidHistory {
   new_amount: number | null;
   action_by_user_id: string | null;
   notes: string | null;
+}
+
+export interface ShipmentTracking {
+  id: string;
+  shipment_id: string;
+  latitude: number | null;
+  longitude: number | null;
+  location_name: string | null;
+  tracking_event: TrackingEvent;
+  event_timestamp: string;
+  recorded_by_user_id: string | null;
+  notes: string | null;
+  images_json: string[];
+  created_at: string;
+}
+
+export interface ShipmentTrackingWithUser extends ShipmentTracking {
+  profiles: Profile | null;
+}
+
+export interface ShipmentWithDetails extends Shipment {
+  tracking_events: ShipmentTrackingWithUser[];
+  carrier_profile: CarrierProfile | null;
+  driver_profile: Profile | null;
 }

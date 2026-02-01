@@ -14,3 +14,7 @@ export const supabase = createBrowserClient(
         }
     }
 )
+
+// Export function for consistency with server client naming
+export const createSupabaseBrowserClient = () => supabase;
+
