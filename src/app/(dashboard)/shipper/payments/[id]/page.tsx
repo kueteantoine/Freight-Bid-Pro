@@ -1,3 +1,4 @@
+import React from "react";
 import { getInvoiceDetail } from "@/app/actions/payment-actions";
 import { InvoiceDetail } from "@/components/shipper/payments/InvoiceDetail";
 import { notFound } from "next/navigation";
@@ -6,7 +7,7 @@ interface PageProps {
     params: { id: string };
 }
 
-export default async function TransporterInvoicePage({ params }: PageProps) {
+export default async function ShipperInvoicePage({ params }: PageProps) {
     try {
         const invoice = await getInvoiceDetail(params.id);
 
@@ -18,7 +19,7 @@ export default async function TransporterInvoicePage({ params }: PageProps) {
             <div className="container mx-auto py-8">
                 <InvoiceDetail
                     invoice={invoice}
-                    backUrl="/transporter/payments"
+                    backUrl="/shipper/payments"
                 />
             </div>
         );

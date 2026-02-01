@@ -21,7 +21,7 @@ const roleNavLinks: Record<string, any[]> = {
         },
         {
             group: "FINANCIALS", items: [
-                { href: "/shipper/billing", icon: Wallet, label: "Payments" },
+                { href: "/shipper/payments", icon: Wallet, label: "Payments" },
             ]
         },
         {

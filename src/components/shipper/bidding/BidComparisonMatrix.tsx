@@ -13,15 +13,13 @@ import { awardBid } from "@/app/actions/bid-actions";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { PaymentInitiation } from "../payments/PaymentInitiation";
+import { processPayment } from "@/app/actions/payment-actions";
 
 interface BidComparisonMatrixProps {
   selectedBid: Bid;
@@ -35,17 +33,33 @@ export function BidComparisonMatrix({ selectedBid, shipment }: BidComparisonMatr
   const [isAwarding, setIsAwarding] = useState(false);
   const router = useRouter();
 
-  const handleAwardBid = async () => {
+  const handlePaymentComplete = async (method: string) => {
     setIsAwarding(true);
     try {
-      await awardBid(selectedBid.id);
-      toast.success("Bid Awarded Successfully!", {
-        description: `${transporter.first_name} ${transporter.last_name} has been awarded the shipment.`,
+      // Cameroonian fees (as per Prompt 17/implementation plan)
+      const platformCommission = selectedBid.bid_amount * 0.05;
+      const aggregatorFee = selectedBid.bid_amount * 0.01;
+      const mobileMoneyFee = selectedBid.bid_amount * 0.01;
+      const totalPayable = selectedBid.bid_amount + platformCommission + aggregatorFee + mobileMoneyFee;
+
+      await processPayment({
+        bidId: selectedBid.id,
+        paymentMethod: method,
+        grossAmount: selectedBid.bid_amount,
+        platformCommission,
+        aggregatorFee,
+        mobileMoneyFee,
+        totalPayable
+      });
+
+      toast.success("Payment Successful & Bid Awarded!", {
+        description: `${transporter.first_name} ${transporter.last_name} has been notified and the shipment is now active.`,
       });
       setShowConfirmDialog(false);
       router.refresh();
+      router.push("/shipper/shipments"); // Redirect to tracking or shipment list
     } catch (error) {
-      toast.error("Failed to Award Bid", {
+      toast.error("Payment Processing Failed", {
         description: error instanceof Error ? error.message : "Please try again.",
       });
     } finally {
@@ -164,69 +178,16 @@ export function BidComparisonMatrix({ selectedBid, shipment }: BidComparisonMatr
         </CardContent>
       </Card>
 
-      {/* Award Confirmation Dialog */}
-      <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-        <AlertDialogContent className="rounded-3xl">
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-2xl font-black">
-              Award Bid to {transporter.first_name} {transporter.last_name}?
-            </AlertDialogTitle>
-            <AlertDialogDescription className="space-y-4 pt-4">
-              <div className="p-4 bg-slate-50 rounded-xl space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-slate-600">Final Price:</span>
-                  <span className="text-xl font-black text-primary">
-                    XAF {selectedBid.bid_amount.toLocaleString()}
-                  </span>
-                </div>
-                <Separator />
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-slate-600">Estimated Delivery:</span>
-                  <span className="text-sm font-bold text-slate-900">
-                    {selectedBid.estimated_delivery_date
-                      ? format(new Date(selectedBid.estimated_delivery_date), "MMM dd, yyyy")
-                      : "Not specified"}
-                  </span>
-                </div>
-                <Separator />
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-slate-600">Transporter Rating:</span>
-                  <div className="flex items-center gap-1">
-                    <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-                    <span className="text-sm font-bold text-slate-900">4.8</span>
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-start gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <AlertCircle className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-blue-900">
-                  Awarding this bid will mark all other bids as outbid and update the shipment status.
-                  This action cannot be undone.
-                </p>
-              </div>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="rounded-xl" disabled={isAwarding}>
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleAwardBid}
-              disabled={isAwarding}
-              className="rounded-xl bg-emerald-600 hover:bg-emerald-700"
-            >
-              {isAwarding ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Awarding...
-                </>
-              ) : (
-                "Confirm Award"
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Payment Initiation Dialog */}
+      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <DialogContent className="max-w-3xl p-0 border-none bg-transparent shadow-none">
+          <PaymentInitiation
+            bidAmount={selectedBid.bid_amount}
+            onPaymentComplete={handlePaymentComplete}
+            onCancel={() => setShowConfirmDialog(false)}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
