@@ -2,6 +2,8 @@ export type ShipmentStatus = "draft" | "open_for_bidding" | "bid_awarded" | "in_
 export type BidStatus = "active" | "withdrawn" | "outbid" | "awarded" | "rejected" | "expired";
 export type AuctionType = "standard" | "sealed" | "dutch" | "buy_it_now";
 export type TrackingEvent = "shipment_created" | "bid_awarded" | "driver_assigned" | "pickup_started" | "loaded" | "in_transit" | "delivered" | "cancelled";
+export type VehicleStatus = "active" | "maintenance" | "inactive";
+export type VehicleDocumentType = "registration" | "insurance" | "permit" | "inspection" | "other";
 
 export interface Profile {
   id: string;
@@ -161,6 +163,39 @@ export interface ShipmentTracking {
   notes: string | null;
   images_json: string[];
   created_at: string;
+}
+
+export interface Vehicle {
+  id: string;
+  transporter_user_id: string;
+  vehicle_type: string;
+  make: string;
+  model: string;
+  year: number;
+  registration_number: string;
+  license_plate: string;
+  capacity_kg: number;
+  capacity_cubic_meters: number | null;
+  insurance_policy_number: string | null;
+  insurance_expiry_date: string | null;
+  gps_device_id: string | null;
+  last_maintenance_date: string | null;
+  next_maintenance_due_date: string | null;
+  status: VehicleStatus;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface VehicleDocument {
+  id: string;
+  vehicle_id: string;
+  document_type: VehicleDocumentType;
+  document_number: string | null;
+  document_url: string;
+  issue_date: string | null;
+  expiry_date: string | null;
+  verification_status: 'pending' | 'verified' | 'rejected';
+  uploaded_at: string;
 }
 
 export interface ShipmentTrackingWithUser extends ShipmentTracking {
