@@ -28,7 +28,7 @@ const roleNavLinks: Record<string, any[]> = {
         {
             group: "SUPPORT", items: [
                 { href: "/settings", icon: Settings, label: "Settings" },
-                { href: "/help", icon: HelpCircle, label: "Help Center" },
+                { href: "/shipper/support", icon: HelpCircle, label: "Support Center" },
             ]
         }
     ],

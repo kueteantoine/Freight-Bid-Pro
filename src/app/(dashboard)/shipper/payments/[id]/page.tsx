@@ -4,12 +4,13 @@ import { InvoiceDetail } from "@/components/shipper/payments/InvoiceDetail";
 import { notFound } from "next/navigation";
 
 interface PageProps {
-    params: { id: string };
+    params: Promise<{ id: string }>;
 }
 
 export default async function ShipperInvoicePage({ params }: PageProps) {
+    const { id } = await params;
     try {
-        const invoice = await getInvoiceDetail(params.id);
+        const invoice = await getInvoiceDetail(id);
 
         if (!invoice) {
             return notFound();
