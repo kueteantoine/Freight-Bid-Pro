@@ -172,3 +172,45 @@ export interface ShipmentWithDetails extends Shipment {
   transporter_profile: TransporterProfile | null;
   driver_profile: Profile | null;
 }
+
+export type MessageType = "text" | "image" | "document";
+export type ConversationType = "shipment_chat" | "bid_negotiation" | "support_ticket";
+export type NotificationType =
+  | "bid_received"
+  | "bid_outbid"
+  | "bid_awarded"
+  | "payment_received"
+  | "shipment_update"
+  | "message_received"
+  | "document_expiring";
+
+export interface Message {
+  id: string;
+  conversation_type: ConversationType;
+  related_shipment_id: string | null;
+  related_bid_id: string | null;
+  sender_user_id: string;
+  receiver_user_id: string | null;
+  message_content: string;
+  message_type: MessageType;
+  attachment_url: string | null;
+  is_read: boolean;
+  sent_at: string;
+  sender_profile?: Profile;
+}
+
+export interface Notification {
+  id: string;
+  user_id: string;
+  for_role_type: string | null;
+  notification_type: NotificationType;
+  title: string;
+  message: string;
+  related_entity_type: string | null;
+  related_entity_id: string | null;
+  is_read: boolean;
+  sent_via_email: boolean;
+  sent_via_sms: boolean;
+  sent_via_push: boolean;
+  created_at: string;
+}

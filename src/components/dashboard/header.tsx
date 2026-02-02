@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Menu, Search, Bell } from "lucide-react";
+import { Menu, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { LogOut, Settings as SettingsIcon } from "lucide-react";
+import { NotificationCenter } from "@/components/dashboard/NotificationCenter";
 
 export function Header({ user, activeRole, userRoles }: { user: User, activeRole: string | null, userRoles: string[] }) {
     const pathname = usePathname();
@@ -56,10 +57,7 @@ export function Header({ user, activeRole, userRoles }: { user: User, activeRole
                 <div className="hidden sm:block">
                     <RoleSwitcher currentRole={activeRole as any} availableRoles={userRoles as any} />
                 </div>
-                <Button variant="ghost" size="icon" className="relative h-11 w-11 rounded-xl bg-slate-50 border border-slate-200 hover:bg-slate-100 transition-all">
-                    <Bell className="h-5 w-5 text-slate-600" />
-                    <span className="absolute top-2 right-2 h-2.5 w-2.5 bg-red-500 border-2 border-white rounded-full shadow-sm"></span>
-                </Button>
+                <NotificationCenter userId={user.id} />
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                         <Avatar className="h-11 w-11 rounded-xl ring-2 ring-primary/5 cursor-pointer hover:ring-primary/20 transition-all">

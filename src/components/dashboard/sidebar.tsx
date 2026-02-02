@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { LayoutDashboard, DollarSign, Package, TrendingUp, Globe, Wallet, Settings, HelpCircle, Truck, LogOut } from "lucide-react";
+import { LayoutDashboard, DollarSign, Package, TrendingUp, Globe, Wallet, Settings, HelpCircle, Truck, LogOut, MessageSquare } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -17,6 +17,7 @@ const roleNavLinks: Record<string, any[]> = {
                 { href: "/shipper/shipments", icon: Package, label: "My Shipments" },
                 { href: "/shipper/analytics", icon: TrendingUp, label: "Spending Analytics" },
                 { href: "/shipper/tracking", icon: Globe, label: "Live Tracking" },
+                { href: "/shipper/messages", icon: MessageSquare, label: "Messages" },
             ]
         },
         {
