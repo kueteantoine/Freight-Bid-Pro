@@ -249,3 +249,52 @@ export interface Notification {
   sent_via_push: boolean;
   created_at: string;
 }
+
+export interface DriverInvitation {
+  id: string;
+  transporter_user_id: string;
+  email: string | null;
+  phone_number: string | null;
+  status: 'pending' | 'accepted' | 'rejected' | 'expired';
+  created_at: string;
+  updated_at: string;
+  expires_at: string;
+}
+
+export interface DriverAssignment {
+  id: string;
+  driver_user_id: string;
+  vehicle_id: string;
+  transporter_user_id: string;
+  assignment_start_date: string;
+  assignment_end_date: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DriverAvailability {
+  id: string;
+  driver_user_id: string;
+  day_of_week: number | null;
+  start_time: string;
+  end_time: string;
+  is_recurring: boolean;
+  specific_date: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DriverPayment {
+  id: string;
+  driver_user_id: string;
+  transporter_user_id: string;
+  shipment_id: string | null;
+  amount: number;
+  currency: string;
+  payment_status: 'pending' | 'processing' | 'completed' | 'failed';
+  payment_date: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
