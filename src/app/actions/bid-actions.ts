@@ -2,7 +2,7 @@
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import { AutoAcceptRules, BidAnalytics, TransporterProfile } from "@/lib/types/database";
+import { AutoAcceptRules, BidAnalytics, TransporterProfile, BidBreakdown } from "@/lib/types/database";
 
 /**
  * Award a bid to a transporter
@@ -369,4 +369,74 @@ export async function evaluateAutoAccept(bidId: string) {
     await awardBid(bidId);
 
     return { autoAccepted: true };
+}
+
+/**
+ * Submit a bid for a shipment
+ */
+export async function submitBid(
+    shipmentId: string,
+    amount: number,
+    breakdown: BidBreakdown,
+    autoBid: { enabled: boolean; limit: number | null }
+) {
+    const supabase = await createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) throw new Error("Unauthorized");
+
+    // Insert the bid
+    const { data: bid, error: insertError } = await supabase
+        .from("bids")
+        .insert({
+            shipment_id: shipmentId,
+            transporter_user_id: user.id,
+            bid_amount: amount,
+            bid_breakdown_json: breakdown,
+            auto_bid_enabled: autoBid.enabled,
+            max_auto_bid_amount: autoBid.limit,
+            bid_status: "active",
+        })
+        .select()
+        .single();
+
+    if (insertError) throw insertError;
+
+    // Evaluate auto-accept if the bid is submitted successfully
+    await evaluateAutoAccept(bid.id);
+
+    revalidatePath("/transporter/loads");
+    revalidatePath("/shipper/bidding");
+
+    return { success: true, bid };
+}
+
+/**
+ * Get active bids for the current transporter
+ */
+export async function getCarrierActiveBids() {
+    const supabase = await createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) throw new Error("Unauthorized");
+
+    const { data: bids, error } = await supabase
+        .from("bids")
+        .select(`
+            *,
+            shipments!inner(
+                shipment_number,
+                pickup_location,
+                delivery_location,
+                status,
+                bid_expires_at
+            )
+        `)
+        .eq("transporter_user_id", user.id)
+        .in("bid_status", ["active", "outbid"])
+        .order("created_at", { ascending: false });
+
+    if (error) throw error;
+
+    return bids;
 }
