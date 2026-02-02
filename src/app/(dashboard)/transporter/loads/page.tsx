@@ -31,8 +31,130 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/lib/supabase/client";
+import { Shipment, SavedSearch, AvailableTruck } from "@/lib/types/database";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+
+
 
 export default function CarrierLoadsPage() {
+  const [loads, setLoads] = React.useState<Shipment[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [searchParams, setSearchParams] = React.useState({
+    origin: "",
+    destination: "",
+    vehicleType: "all",
+    weightRange: "all",
+  });
+  const [isPostTruckOpen, setIsPostTruckOpen] = React.useState(false);
+  const [newTruck, setNewTruck] = React.useState({
+    origin_location: "",
+    destination_location: "",
+    available_from: "",
+    vehicle_type: "flatbed",
+    capacity_kg: 0,
+  });
+
+  const fetchLoads = async () => {
+    setLoading(true);
+    try {
+      let query = supabase
+        .from("shipments")
+        .select("*, bids(*)")
+        .eq("status", "open_for_bidding");
+
+      if (searchParams.origin) {
+        query = query.ilike("pickup_location", `%${searchParams.origin}%`);
+      }
+      if (searchParams.destination) {
+        query = query.ilike("delivery_location", `%${searchParams.destination}%`);
+      }
+      if (searchParams.vehicleType !== "all") {
+        query = query.eq("preferred_vehicle_type", searchParams.vehicleType);
+      }
+
+      const { data, error } = await query.order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setLoads(data || []);
+    } catch (error: any) {
+      toast.error("Failed to fetch loads: " + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  React.useEffect(() => {
+    fetchLoads();
+
+    // Subscribe to new shipments
+    const channel = supabase
+      .channel("open-shipments")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "shipments", filter: "status=eq.open_for_bidding" },
+        () => {
+          fetchLoads();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [searchParams]);
+
+  const handlePostTruck = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        toast.error("You must be logged in to post capacity.");
+        return;
+      }
+
+      const { error } = await supabase.from("available_trucks").insert({
+        ...newTruck,
+        transporter_user_id: user.id,
+        status: "active",
+      });
+
+      if (error) throw error;
+
+      toast.success("Truck capacity posted successfully!");
+      setIsPostTruckOpen(false);
+    } catch (error: any) {
+      toast.error("Failed to post truck: " + error.message);
+    }
+  };
+
+  const handleSaveSearch = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase.from("saved_searches").insert({
+        user_id: user.id,
+        search_name: `${searchParams.origin || 'Any'} to ${searchParams.destination || 'Any'}`,
+        filters: searchParams,
+      });
+
+      if (error) throw error;
+      toast.success("Search saved!");
+    } catch (error: any) {
+      toast.error("Failed to save search: " + error.message);
+    }
+  };
+
   return (
     <div className="flex flex-col h-[calc(100vh-140px)] overflow-hidden -m-6 md:-m-10">
       <div className="flex flex-1 min-h-0">
@@ -40,20 +162,35 @@ export default function CarrierLoadsPage() {
         {/* Left Sidebar: Filters */}
         <aside className="w-80 bg-white border-r border-slate-100 flex flex-col p-6 space-y-8 overflow-y-auto">
           <div className="space-y-4">
-            <h3 className="text-sm font-bold uppercase tracking-widest text-slate-400">Search Filters</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold uppercase tracking-widest text-slate-400">Search Filters</h3>
+              <Button variant="ghost" size="sm" className="text-[10px] h-6 px-2 hover:bg-slate-50 font-bold text-primary" onClick={handleSaveSearch}>
+                Save Search
+              </Button>
+            </div>
             <div className="space-y-4">
               <div className="space-y-2">
                 <label className="text-xs font-bold text-slate-600">Origin</label>
                 <div className="relative group">
                   <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary" />
-                  <Input placeholder="Origin city or port" className="pl-9 bg-slate-50 border-slate-100 rounded-xl focus:bg-white h-11" />
+                  <Input
+                    placeholder="Origin city or port"
+                    className="pl-9 bg-slate-50 border-slate-100 rounded-xl focus:bg-white h-11"
+                    value={searchParams.origin}
+                    onChange={(e) => setSearchParams({ ...searchParams, origin: e.target.value })}
+                  />
                 </div>
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-bold text-slate-600">Destination</label>
                 <div className="relative group">
                   <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary" />
-                  <Input placeholder="Destination" className="pl-9 bg-slate-50 border-slate-100 rounded-xl focus:bg-white h-11" />
+                  <Input
+                    placeholder="Destination"
+                    className="pl-9 bg-slate-50 border-slate-100 rounded-xl focus:bg-white h-11"
+                    value={searchParams.destination}
+                    onChange={(e) => setSearchParams({ ...searchParams, destination: e.target.value })}
+                  />
                 </div>
               </div>
             </div>
@@ -62,11 +199,15 @@ export default function CarrierLoadsPage() {
           <div className="space-y-4">
             <h3 className="text-sm font-bold uppercase tracking-widest text-slate-400">Shipment Details</h3>
             <div className="space-y-4">
-              <Select defaultValue="flatbed">
+              <Select
+                value={searchParams.vehicleType}
+                onValueChange={(val) => setSearchParams({ ...searchParams, vehicleType: val })}
+              >
                 <SelectTrigger className="h-11 rounded-xl bg-slate-50 border-slate-100 font-medium">
                   <SelectValue placeholder="Vehicle Type" />
                 </SelectTrigger>
                 <SelectContent className="rounded-xl">
+                  <SelectItem value="all">All Vehicles</SelectItem>
                   <SelectItem value="flatbed">Flatbed / Reefer</SelectItem>
                   <SelectItem value="box">Box Truck</SelectItem>
                   <SelectItem value="container">Container Carrier</SelectItem>
@@ -91,28 +232,94 @@ export default function CarrierLoadsPage() {
           </div>
 
           <div className="pt-4 mt-auto">
-            <Button className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 font-bold transition-all">
-              Post Empty Truck
-            </Button>
+            <Dialog open={isPostTruckOpen} onOpenChange={setIsPostTruckOpen}>
+              <DialogTrigger asChild>
+                <Button className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 font-bold transition-all">
+                  Post Empty Truck
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px] rounded-3xl">
+                <DialogHeader>
+                  <DialogTitle className="text-2xl font-black">Post Available Capacity</DialogTitle>
+                  <DialogDescription>
+                    Advertise your empty truck to receive matching load recommendations.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="origin" className="font-bold">Origin</Label>
+                    <Input
+                      id="origin"
+                      placeholder="e.g. Douala"
+                      className="rounded-xl h-11 bg-slate-50 border-slate-100"
+                      value={newTruck.origin_location}
+                      onChange={(e) => setNewTruck({ ...newTruck, origin_location: e.target.value })}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="destination" className="font-bold">Destination (Optional)</Label>
+                    <Input
+                      id="destination"
+                      placeholder="e.g. Yaoundé"
+                      className="rounded-xl h-11 bg-slate-50 border-slate-100"
+                      value={newTruck.destination_location}
+                      onChange={(e) => setNewTruck({ ...newTruck, destination_location: e.target.value })}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="date" className="font-bold">Available From</Label>
+                      <Input
+                        id="date"
+                        type="date"
+                        className="rounded-xl h-11 bg-slate-50 border-slate-100"
+                        value={newTruck.available_from}
+                        onChange={(e) => setNewTruck({ ...newTruck, available_from: e.target.value })}
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="type" className="font-bold">Vehicle Type</Label>
+                      <Select
+                        value={newTruck.vehicle_type}
+                        onValueChange={(val) => setNewTruck({ ...newTruck, vehicle_type: val })}
+                      >
+                        <SelectTrigger className="h-11 rounded-xl bg-slate-50 border-slate-100">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="flatbed">Flatbed</SelectItem>
+                          <SelectItem value="reefer">Reefer</SelectItem>
+                          <SelectItem value="box">Box Truck</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button className="w-full h-12 rounded-xl bg-primary font-bold shadow-lg shadow-primary/20" onClick={handlePostTruck}>
+                    Post Availability
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         </aside>
 
         {/* Middle Section: Map */}
         <div className="flex-1 relative bg-slate-100">
-          <div className="absolute inset-0 bg-[url('https://maps.googleapis.com/maps/api/staticmap?center=6.5,12&zoom=6&size=1000x800&key=...')] bg-cover bg-center">
+          <div className="absolute inset-0 bg-[url('/map-placeholder.png')] bg-cover bg-center">
             {/* Map UI Elements */}
             <div className="absolute top-6 left-6 flex gap-4">
               <Badge className="bg-white/90 backdrop-blur shadow-lg border-none text-slate-900 px-4 py-2 rounded-xl flex items-center gap-2">
                 <Zap className="h-3 w-3 text-amber-500 fill-amber-500" />
                 <span className="text-[10px] font-black uppercase">Live Marketplace</span>
-                <span className="font-black text-primary">1,284</span>
+                <span className="font-black text-primary">{loads.length}</span>
                 <span className="text-[10px] text-emerald-500">+12% today</span>
               </Badge>
             </div>
 
             {/* Map Markers */}
-            <MapMarker x="40%" y="60%" label="12 Loads" />
-            <MapMarker x="65%" y="45%" label="4 Loads" xOffset />
+            <MapMarker x="40%" y="60%" label={`${loads.length} Loads`} />
             <MapMarker x="25%" y="75%" label="Douala" dot />
 
             {/* Zoom Controls */}
@@ -146,51 +353,41 @@ export default function CarrierLoadsPage() {
           </header>
 
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
-            <LoadCard
-              type="INTERNATIONAL"
-              refId="#LK-9021"
-              origin="Douala Port, Cameroon"
-              dest="N'Djamena, Chad"
-              freight="General Cargo"
-              weight="24.5 Tons"
-              equip="Flatbed"
-              price="1,450,000"
-              currentBid="1,320,000"
-              pickup="Tomorrow, 08:00"
-              distance="1,240 km"
-            />
-            <LoadCard
-              type="LOCAL CAMEROON"
-              typeColor="text-orange-600 bg-orange-50"
-              refId="#LK-4410"
-              origin="Yaoundé (Industrial Zone)"
-              dest="Bafoussam, Cameroon"
-              freight="Perishables"
-              weight="12.0 Tons"
-              equip="Refrigerated"
-              price="480,000"
-              currentBid="400,000"
-              pickup="Today, ASAP"
-              distance="290 km"
-              urgent
-            />
-            <LoadCard
-              type="INTERNATIONAL"
-              refId="#LK-5582"
-              origin="Kribi Deep Sea Port, CM"
-              dest="Bangui, CAR"
-              freight="Heavy Machinery"
-              weight="45.0 Tons"
-              equip="Lowboy"
-              price="2,800,000"
-              currentBid="2,450,000"
-              pickup="In 2 Days"
-              distance="1,180 km"
-            />
+            {loading ? (
+              <div className="p-10 text-center space-y-4">
+                <div className="h-8 w-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
+                <p className="text-sm font-bold text-slate-400">Loading live marketplace...</p>
+              </div>
+            ) : loads.length === 0 ? (
+              <div className="p-10 text-center space-y-4">
+                <AlertCircle className="h-12 w-12 text-slate-200 mx-auto" />
+                <p className="text-sm font-bold text-slate-400">No matching loads found.</p>
+                <Button variant="outline" size="sm" className="rounded-xl" onClick={() => setSearchParams({ origin: "", destination: "", vehicleType: "all", weightRange: "all" })}>
+                  Clear Filters
+                </Button>
+              </div>
+            ) : (
+              loads.map((load) => (
+                <LoadCard
+                  key={load.id}
+                  load={load}
+                  type={load.delivery_location.toLowerCase().includes('chad') || load.delivery_location.toLowerCase().includes('car') ? "INTERNATIONAL" : "LOCAL CAMEROON"}
+                  refId={load.shipment_number}
+                  origin={load.pickup_location}
+                  dest={load.delivery_location}
+                  freight={load.freight_type}
+                  weight={`${load.weight_kg} kg`}
+                  equip={load.preferred_vehicle_type}
+                  price={load.bids?.[0]?.bid_amount || 0} // Using first bid as current bid for demo
+                  pickup={new Date(load.scheduled_pickup_date).toLocaleDateString()}
+                  distance="Calculating..."
+                />
+              ))
+            )}
           </div>
 
           <footer className="p-4 border-t border-slate-50 flex items-center justify-between text-xs text-slate-400 font-medium">
-            <p>Showing 3 of 1,284 available loads</p>
+            <p>Showing {loads.length} available loads</p>
             <div className="flex gap-2">
               <Button size="sm" variant="outline" className="h-8 rounded-lg border-slate-100">Previous</Button>
               <Button size="sm" className="h-8 rounded-lg bg-primary">Next Page</Button>
@@ -226,7 +423,7 @@ function MapMarker({ x, y, label, dot, xOffset }: any) {
   );
 }
 
-function LoadCard({ type, typeColor, refId, origin, dest, freight, weight, equip, price, currentBid, pickup, distance, urgent }: any) {
+function LoadCard({ load, type, typeColor, refId, origin, dest, freight, weight, equip, price, currentBid, pickup, distance, urgent }: any) {
   return (
     <Card className="rounded-3xl border-slate-100 shadow-sm hover:shadow-lg hover:border-primary/20 transition-all group overflow-hidden">
       <CardContent className="p-6 space-y-6">
@@ -239,9 +436,9 @@ function LoadCard({ type, typeColor, refId, origin, dest, freight, weight, equip
               Ref: <span className="text-slate-600">{refId}</span>
             </span>
           </div>
-          {urgent && (
+          {(urgent || (load.bid_expires_at && new Date(load.bid_expires_at) < new Date(Date.now() + 2 * 60 * 60 * 1000))) && (
             <Badge className="bg-rose-50 text-rose-600 border-none text-[9px] font-black animate-pulse">
-              EXPIRING IN 2H
+              URGENT
             </Badge>
           )}
         </header>
@@ -274,24 +471,20 @@ function LoadCard({ type, typeColor, refId, origin, dest, freight, weight, equip
             <p className="text-[11px] font-bold text-slate-700">{freight}</p>
           </div>
           <div className="space-y-1">
-            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">General Cargo</span>
+            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Weight</span>
             <p className="text-[11px] font-bold text-slate-700">{weight}</p>
           </div>
           <div className="space-y-1">
             <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Equipment</span>
-            <p className="text-[11px] font-bold text-slate-700">{equip}</p>
+            <p className="text-[11px] font-bold text-slate-700 uppercase">{equip}</p>
           </div>
         </div>
 
         <div className="flex items-center gap-3 pt-2">
           <div className="flex-1 p-4 bg-slate-50/50 rounded-2xl border border-slate-100 group-hover:bg-white group-hover:border-primary/20 transition-all">
-            <div className="flex justify-between mb-1">
-              <span className="text-[9px] font-bold text-slate-400 uppercase">Buy It Now</span>
-              <span className="text-[12px] font-black text-emerald-600">CFA {price}</span>
-            </div>
             <div className="flex justify-between items-center">
               <span className="text-[9px] font-bold text-slate-400 uppercase">Current Bid</span>
-              <span className="text-[12px] font-bold text-slate-900">CFA {currentBid}</span>
+              <span className="text-[12px] font-black text-primary">CFA {price.toLocaleString()}</span>
             </div>
           </div>
         </div>
@@ -299,7 +492,7 @@ function LoadCard({ type, typeColor, refId, origin, dest, freight, weight, equip
         <div className="flex gap-3">
           <Button variant="outline" className="flex-1 h-12 rounded-xl text-xs font-bold border-slate-200">Details</Button>
           <Button className="flex-1 h-12 rounded-xl text-xs font-bold bg-primary shadow-lg shadow-primary/10">
-            {price === currentBid ? "Accept Offer" : "Quick Bid"}
+            Quick Bid
           </Button>
         </div>
       </CardContent>

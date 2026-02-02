@@ -298,3 +298,33 @@ export interface DriverPayment {
   created_at: string;
   updated_at: string;
 }
+
+export interface SavedSearch {
+  id: string;
+  user_id: string;
+  search_name: string;
+  filters: any;
+  notification_enabled: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AvailableTruck {
+  id: string;
+  transporter_user_id: string;
+  origin_location: string;
+  origin_latitude: number | null;
+  origin_longitude: number | null;
+  destination_location: string | null;
+  destination_latitude: number | null;
+  destination_longitude: number | null;
+  available_from: string;
+  available_until: string | null;
+  vehicle_type: string;
+  capacity_kg: number | null;
+  contact_phone: string | null;
+  notes: string | null;
+  status: 'active' | 'matched' | 'expired' | 'cancelled';
+  created_at: string;
+  updated_at: string;
+}
