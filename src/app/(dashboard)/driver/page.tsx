@@ -1,8 +1,10 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Truck, DollarSign, ListChecks } from "lucide-react";
+import { Truck, DollarSign, ListChecks, Clock } from "lucide-react";
 import { getDriverJobs } from "@/app/actions/driver-jobs";
+import { AvailabilityToggle } from "@/components/driver/availability/AvailabilityToggle";
+import { ShiftSummary } from "@/components/driver/availability/ShiftSummary";
 
 export default async function DriverDashboardPage() {
     // Fetch some basic stats
@@ -13,10 +15,9 @@ export default async function DriverDashboardPage() {
         <div className="space-y-6">
             <header className="flex items-center justify-between">
                 <h1 className="text-2xl font-bold">Driver Dashboard</h1>
-                <div className="flex bg-slate-100 rounded-full p-1 border">
-                    <span className="px-3 py-1 bg-white rounded-full text-xs font-semibold shadow-sm text-green-700">Online</span>
-                </div>
             </header>
+
+            <AvailabilityToggle />
 
             {/* Quick Stats */}
             <div className="grid grid-cols-2 gap-4">
@@ -29,15 +30,7 @@ export default async function DriverDashboardPage() {
                         </div>
                     </CardContent>
                 </Card>
-                <Card>
-                    <CardContent className="p-4 flex flex-col items-center justify-center text-center space-y-2">
-                        <DollarSign className="h-8 w-8 text-green-600" />
-                        <div>
-                            <div className="text-2xl font-bold">45K</div>
-                            <div className="text-xs text-muted-foreground">Today's Earnings</div>
-                        </div>
-                    </CardContent>
-                </Card>
+                <ShiftSummary />
             </div>
 
             {/* Quick Actions */}
@@ -51,6 +44,17 @@ export default async function DriverDashboardPage() {
                                 <span>My Jobs</span>
                                 <span className="text-xs text-muted-foreground font-normal">
                                     {pendingJobs && pendingJobs.length > 0 ? `${pendingJobs.length} new offers` : "View job history"}
+                                </span>
+                            </div>
+                        </Button>
+                    </Link>
+                    <Link href="/driver/schedule">
+                        <Button variant="outline" className="w-full justify-start h-14 text-left">
+                            <Clock className="mr-3 h-5 w-5" />
+                            <div className="flex flex-col items-start">
+                                <span>Manage Schedule</span>
+                                <span className="text-xs text-muted-foreground font-normal">
+                                    Set availability & request time off
                                 </span>
                             </div>
                         </Button>

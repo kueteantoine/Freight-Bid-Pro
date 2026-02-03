@@ -4,7 +4,9 @@ export type AuctionType = "standard" | "sealed" | "dutch" | "buy_it_now";
 export type TrackingEvent = "shipment_created" | "bid_awarded" | "driver_assigned" | "pickup_started" | "loaded" | "in_transit" | "delivered" | "cancelled";
 export type VehicleStatus = "active" | "maintenance" | "inactive";
 export type VehicleDocumentType = "registration" | "insurance" | "permit" | "inspection" | "other";
-
+export type DriverStatus = "online" | "busy" | "offline";
+export type TimeOffStatus = "pending" | "approved" | "rejected";
+export type FuelLevel = "empty" | "low" | "half" | "full";
 export interface Profile {
   id: string;
   first_name: string | null;
@@ -371,6 +373,54 @@ export interface CarrierNotificationSettings {
   id: string;
   transporter_user_id: string;
   preferences: any; // JSONB
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DriverStatusRecord {
+  user_id: string;
+  status: DriverStatus;
+  current_latitude: number | null;
+  current_longitude: number | null;
+  last_location_update: string | null;
+  current_session_started_at: string | null;
+  updated_at: string;
+}
+
+export interface TimeOffRequest {
+  id: string;
+  driver_user_id: string;
+  transporter_user_id: string;
+  start_date: string;
+  end_date: string;
+  reason: string | null;
+  status: TimeOffStatus;
+  admin_notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface VehicleChecklist {
+  id: string;
+  driver_user_id: string;
+  vehicle_id: string;
+  fuel_level: FuelLevel | null;
+  tire_pressure_ok: boolean;
+  cleanliness_ok: boolean;
+  safety_equipment_ok: boolean;
+  gps_functional: boolean;
+  notes: string | null;
+  submitted_at: string;
+  created_at: string;
+}
+
+export interface ShiftLog {
+  id: string;
+  driver_user_id: string;
+  shift_start: string;
+  shift_end: string | null;
+  jobs_completed: number;
+  total_earnings: number;
   created_at: string;
   updated_at: string;
 }
