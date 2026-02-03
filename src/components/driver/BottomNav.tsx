@@ -10,7 +10,7 @@ export function BottomNav() {
 
     const navItems = [
         {
-            href: "/driver/dashboard",
+            href: "/driver",
             label: "Home",
             icon: Home,
         },
