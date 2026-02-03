@@ -64,3 +64,5 @@ export const createSupabaseServerClient = async () => {
         }
     )
 }
+
+export const createClient = createSupabaseServerClient;

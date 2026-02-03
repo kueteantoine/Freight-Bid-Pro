@@ -16,7 +16,7 @@ export class CarrierAnalyticsService {
             });
 
         if (error) throw error;
-        return data;
+        return data || [];
     }
 
     async getRevenueTrends(carrierId: string, period: 'daily' | 'weekly' | 'monthly' = 'monthly') {
@@ -29,7 +29,7 @@ export class CarrierAnalyticsService {
             });
 
         if (error) throw error;
-        return data;
+        return data || [];
     }
 
     async getVehicleUtilization(carrierId: string) {
@@ -41,7 +41,7 @@ export class CarrierAnalyticsService {
             });
 
         if (error) throw error;
-        return data;
+        return data || [];
     }
 
     async getDriverPerformance(carrierId: string) {
@@ -53,7 +53,7 @@ export class CarrierAnalyticsService {
             });
 
         if (error) throw error;
-        return data;
+        return data || [];
     }
 
     async getRouteProfitability(carrierId: string) {
@@ -65,6 +65,6 @@ export class CarrierAnalyticsService {
             });
 
         if (error) throw error;
-        return data;
+        return data || [];
     }
 }

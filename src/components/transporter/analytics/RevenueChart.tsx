@@ -14,7 +14,7 @@ interface RevenueChartProps {
 
 export function RevenueChart({ data }: RevenueChartProps) {
     // Format data for chart
-    const formattedData = data.map(item => ({
+    const formattedData = (data || []).map(item => ({
         name: new Date(item.period).toLocaleDateString('fr-CM', { month: 'short', year: 'numeric' }),
         total: item.revenue
     })).reverse(); // API returns descending, we want ascending for chart l-to-r usually
