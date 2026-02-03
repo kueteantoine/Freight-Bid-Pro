@@ -38,6 +38,7 @@ const roleNavLinks: Record<string, any[]> = {
                 { href: "/transporter/dashboard", icon: LayoutDashboard, label: "Dashboard" },
                 { href: "/transporter/loads", icon: Package, label: "Marketplace" },
                 { href: "/transporter/operations", icon: ClipboardList, label: "Operations" },
+                { href: "/transporter/analytics", icon: TrendingUp, label: "Performance" },
                 { href: "/transporter/fleet", icon: Truck, label: "Fleet Management" },
                 { href: "/transporter/drivers", icon: Users, label: "Driver Management" },
             ]
