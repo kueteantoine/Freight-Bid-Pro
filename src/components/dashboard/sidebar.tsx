@@ -50,7 +50,7 @@ const roleNavLinks: Record<string, any[]> = {
         },
         {
             group: "SUPPORT", items: [
-                { href: "/settings", icon: Settings, label: "Settings" },
+                { href: "/transporter/settings", icon: Settings, label: "Settings" },
                 { href: "/help", icon: HelpCircle, label: "Help Center" },
             ]
         }

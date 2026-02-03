@@ -328,3 +328,49 @@ export interface AvailableTruck {
   created_at: string;
   updated_at: string;
 }
+
+export interface ServiceOfferings {
+  id: string;
+  transporter_user_id: string;
+  freight_types: string[];
+  service_regions: any[]; // JSONB
+  max_distance_km: number | null;
+  min_weight_kg: number | null;
+  max_weight_kg: number | null;
+  special_capabilities: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PricingRule {
+  id: string;
+  transporter_user_id: string;
+  rule_name: string;
+  freight_type: string | null;
+  base_rate: number;
+  rate_unit: 'per_km' | 'per_kg' | 'flat' | 'per_hour';
+  min_price: number | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface BidAutomationSettings {
+  id: string;
+  transporter_user_id: string;
+  enabled: boolean;
+  strategy: 'lowest' | 'market' | 'premium' | 'custom' | null;
+  max_auto_bid_amount: number | null;
+  min_profit_margin: number | null;
+  min_shipper_rating: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CarrierNotificationSettings {
+  id: string;
+  transporter_user_id: string;
+  preferences: any; // JSONB
+  created_at: string;
+  updated_at: string;
+}
