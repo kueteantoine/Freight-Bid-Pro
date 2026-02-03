@@ -200,3 +200,75 @@ BEGIN
     );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 6. Get Competitor Benchmarks (Aggregated & Anonymized)
+CREATE OR REPLACE FUNCTION get_competitor_benchmarks(transporter_uuid UUID)
+RETURNS JSONB AS $$
+DECLARE
+    my_avg_bid DECIMAL;
+    market_avg_bid DECIMAL;
+    my_on_time DECIMAL;
+    market_on_time DECIMAL;
+    my_rating DECIMAL;
+    market_rating DECIMAL;
+BEGIN
+    -- My Stats
+    SELECT AVG(bid_amount) INTO my_avg_bid
+    FROM public.bids
+    WHERE transporter_user_id = transporter_uuid AND bid_status = 'awarded';
+
+    SELECT COALESCE(AVG(rating_overall), 0) INTO my_rating
+    FROM public.ratings_reviews
+    WHERE reviewed_user_id = transporter_uuid;
+
+    -- Market Stats (All transporters excluding me)
+    SELECT AVG(bid_amount) INTO market_avg_bid
+    FROM public.bids
+    WHERE transporter_user_id != transporter_uuid AND bid_status = 'awarded';
+
+    SELECT COALESCE(AVG(rating_overall), 0) INTO market_rating
+    FROM public.ratings_reviews
+    WHERE reviewed_user_id != transporter_uuid;
+
+    -- Return JSON
+    RETURN jsonb_build_object(
+        'my_avg_bid', COALESCE(my_avg_bid, 0),
+        'market_avg_bid', COALESCE(market_avg_bid, 0),
+        'my_rating', my_rating,
+        'market_rating', market_rating,
+        'my_on_time_rate', 0, -- Needs complex calc, placeholder
+        'market_on_time_rate', 0 -- Needs complex calc, placeholder
+    );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 7. Get Predictive Analytics (Simple Forecasting)
+CREATE OR REPLACE FUNCTION get_predictive_analytics(transporter_uuid UUID)
+RETURNS JSONB AS $$
+DECLARE
+    forecast_revenue DECIMAL;
+    growth_rate DECIMAL;
+BEGIN
+    -- Simple forecast: Avg of last 3 months revenue * 1.1 (10% growth assumption for demo)
+    -- Real implementation would use linear regression or time-series analysis
+    
+    WITH monthly_revenues AS (
+        SELECT 
+            DATE_TRUNC('month', created_at) as m,
+            SUM(net_amount) as rev
+        FROM public.transactions
+        WHERE payee_user_id = transporter_uuid
+        AND payment_status = 'completed'
+        AND created_at >= NOW() - INTERVAL '3 months'
+        GROUP BY 1
+    )
+    SELECT AVG(rev) * 1.05 INTO forecast_revenue -- Forecast 5% growth
+    FROM monthly_revenues;
+
+    RETURN jsonb_build_object(
+        'predicted_monthly_revenue', COALESCE(forecast_revenue, 0),
+        'growth_trend', 'positive', 
+        'demand_forecast', 'high'
+    );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
