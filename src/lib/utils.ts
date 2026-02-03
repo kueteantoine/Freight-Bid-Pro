@@ -42,3 +42,16 @@ export function formatTimeRemaining(ms: number): string {
 
   return parts.join(' ');
 }
+
+export function formatCurrency(amount: number) {
+  return new Intl.NumberFormat('fr-CM', {
+    style: 'currency',
+    currency: 'XAF',
+    maximumFractionDigits: 0
+  }).format(amount);
+}
+
+export function formatDate(date: string | Date) {
+  if (!date) return '';
+  return new Date(date).toLocaleDateString('en-GB'); // DD/MM/YYYY
+}
