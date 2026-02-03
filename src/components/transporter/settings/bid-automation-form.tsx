@@ -69,7 +69,7 @@ export function BidAutomationForm({ initialSettings }: BidAutomationFormProps) {
                     <div className={!enabled ? "opacity-50 pointer-events-none transition-opacity" : "transition-opacity"}>
                         <div className="space-y-4">
                             <Label className="text-base font-semibold">Bidding Strategy</Label>
-                            <RadioGroup value={strategy} onValueChange={setStrategy} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <RadioGroup value={strategy} onValueChange={(value) => setStrategy(value as any)} className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                 <div>
                                     <RadioGroupItem value="lowest" id="lowest" className="peer sr-only" />
                                     <Label
