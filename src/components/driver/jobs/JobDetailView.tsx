@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { MapPin, Calendar, Truck, Package, Phone, Navigation, Info } from "lucide-react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 interface JobDetailViewProps {
     job: DriverJob;
@@ -35,11 +36,24 @@ export function JobDetailView({ job }: JobDetailViewProps) {
                         Map Preview
                     </span>
                 </div>
+
+                {/* Navigation Button Overlay */}
+                {['accepted', 'in_progress'].includes(job.status) && (
+                    <div className="absolute inset-0 flex items-center justify-center z-10 bg-black/10 hover:bg-black/20 transition-colors">
+                        <Link href={`/driver/navigation?jobId=${job.shipment_id}`}>
+                            <Button size="lg" className="rounded-full gap-2 shadow-xl shadow-primary/20">
+                                <Navigation className="h-5 w-5" />
+                                Start Navigation
+                            </Button>
+                        </Link>
+                    </div>
+                )}
+
                 {/* Distance overlay */}
-                <div className="absolute bottom-4 left-4 bg-background/90 backdrop-blur px-3 py-1.5 rounded-lg text-sm font-medium shadow-sm">
+                <div className="absolute bottom-4 left-4 bg-background/90 backdrop-blur px-3 py-1.5 rounded-lg text-sm font-medium shadow-sm z-20">
                     Est. Distance: 345 km
                 </div>
-                <div className="absolute bottom-4 right-4 bg-background/90 backdrop-blur px-3 py-1.5 rounded-lg text-sm font-medium shadow-sm">
+                <div className="absolute bottom-4 right-4 bg-background/90 backdrop-blur px-3 py-1.5 rounded-lg text-sm font-medium shadow-sm z-20">
                     Est. Duration: 5h 30m
                 </div>
             </div>

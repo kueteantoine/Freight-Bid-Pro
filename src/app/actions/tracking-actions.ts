@@ -1,139 +1,29 @@
 "use server";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { ShipmentStatus, ShipmentTracking, ShipmentWithDetails, TrackingEvent } from "@/lib/types/database";
+import { revalidatePath } from "next/cache";
+import { TrackingEvent, ShipmentStatus, Shipment, ShipmentWithDetails } from "@/lib/types/database";
 
 /**
- * Get all tracking events for a shipment
- */
-export async function getShipmentTracking(shipmentId: string) {
-    const supabase = await createSupabaseServerClient();
-
-    const { data, error } = await supabase
-        .from("shipment_tracking")
-        .select(`
-      *,
-      profiles:recorded_by_user_id (
-        id,
-        first_name,
-        last_name,
-        avatar_url
-      )
-    `)
-        .eq("shipment_id", shipmentId)
-        .order("event_timestamp", { ascending: false });
-
-    if (error) {
-        console.error("Error fetching shipment tracking:", error);
-        throw new Error("Failed to fetch tracking events");
-    }
-
-    return data;
-}
-
-/**
- * Add a new tracking event
- */
-export async function addTrackingEvent(
-    shipmentId: string,
-    event: TrackingEvent,
-    notes?: string,
-    latitude?: number,
-    longitude?: number,
-    locationName?: string,
-    images?: string[]
-) {
-    const supabase = await createSupabaseServerClient();
-
-    const { data: user } = await supabase.auth.getUser();
-    if (!user.user) {
-        throw new Error("User not authenticated");
-    }
-
-    const { data, error } = await supabase
-        .from("shipment_tracking")
-        .insert({
-            shipment_id: shipmentId,
-            tracking_event: event,
-            notes,
-            latitude,
-            longitude,
-            location_name: locationName,
-            images_json: images || [],
-            recorded_by_user_id: user.user.id,
-        })
-        .select()
-        .single();
-
-    if (error) {
-        console.error("Error adding tracking event:", error);
-        throw new Error("Failed to add tracking event");
-    }
-
-    return data;
-}
-
-/**
- * Update shipment location (for real-time tracking)
- */
-export async function updateShipmentLocation(
-    shipmentId: string,
-    latitude: number,
-    longitude: number,
-    locationName?: string
-) {
-    const supabase = await createSupabaseServerClient();
-
-    // Update current location on shipment
-    const { error: updateError } = await supabase
-        .from("shipments")
-        .update({
-            current_latitude: latitude,
-            current_longitude: longitude,
-        })
-        .eq("id", shipmentId);
-
-    if (updateError) {
-        console.error("Error updating shipment location:", updateError);
-        throw new Error("Failed to update location");
-    }
-
-    // Create tracking event
-    await addTrackingEvent(
-        shipmentId,
-        "in_transit",
-        locationName ? `Location update: ${locationName}` : "Location updated",
-        latitude,
-        longitude,
-        locationName
-    );
-
-    return { success: true };
-}
-
-/**
- * Get shipments filtered by status
+ * Fetch shipments for the current shipper, optionally filtered by status.
  */
 export async function getShipmentsByStatus(status?: ShipmentStatus) {
     const supabase = await createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
 
-    const { data: user } = await supabase.auth.getUser();
-    if (!user.user) {
-        throw new Error("User not authenticated");
-    }
+    if (!user) throw new Error("Unauthorized");
 
     let query = supabase
         .from("shipments")
         .select(`
-      *,
-      bids (
-        id,
-        bid_amount,
-        bid_status,
-        transporter_user_id
-      )
-    `)
-        .eq("shipper_user_id", user.user.id)
+            *,
+            bids (
+                id,
+                bid_amount,
+                bid_status
+            )
+        `)
+        .eq("shipper_user_id", user.id)
         .order("created_at", { ascending: false });
 
     if (status) {
@@ -141,37 +31,26 @@ export async function getShipmentsByStatus(status?: ShipmentStatus) {
     }
 
     const { data, error } = await query;
-
-    if (error) {
-        console.error("Error fetching shipments:", error);
-        throw new Error("Failed to fetch shipments");
-    }
-
-    return data;
+    if (error) throw error;
+    return data as Shipment[];
 }
 
 /**
- * Get shipment counts by status
+ * Get counts of shipments by status for the current shipper.
  */
 export async function getShipmentCounts() {
     const supabase = await createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
 
-    const { data: user } = await supabase.auth.getUser();
-    if (!user.user) {
-        throw new Error("User not authenticated");
-    }
+    if (!user) throw new Error("Unauthorized");
 
     const { data, error } = await supabase
         .from("shipments")
         .select("status")
-        .eq("shipper_user_id", user.user.id);
+        .eq("shipper_user_id", user.id);
 
-    if (error) {
-        console.error("Error fetching shipment counts:", error);
-        throw new Error("Failed to fetch shipment counts");
-    }
+    if (error) throw error;
 
-    // Count by status
     const counts = {
         all: data.length,
         draft: 0,
@@ -182,114 +61,196 @@ export async function getShipmentCounts() {
         cancelled: 0,
     };
 
-    data.forEach((shipment: { status: ShipmentStatus }) => {
-        counts[shipment.status as keyof typeof counts]++;
+    data.forEach((s) => {
+        if (s.status in counts) {
+            counts[s.status as keyof typeof counts]++;
+        }
     });
 
     return counts;
 }
 
 /**
- * Get complete shipment details with tracking, carrier, and driver info
+ * Fetch full shipment details including tracking events and profiles.
  */
-export async function getShipmentDetails(shipmentId: string): Promise<ShipmentWithDetails> {
+export async function getShipmentDetails(id: string) {
     const supabase = await createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
 
-    // Fetch shipment with all related data
-    const { data: shipment, error: shipmentError } = await supabase
-        .from("shipments")
-        .select(`
-      *,
-      bids (
-        id,
-        bid_amount,
-        bid_status,
-        estimated_delivery_date,
-        transporter_user_id,
-        profiles:transporter_user_id (
-          id,
-          first_name,
-          last_name,
-          avatar_url
-        )
-      )
-    `)
-        .eq("id", shipmentId)
-        .single();
-
-    if (shipmentError) {
-        console.error("Error fetching shipment:", shipmentError);
-        throw new Error("Failed to fetch shipment details");
-    }
-
-    // Fetch tracking events
-    const trackingEvents = await getShipmentTracking(shipmentId);
-
-    // Fetch transporter profile if assigned
-    let transporterProfile = null;
-    if (shipment.assigned_transporter_user_id) {
-        const { data: transporter } = await supabase
-            .from("profiles")
-            .select("*")
-            .eq("id", shipment.assigned_transporter_user_id)
-            .single();
-        transporterProfile = transporter;
-    }
-
-    // Fetch driver profile if assigned
-    let driverProfile = null;
-    if (shipment.assigned_driver_user_id) {
-        const { data: driver } = await supabase
-            .from("profiles")
-            .select("*")
-            .eq("id", shipment.assigned_driver_user_id)
-            .single();
-        driverProfile = driver;
-    }
-
-    return {
-        ...shipment,
-        tracking_events: trackingEvents,
-        transporter_profile: transporterProfile,
-        driver_profile: driverProfile,
-    } as ShipmentWithDetails;
-}
-
-/**
- * Get active shipments for map view (in_transit and bid_awarded)
- */
-export async function getActiveShipmentsForMap() {
-    const supabase = await createSupabaseServerClient();
-
-    const { data: user } = await supabase.auth.getUser();
-    if (!user.user) {
-        throw new Error("User not authenticated");
-    }
+    if (!user) throw new Error("Unauthorized");
 
     const { data, error } = await supabase
         .from("shipments")
         .select(`
-      id,
-      shipment_number,
-      pickup_location,
-      pickup_latitude,
-      pickup_longitude,
-      delivery_location,
-      delivery_latitude,
-      delivery_longitude,
-      current_latitude,
-      current_longitude,
-      status,
-      estimated_arrival
-    `)
-        .eq("shipper_user_id", user.user.id)
-        .in("status", ["bid_awarded", "in_transit"])
-        .order("created_at", { ascending: false });
+            *,
+            tracking_events:shipment_tracking (
+                *,
+                profiles:recorded_by_user_id (
+                    id,
+                    first_name,
+                    last_name,
+                    avatar_url
+                )
+            ),
+            transporter_profile:assigned_transporter_user_id (
+                id,
+                first_name,
+                last_name,
+                avatar_url
+            ),
+            driver_profile:assigned_driver_user_id (
+                id,
+                first_name,
+                last_name,
+                avatar_url
+            )
+        `)
+        .eq("id", id)
+        .single();
 
-    if (error) {
-        console.error("Error fetching active shipments:", error);
-        throw new Error("Failed to fetch active shipments");
+    if (error) throw error;
+    return data as unknown as ShipmentWithDetails;
+}
+
+/**
+ * Updates the driver's current location in driver_status and 
+ * optionally in any active shipment they are currently handling.
+ */
+export async function updateDriverLocation(
+    lat: number,
+    lng: number,
+    locationName?: string,
+    activeShipmentId?: string
+) {
+    const supabase = await createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return { success: false, error: "Unauthorized" };
+
+    // 1. Update general driver status
+    const { error: statusError } = await supabase
+        .from("driver_status")
+        .upsert({
+            user_id: user.id,
+            current_latitude: lat,
+            current_longitude: lng,
+            last_location_update: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+        });
+
+    if (statusError) {
+        console.error("Error updating driver status:", statusError);
     }
 
-    return data;
+    // 2. If on a job, update the shipment record for real-time customer view
+    if (activeShipmentId) {
+        const { error: shipmentError } = await supabase
+            .from("shipments")
+            .update({
+                current_latitude: lat,
+                current_longitude: lng,
+                updated_at: new Date().toISOString()
+            })
+            .eq("id", activeShipmentId)
+            .eq("assigned_driver_user_id", user.id);
+
+        if (shipmentError) {
+            console.error("Error updating shipment location:", shipmentError);
+        }
+
+        // 3. Log to tracking history (optional frequency control could be added here)
+        // We log 'in_transit' points periodically
+        const { error: trackingError } = await supabase
+            .from("shipment_tracking")
+            .insert({
+                shipment_id: activeShipmentId,
+                latitude: lat,
+                longitude: lng,
+                location_name: locationName || null,
+                tracking_event: 'in_transit',
+                recorded_by_user_id: user.id
+            });
+
+        if (trackingError) {
+            console.error("Error adding tracking point:", trackingError);
+        }
+    }
+
+    return { success: true };
+}
+
+/**
+ * Records a specific tracking event (e.g., arrived_at_pickup, loaded, etc.)
+ */
+export async function recordTrackingEvent(
+    shipmentId: string,
+    event: TrackingEvent,
+    notes?: string,
+    lat?: number,
+    lng?: number
+) {
+    const supabase = await createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return { success: false, error: "Unauthorized" };
+
+    const { error } = await supabase
+        .from("shipment_tracking")
+        .insert({
+            shipment_id: shipmentId,
+            tracking_event: event,
+            notes: notes || `Event: ${event}`,
+            latitude: lat,
+            longitude: lng,
+            recorded_by_user_id: user.id
+        });
+
+    if (error) {
+        console.error("Error recording tracking event:", error);
+        return { success: false, error: error.message };
+    }
+
+    revalidatePath(`/driver/jobs/${shipmentId}`);
+    return { success: true };
+}
+
+/**
+ * Updates shipment status based on geofence trigger
+ */
+export async function updateShipmentStatusFromGeofence(
+    shipmentId: string,
+    newStatus: ShipmentStatus,
+    event: TrackingEvent,
+    lat: number,
+    lng: number
+) {
+    const supabase = await createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return { success: false, error: "Unauthorized" };
+
+    // 1. Update Shipment Status
+    const { error: shipmentError } = await supabase
+        .from("shipments")
+        .update({
+            status: newStatus,
+            current_latitude: lat,
+            current_longitude: lng,
+            updated_at: new Date().toISOString()
+        })
+        .eq("id", shipmentId)
+        .eq("assigned_driver_user_id", user.id);
+
+    if (shipmentError) {
+        console.error("Error updating shipment status via geofence:", shipmentError);
+        return { success: false, error: shipmentError.message };
+    }
+
+    // 2. Record Event
+    await recordTrackingEvent(shipmentId, event, `Geofence trigger: ${event}`, lat, lng);
+
+    revalidatePath(`/driver/jobs/${shipmentId}`);
+    revalidatePath("/driver/dashboard");
+
+    return { success: true };
 }
