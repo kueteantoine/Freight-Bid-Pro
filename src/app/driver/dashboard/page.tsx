@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 
 import { DriverThemeToggle } from "@/components/driver/DriverThemeToggle"
+import { SafetyActions } from "@/components/driver/safety/SafetyActions"
+import { SafetyCheckinPrompt } from "@/components/driver/safety/SafetyCheckinPrompt"
 
 // Mock Data
 const MOCK_JOBS: Job[] = [
@@ -82,6 +84,13 @@ export default function DriverDashboardPage() {
                         </Button>
                     </div>
                 </Card>
+
+                <SafetyCheckinPrompt />
+
+                <SafetyActions
+                    shipmentId={MOCK_JOBS[0].id}
+                    className="border-red-100 shadow-md"
+                />
 
                 {/* Quick Actions or Job Queue */}
                 <div>
