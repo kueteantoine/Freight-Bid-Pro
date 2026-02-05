@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, Truck, DollarSign, Receipt, User } from "lucide-react"
+import { Home, Truck, DollarSign, Receipt, User, MessageSquare } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 export function BottomNav() {
@@ -28,6 +28,11 @@ export function BottomNav() {
             href: "/driver/expenses",
             label: "Expenses",
             icon: Receipt,
+        },
+        {
+            href: "/driver/messages",
+            label: "Chat",
+            icon: MessageSquare,
         },
         {
             href: "/driver/profile",

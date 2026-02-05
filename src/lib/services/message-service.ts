@@ -83,6 +83,24 @@ export const messageService = {
     },
 
     /**
+     * Upload an audio message to storage
+     */
+    async uploadAudio(file: Blob, userId: string) {
+        const fileName = `${userId}/${Date.now()}.webm`;
+        const { data, error } = await supabase.storage
+            .from('message-attachments')
+            .upload(fileName, file);
+
+        if (error) throw error;
+
+        const { data: { publicUrl } } = supabase.storage
+            .from('message-attachments')
+            .getPublicUrl(data.path);
+
+        return publicUrl;
+    },
+
+    /**
      * Mark messages as read
      */
     async markAsRead(messageIds: string[]) {

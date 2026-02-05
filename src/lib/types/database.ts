@@ -210,7 +210,7 @@ export interface ShipmentWithDetails extends Shipment {
   driver_profile: Profile | null;
 }
 
-export type MessageType = "text" | "image" | "document";
+export type MessageType = "text" | "image" | "document" | "audio";
 export type ConversationType = "shipment_chat" | "bid_negotiation" | "support_ticket";
 export type NotificationType =
   | "bid_received"
