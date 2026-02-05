@@ -11,7 +11,7 @@ import {
     getDriverTransporters,
     getMileageLogs
 } from "@/app/actions/driver-expense-actions";
-import { getDriverJobs } from "@/app/actions/driver-jobs";
+import { getDriverJobs, DriverJob } from "@/app/actions/driver-jobs";
 import { Wallet, Receipt, History, Send, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
@@ -77,7 +77,7 @@ export default async function ExpensesPage() {
 
                 <TabsContent value="log" className="space-y-6">
                     <ExpenseLogForm
-                        shipments={jobs.map((j: any) => ({ id: j.shipment_id, shipment_number: j.shipment.shipment_number }))}
+                        shipments={jobs.map((j: DriverJob) => ({ id: j.shipment_id, shipment_number: j.shipment.shipment_number }))}
                     />
 
                     <div className="space-y-4">
@@ -90,7 +90,7 @@ export default async function ExpensesPage() {
 
                 <TabsContent value="mileage" className="space-y-6">
                     <MileageLogForm
-                        shipments={jobs.map((j: any) => ({ id: j.shipment_id, shipment_number: j.shipment.shipment_number }))}
+                        shipments={jobs.map((j: DriverJob) => ({ id: j.shipment_id, shipment_number: j.shipment.shipment_number }))}
                     />
                     <div className="space-y-4">
                         <h2 className="text-lg font-semibold">Mileage History</h2>

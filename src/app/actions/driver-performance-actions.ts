@@ -27,7 +27,7 @@ export async function getDriverPerformanceMetrics() {
         .from("shipment_assignments")
         .select("*", { count: "exact", head: true })
         .eq("driver_user_id", user.id)
-        .eq("assignment_status", "completed");
+        .eq("status", "completed");
 
     const { data: earningsData } = await supabase
         .from("driver_payments")
@@ -57,7 +57,7 @@ export async function getDriverPerformanceMetrics() {
         .from("shipment_assignments")
         .select("*", { count: "exact", head: true })
         .eq("driver_user_id", user.id)
-        .not("accepted_at", "is", null);
+        .not("responded_at", "is", null);
 
     const acceptanceRate = (totalAssigned && totalAssigned > 0)
         ? (totalAccepted || 0) / totalAssigned * 100

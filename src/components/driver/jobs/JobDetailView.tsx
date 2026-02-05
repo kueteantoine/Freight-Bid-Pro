@@ -29,10 +29,10 @@ export function JobDetailView({ job }: JobDetailViewProps) {
                     <p className="text-muted-foreground">{job.shipper?.company_name}</p>
                 </div>
                 <Badge
-                    variant={['completed', 'delivered'].includes(job.status) ? 'default' : 'secondary'}
+                    variant={['completed'].includes(job.status) ? 'default' : 'secondary'}
                     className="text-base px-3 py-1"
                 >
-                    {job.status === 'delivered' ? 'Completed' : job.status}
+                    {job.status.charAt(0).toUpperCase() + job.status.slice(1)}
                 </Badge>
             </div>
 
@@ -46,7 +46,7 @@ export function JobDetailView({ job }: JobDetailViewProps) {
                     <FileText className="h-4 w-4" />
                     Digital BOL
                 </Button>
-                {['accepted', 'in_progress'].includes(job.status) && (
+                {job.status === 'accepted' && (
                     <Link href={`/driver/navigation?jobId=${job.shipment_id}`} className="flex-1">
                         <Button className="w-full gap-2 shadow-md">
                             <Navigation className="h-4 w-4" />
@@ -66,7 +66,7 @@ export function JobDetailView({ job }: JobDetailViewProps) {
                 </div>
 
                 {/* Status Specific Overlay */}
-                {job.status === 'delivered' && (
+                {job.status === 'completed' && (
                     <div className="absolute inset-0 bg-green-500/10 flex items-center justify-center backdrop-blur-[1px]">
                         <div className="bg-white/90 dark:bg-slate-900/90 px-4 py-2 rounded-full flex items-center gap-2 shadow-lg">
                             <CheckCircle2 className="h-5 w-5 text-green-600" />
@@ -112,7 +112,7 @@ export function JobDetailView({ job }: JobDetailViewProps) {
                 </Card>
 
                 {/* Documents & POD Section - Only if accepted or delivered */}
-                {['accepted', 'in_progress', 'delivered'].includes(job.status) && (
+                {job.status === 'accepted' && (
                     <div className="space-y-3">
                         <h2 className="text-lg font-bold px-1">Documents & POD</h2>
                         <DocumentSection job={job} />

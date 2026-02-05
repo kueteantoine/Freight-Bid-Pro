@@ -298,37 +298,40 @@ export async function getDriverTransporters() {
 
     if (!user) return { data: [], error: "Unauthorized" };
 
-    // Joins driver_assignments -> user_roles (of the transporter)
-    const { data, error } = await supabase
+    // 1. Get active assignments to find transporter IDs
+    const { data: assignments, error: assignError } = await supabase
         .from('driver_assignments')
-        .select(`
-            transporter_user_id,
-            transporter:user_roles!driver_assignments_transporter_user_id_fkey(
-                role_specific_profile
-            )
-        `)
+        .select('transporter_user_id')
         .eq('driver_user_id', user.id)
         .eq('is_active', true);
 
-    if (error) {
-        console.error("Error fetching driver transporters:", error);
-        return { data: [], error: error.message };
+    if (assignError) {
+        console.error("Error fetching driver assignments:", assignError);
+        return { data: [], error: assignError.message };
     }
 
-    // Deduplicate and format
-    const seen = new Set();
-    const transporters: { id: string, company_name: string }[] = [];
+    if (!assignments || assignments.length === 0) return { data: [] };
 
-    data.forEach((row: any) => {
-        if (!row.transporter || seen.has(row.transporter_user_id)) return;
-        seen.add(row.transporter_user_id);
+    const transporterIds = Array.from(new Set(assignments.map(a => a.transporter_user_id)));
 
-        const profile = row.transporter.role_specific_profile;
-        transporters.push({
-            id: row.transporter_user_id,
-            company_name: profile?.company_name || "Unknown Transporter"
-        });
-    });
+    // 2. Fetch company names from user_roles
+    // Note: Checking for both 'transporter' and 'carrier' to be safe, 
+    // although the system should be consistent.
+    const { data: roles, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('user_id, role_specific_profile')
+        .in('user_id', transporterIds)
+        .in('role_type', ['transporter', 'carrier']);
+
+    if (rolesError) {
+        console.error("Error fetching transporter roles:", rolesError);
+        return { data: [], error: rolesError.message };
+    }
+
+    const transporters = roles.map(role => ({
+        id: role.user_id,
+        company_name: (role.role_specific_profile as any)?.company_name || "Unknown Transporter"
+    }));
 
     return { data: transporters };
 }

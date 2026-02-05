@@ -101,7 +101,7 @@ export default function DriverNavigationPage() {
                     shipmentId={job.shipment_id}
                     pickupCoords={pickup}
                     deliveryCoords={delivery}
-                    currentStatus={job.status as any}
+                    currentStatus={job.assignment_status as any}
                     onLocationUpdate={(lat, lng) => setCurrentPos({ lat, lng })}
                 />
 

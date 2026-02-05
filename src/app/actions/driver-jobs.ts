@@ -6,9 +6,9 @@ import { revalidatePath } from "next/cache";
 export type DriverJob = {
     id: string; // Assignment ID
     shipment_id: string;
-    status: "pending" | "accepted" | "rejected" | "cancelled" | "completed" | "expired" | "delivered";
+    status: "pending" | "accepted" | "rejected" | "cancelled" | "completed" | "expired";
     assigned_at: string;
-    response_deadline: string | null;
+    responded_at: string | null;
     shipment: {
         shipment_number: string;
         pickup_location: string;
@@ -23,7 +23,7 @@ export type DriverJob = {
         weight_kg: number;
         dimensions_json: any;
         special_handling_requirements: string | null;
-        shipper_id: string;
+        shipper_user_id: string;
     };
     shipper?: { // Joined from shipment's shipper_user_id (requires additional join usually, but keeping simple for now)
         company_name?: string;
@@ -46,7 +46,7 @@ export async function getDriverJobs(statusFilter?: "pending" | "active" | "histo
             shipment_id,
             status,
             assigned_at,
-            response_deadline,
+            responded_at,
             shipment:shipments (
                 id,
                 shipment_number,
@@ -71,15 +71,16 @@ export async function getDriverJobs(statusFilter?: "pending" | "active" | "histo
     if (statusFilter === "pending") {
         query = query.eq("status", "pending");
     } else if (statusFilter === "active") {
-        query = query.in("status", ["accepted", "in_progress"]); // 'in_progress' implies accepted and started
+        query = query.eq("status", "accepted");
     } else if (statusFilter === "history") {
-        query = query.in("status", ["rejected", "cancelled", "completed", "expired"]);
+        query = query.in("status", ["rejected", "cancelled", "completed"]);
     }
 
     const { data, error } = await query;
 
     if (error) {
-        console.error("Error fetching driver jobs:", error);
+        console.error("Error fetching driver jobs (full):", JSON.stringify(error, null, 2));
+        console.error("Error message:", error.message);
         return { jobs: [], error: error.message };
     }
 
@@ -101,7 +102,7 @@ export async function respondToAssignment(assignmentId: string, response: "accep
     const { error: assignmentError } = await supabase
         .from("shipment_assignments")
         .update({
-            status,
+            status: status,
             rejection_reason: reason || null,
             responded_at: new Date().toISOString()
         })
