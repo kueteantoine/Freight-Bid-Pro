@@ -6,7 +6,7 @@ import { revalidatePath } from "next/cache";
 export type DriverJob = {
     id: string; // Assignment ID
     shipment_id: string;
-    status: "pending" | "accepted" | "rejected" | "cancelled" | "completed" | "expired";
+    status: "pending" | "accepted" | "rejected" | "cancelled" | "completed" | "expired" | "delivered";
     assigned_at: string;
     response_deadline: string | null;
     shipment: {

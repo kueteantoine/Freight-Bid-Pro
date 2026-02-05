@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Truck, DollarSign, ListChecks, Clock } from "lucide-react";
+import { Truck, DollarSign, ListChecks, Clock, Receipt } from "lucide-react";
 import { getDriverJobs } from "@/app/actions/driver-jobs";
 import { AvailabilityToggle } from "@/components/driver/availability/AvailabilityToggle";
 import { ShiftSummary } from "@/components/driver/availability/ShiftSummary";
@@ -50,11 +50,22 @@ export default async function DriverDashboardPage() {
                     </Link>
                     <Link href="/driver/schedule">
                         <Button variant="outline" className="w-full justify-start h-14 text-left">
-                            <Clock className="mr-3 h-5 w-5" />
+                            <Clock className="mr-3 h-5 w-5 text-purple-600" />
                             <div className="flex flex-col items-start">
                                 <span>Manage Schedule</span>
                                 <span className="text-xs text-muted-foreground font-normal">
                                     Set availability & request time off
+                                </span>
+                            </div>
+                        </Button>
+                    </Link>
+                    <Link href="/driver/expenses">
+                        <Button variant="outline" className="w-full justify-start h-14 text-left">
+                            <Receipt className="mr-3 h-5 w-5 text-emerald-600" />
+                            <div className="flex flex-col items-start">
+                                <span>Log Expenses</span>
+                                <span className="text-xs text-muted-foreground font-normal">
+                                    Track fuel, tolls & other costs
                                 </span>
                             </div>
                         </Button>
