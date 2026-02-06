@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 import {
     getPromotionalCodes,
@@ -33,7 +33,7 @@ export default function PromotionalCodesManager() {
         max_usage_per_user: 1,
         is_active: true,
     });
-    const { toast } = useToast();
+
 
     useEffect(() => {
         loadCodes();
@@ -79,7 +79,7 @@ export default function PromotionalCodesManager() {
             setIsDialogOpen(false);
             loadCodes();
         } else {
-            toast({ title: 'Error', description: result.error, variant: 'destructive' });
+            toast.error(result.error);
         }
     };
 
@@ -87,7 +87,7 @@ export default function PromotionalCodesManager() {
         if (!confirm('Delete this code?')) return;
         const result = await deletePromotionalCode(id);
         if (result.success) {
-            toast({ title: 'Success', description: 'Code deleted' });
+            toast.success('Code deleted');
             loadCodes();
         }
     };

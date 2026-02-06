@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 import {
     getFreightCategories,
     createFreightCategory,
@@ -31,7 +31,7 @@ export default function FreightCategoriesManager() {
         is_restricted: false,
         is_active: true,
     });
-    const { toast } = useToast();
+
 
     useEffect(() => {
         loadCategories();
@@ -73,7 +73,7 @@ export default function FreightCategoriesManager() {
             setIsDialogOpen(false);
             loadCategories();
         } else {
-            toast({ title: 'Error', description: result.error, variant: 'destructive' });
+            toast.error(result.error);
         }
     };
 
@@ -81,7 +81,7 @@ export default function FreightCategoriesManager() {
         if (!confirm('Delete this category?')) return;
         const result = await deleteFreightCategory(id);
         if (result.success) {
-            toast({ title: 'Success', description: 'Category deleted' });
+            toast.success('Category deleted');
             loadCategories();
         }
     };
@@ -109,7 +109,7 @@ export default function FreightCategoriesManager() {
                                 <CardTitle className="flex items-center gap-2">
                                     {category.name}
                                     {category.is_restricted && (
-                                        <AlertTriangle className="w-4 h-4 text-red-500" title="Restricted" />
+                                        <AlertTriangle className="w-4 h-4 text-red-500" />
                                     )}
                                 </CardTitle>
                                 <CardDescription>{category.description}</CardDescription>

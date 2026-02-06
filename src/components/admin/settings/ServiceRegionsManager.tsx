@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 import {
     getServiceRegions,
     createServiceRegion,
@@ -30,7 +30,7 @@ export default function ServiceRegionsManager() {
         distance_calculation_method: 'haversine',
         is_active: true,
     });
-    const { toast } = useToast();
+
 
     useEffect(() => {
         loadRegions();
@@ -70,7 +70,7 @@ export default function ServiceRegionsManager() {
             setIsDialogOpen(false);
             loadRegions();
         } else {
-            toast({ title: 'Error', description: result.error, variant: 'destructive' });
+            toast.error(result.error);
         }
     };
 
@@ -78,7 +78,7 @@ export default function ServiceRegionsManager() {
         if (!confirm('Delete this region?')) return;
         const result = await deleteServiceRegion(id);
         if (result.success) {
-            toast({ title: 'Success', description: 'Region deleted' });
+            toast.success('Region deleted');
             loadRegions();
         }
     };

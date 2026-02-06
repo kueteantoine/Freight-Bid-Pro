@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 import {
     getVehicleTypes,
     createVehicleType,
@@ -34,7 +34,7 @@ export default function VehicleTypesManager() {
         description: '',
         is_active: true,
     });
-    const { toast } = useToast();
+
 
     useEffect(() => {
         loadVehicleTypes();
@@ -46,11 +46,7 @@ export default function VehicleTypesManager() {
         if (result.success && result.data) {
             setVehicleTypes(result.data);
         } else {
-            toast({
-                title: 'Error',
-                description: result.error || 'Failed to load vehicle types',
-                variant: 'destructive',
-            });
+            toast.error(result.error || 'Failed to load vehicle types');
         }
         setLoading(false);
     };
@@ -88,11 +84,7 @@ export default function VehicleTypesManager() {
             setIsDialogOpen(false);
             loadVehicleTypes();
         } else {
-            toast({
-                title: 'Error',
-                description: result.error || 'Failed to save vehicle type',
-                variant: 'destructive',
-            });
+            toast.error(result.error || 'Failed to save vehicle type');
         }
     };
 
@@ -101,17 +93,10 @@ export default function VehicleTypesManager() {
 
         const result = await deleteVehicleType(id);
         if (result.success) {
-            toast({
-                title: 'Success',
-                description: 'Vehicle type deleted successfully',
-            });
+            toast.success('Vehicle type deleted successfully');
             loadVehicleTypes();
         } else {
-            toast({
-                title: 'Error',
-                description: result.error || 'Failed to delete vehicle type',
-                variant: 'destructive',
-            });
+            toast.error(result.error || 'Failed to delete vehicle type');
         }
     };
 
@@ -124,11 +109,7 @@ export default function VehicleTypesManager() {
             });
             loadVehicleTypes();
         } else {
-            toast({
-                title: 'Error',
-                description: result.error || 'Failed to update status',
-                variant: 'destructive',
-            });
+            toast.error(result.error || 'Failed to update status');
         }
     };
 

@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 import {
     getTaxRates,
     createTaxRate,
@@ -33,7 +33,7 @@ export default function TaxRatesManager() {
         calculation_method: 'percentage',
         is_active: true,
     });
-    const { toast } = useToast();
+
 
     useEffect(() => {
         loadTaxRates();
@@ -75,7 +75,7 @@ export default function TaxRatesManager() {
             setIsDialogOpen(false);
             loadTaxRates();
         } else {
-            toast({ title: 'Error', description: result.error, variant: 'destructive' });
+            toast.error(result.error);
         }
     };
 
@@ -83,7 +83,7 @@ export default function TaxRatesManager() {
         if (!confirm('Delete this tax rate?')) return;
         const result = await deleteTaxRate(id);
         if (result.success) {
-            toast({ title: 'Success', description: 'Tax rate deleted' });
+            toast.success('Tax rate deleted');
             loadTaxRates();
         }
     };

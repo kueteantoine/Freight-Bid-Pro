@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 import {
     getCommissionTiers,
     createCommissionTier,
@@ -29,7 +29,7 @@ export default function CommissionTiersManager() {
         commission_percentage: 0,
         is_active: true,
     });
-    const { toast } = useToast();
+
 
     useEffect(() => {
         loadTiers();
@@ -71,7 +71,7 @@ export default function CommissionTiersManager() {
             setIsDialogOpen(false);
             loadTiers();
         } else {
-            toast({ title: 'Error', description: result.error, variant: 'destructive' });
+            toast.error(result.error);
         }
     };
 
@@ -79,7 +79,7 @@ export default function CommissionTiersManager() {
         if (!confirm('Delete this tier?')) return;
         const result = await deleteCommissionTier(id);
         if (result.success) {
-            toast({ title: 'Success', description: 'Tier deleted' });
+            toast.success('Tier deleted');
             loadTiers();
         }
     };

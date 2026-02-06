@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 import {
     getSurgePricingRules,
     createSurgePricingRule,
@@ -34,7 +34,7 @@ export default function SurgePricingManager() {
         priority: 0,
         is_active: true,
     });
-    const { toast } = useToast();
+
 
     useEffect(() => {
         loadRules();
@@ -76,7 +76,7 @@ export default function SurgePricingManager() {
             setIsDialogOpen(false);
             loadRules();
         } else {
-            toast({ title: 'Error', description: result.error, variant: 'destructive' });
+            toast.error(result.error);
         }
     };
 
@@ -84,7 +84,7 @@ export default function SurgePricingManager() {
         if (!confirm('Delete this rule?')) return;
         const result = await deleteSurgePricingRule(id);
         if (result.success) {
-            toast({ title: 'Success', description: 'Rule deleted' });
+            toast.success('Rule deleted');
             loadRules();
         }
     };
