@@ -298,7 +298,7 @@ export default function CommissionsPage() {
                                             y: {
                                                 beginAtZero: true,
                                                 ticks: {
-                                                    callback: (value) => {
+                                                    callback: (value: string | number) => {
                                                         return new Intl.NumberFormat('en-US', {
                                                             style: 'currency',
                                                             currency: 'XAF',

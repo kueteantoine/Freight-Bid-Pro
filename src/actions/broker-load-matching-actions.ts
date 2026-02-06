@@ -174,7 +174,7 @@ export async function getAvailableCarriers(brokerId: string) {
         if (error) throw error;
 
         // Filter carriers with available capacity and enrich with names
-        const enrichedCarriers: AvailableCarrier[] = await Promise.all(
+        const enrichedCarriers = await Promise.all(
             (data || [])
                 .filter(carrier =>
                     carrier.broker_carrier_capacity &&
@@ -190,6 +190,10 @@ export async function getAvailableCarriers(brokerId: string) {
                         .single();
 
                     const availableCapacity = carrier.broker_carrier_capacity.find((cap: any) => cap.is_available);
+
+                    if (!availableCapacity) {
+                        return null;
+                    }
 
                     return {
                         carrier_user_id: carrier.carrier_user_id,
@@ -207,7 +211,8 @@ export async function getAvailableCarriers(brokerId: string) {
                         vehicle_types: availableCapacity.vehicle_types || [],
                     };
                 })
-        );
+        ).then(results => results.filter((carrier): carrier is AvailableCarrier => carrier !== null));
+
 
         return { data: enrichedCarriers, error: null };
     } catch (error: any) {

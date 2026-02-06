@@ -216,6 +216,21 @@ export async function getCapacityGaps(brokerId: string) {
     const supabase = await createClient();
 
     try {
+        // Get shipper IDs from broker's network
+        const { data: shipperNetwork, error: networkError } = await supabase
+            .from('broker_shipper_network')
+            .select('shipper_user_id')
+            .eq('broker_user_id', brokerId)
+            .eq('relationship_status', 'active');
+
+        if (networkError) throw networkError;
+
+        const shipperIds = shipperNetwork?.map(s => s.shipper_user_id) || [];
+
+        if (shipperIds.length === 0) {
+            return { data: { unmatched_loads_count: 0, total_required_weight_kg: 0, total_available_weight_kg: 0, capacity_deficit_kg: 0, has_capacity_shortage: false, unmatched_loads: [] }, error: null };
+        }
+
         // Get unmatched loads
         const { data: unmatchedLoads, error: loadsError } = await supabase
             .from('shipments')
@@ -228,13 +243,7 @@ export async function getCapacityGaps(brokerId: string) {
         pickup_location,
         delivery_location
       `)
-            .in('shipper_user_id',
-                supabase
-                    .from('broker_shipper_network')
-                    .select('shipper_user_id')
-                    .eq('broker_user_id', brokerId)
-                    .eq('relationship_status', 'active')
-            )
+            .in('shipper_user_id', shipperIds)
             .not('id', 'in', `(
         SELECT shipment_id FROM broker_load_matches 
         WHERE broker_user_id = '${brokerId}' 

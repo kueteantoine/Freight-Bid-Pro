@@ -204,13 +204,21 @@ export async function executeMatchingRules(shipmentId: string, brokerId: string)
                             confirmed_at: new Date().toISOString(),
                         });
 
-                    // Update rule statistics
-                    await supabase
+                    // Update rule statistics - fetch current value and increment
+                    const { data: currentRule } = await supabase
                         .from('broker_matching_rules')
-                        .update({
-                            successful_matches: supabase.raw('successful_matches + 1'),
-                        })
-                        .eq('id', result.rule_id);
+                        .select('successful_matches')
+                        .eq('id', result.rule_id)
+                        .single();
+
+                    if (currentRule) {
+                        await supabase
+                            .from('broker_matching_rules')
+                            .update({
+                                successful_matches: (currentRule.successful_matches || 0) + 1,
+                            })
+                            .eq('id', result.rule_id);
+                    }
                 }
             }
 

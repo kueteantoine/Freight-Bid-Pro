@@ -3,12 +3,13 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 
 interface ConversationPageProps {
-    params: {
+    params: Promise<{
         id: string;
-    };
+    }>;
 }
 
-export default async function ConversationPage({ params }: ConversationPageProps) {
+export default async function ConversationPage(props: ConversationPageProps) {
+    const params = await props.params;
     const supabase = await createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
