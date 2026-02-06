@@ -22,7 +22,7 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
     process.exit(1);
 }
 
-const migrationPath = path.join(__dirname, 'supabase', 'migrations', '20260201010000_payment_schema.sql');
+const migrationPath = path.join(__dirname, 'supabase', 'migrations', '20260206030000_admin_dashboard.sql');
 const migrationSQL = fs.readFileSync(migrationPath, 'utf8');
 
 console.log('📦 Applying migration:', path.basename(migrationPath));
