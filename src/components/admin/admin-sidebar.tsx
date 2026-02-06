@@ -2,13 +2,14 @@
 
 import React from "react";
 import { usePathname } from "next/navigation";
-import { Settings, Users, AlertCircle } from "lucide-react";
+import { LayoutDashboard, FileCheck, Users } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
 const adminNavLinks = [
-    { href: "/admin/dashboard", icon: Settings, label: "Dashboard" },
-    { href: "/admin/users", icon: Users, label: "User Management" },
+    { href: "/admin/dashboard", icon: LayoutDashboard, label: "Dashboard" },
+    { href: "/admin/verifications", icon: FileCheck, label: "Verifications" },
+    { href: "/admin/users", icon: Users, label: "Users" },
 ];
 
 export function AdminSidebar() {
