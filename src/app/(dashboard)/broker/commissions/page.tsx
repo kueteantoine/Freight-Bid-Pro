@@ -252,7 +252,7 @@ export default function CommissionsPage() {
                                             legend: { display: false },
                                             tooltip: {
                                                 callbacks: {
-                                                    label: (context) => {
+                                                    label: (context: any) => {
                                                         return `Commission: ${new Intl.NumberFormat('en-US', {
                                                             style: 'currency',
                                                             currency: 'XAF'
@@ -265,7 +265,7 @@ export default function CommissionsPage() {
                                             y: {
                                                 beginAtZero: true,
                                                 ticks: {
-                                                    callback: (value) => {
+                                                    callback: (value: any) => {
                                                         return new Intl.NumberFormat('en-US', {
                                                             style: 'currency',
                                                             currency: 'XAF',

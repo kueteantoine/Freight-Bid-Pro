@@ -60,7 +60,7 @@ export default async function JobDetailsPage({ params }: PageProps) {
                 <JobDetailView job={job} />
             </div>
 
-            {job.assignment_status === 'pending' && (
+            {job.status === 'pending' && (
                 <AcceptanceFooter
                     onAccept={handleAccept}
                     onReject={handleReject}
