@@ -33,6 +33,12 @@ export default async function BrokerDashboardPage() {
       <div className="flex items-center justify-between">
         <h2 className="text-3xl font-bold text-primary">Broker Dashboard</h2>
         <div className="flex gap-3">
+          <Link href="/broker/commissions">
+            <Button variant="default">
+              <DollarSign className="mr-2 h-4 w-4" />
+              Commissions
+            </Button>
+          </Link>
           <Link href="/broker/analytics">
             <Button variant="outline">
               <BarChart3 className="mr-2 h-4 w-4" />

@@ -14,9 +14,9 @@ import { Upload, Download, CheckCircle, XCircle, AlertCircle } from "lucide-reac
 import {
     bulkImportShippers,
     bulkImportCarriers,
-    generateCSVTemplate,
     type ImportResult,
 } from "@/lib/services/csv-import-service";
+import { generateCSVTemplate } from "@/lib/utils/csv-utils";
 import { toast } from "sonner";
 
 interface CSVImportDialogProps {
