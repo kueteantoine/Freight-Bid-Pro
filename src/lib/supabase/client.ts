@@ -1,3 +1,4 @@
+import "../clear-server-storage";
 import { createBrowserClient } from '@supabase/ssr'
 
 export const supabase = createBrowserClient(

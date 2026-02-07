@@ -87,6 +87,21 @@ Apply these migrations **in order** (the timestamps ensure correct ordering):
 
 ---
 
+### 6. Platform Reporting & Analytics
+**File:** `supabase/migrations/20260207210000_platform_reporting.sql`
+
+**What it creates:**
+- `report_templates` table (pre-built reports)
+- `generated_reports` table (stored report results)
+- `scheduled_reports` table (recurring report config)
+- `user_dashboards` table (custom layouts)
+- `analytics_events` table (raw event stream)
+- Extensive RPC functions for aggregation and analysis
+
+**Depends on:** Migration #5 (ad revenue tracking)
+
+---
+
 ## 🚀 How to Apply Migrations
 
 ### Option 1: Using Supabase CLI (Recommended)

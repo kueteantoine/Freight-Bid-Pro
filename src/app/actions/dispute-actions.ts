@@ -1,6 +1,6 @@
 "use server";
 
-import { supabase } from "@/lib/supabase/client";
+
 import { createClient } from "@/lib/supabase/server";
 
 export interface Dispute {

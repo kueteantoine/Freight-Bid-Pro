@@ -8,12 +8,13 @@ import { AdPerformanceChart } from '../_components/ad-performance-chart';
 import { ExternalLink } from 'lucide-react';
 
 interface PageProps {
-    params: {
+    params: Promise<{
         id: string;
-    };
+    }>;
 }
 
-export default async function AdDetailsPage({ params }: PageProps) {
+export default async function AdDetailsPage(props: PageProps) {
+    const params = await props.params;
     const result = await getAdvertisementById(params.id);
 
     if (!result.success || !result.data) {
