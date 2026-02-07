@@ -207,3 +207,83 @@ export async function exportUserData(filters: UserFilters = {}) {
 
     return csv;
 }
+
+/**
+ * Assign a role to a user
+ * @param userId - The UUID of the user
+ * @param roleType - The role to assign ('shipper', 'carrier', 'driver', 'broker', 'admin')
+ * @param verificationStatus - Initial verification status (default: 'verified')
+ */
+export async function assignUserRole(
+    userId: string,
+    roleType: 'shipper' | 'carrier' | 'driver' | 'broker' | 'admin',
+    verificationStatus: 'pending' | 'verified' | 'rejected' = 'verified'
+) {
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+        .from('user_roles')
+        .insert({
+            user_id: userId,
+            role_type: roleType,
+            is_active: true,
+            verification_status: verificationStatus,
+            role_specific_profile: {}
+        })
+        .select()
+        .single();
+
+    if (error) {
+        // Handle unique constraint violation
+        if (error.code === '23505') {
+            // Role already exists, update it instead
+            const { data: updateData, error: updateError } = await supabase
+                .from('user_roles')
+                .update({
+                    is_active: true,
+                    verification_status: verificationStatus
+                })
+                .eq('user_id', userId)
+                .eq('role_type', roleType)
+                .select()
+                .single();
+
+            if (updateError) {
+                console.error('Error updating existing role:', updateError);
+                throw new Error(updateError.message);
+            }
+
+            return { success: true, data: updateData, message: 'Role updated successfully' };
+        }
+
+        console.error('Error assigning role:', error);
+        throw new Error(error.message);
+    }
+
+    return { success: true, data, message: 'Role assigned successfully' };
+}
+
+/**
+ * Remove a role from a user
+ * @param userId - The UUID of the user
+ * @param roleType - The role to remove
+ */
+export async function removeUserRole(
+    userId: string,
+    roleType: 'shipper' | 'carrier' | 'driver' | 'broker' | 'admin'
+) {
+    const supabase = await createClient();
+
+    const { error } = await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', userId)
+        .eq('role_type', roleType);
+
+    if (error) {
+        console.error('Error removing role:', error);
+        throw new Error(error.message);
+    }
+
+    return { success: true, message: 'Role removed successfully' };
+}
