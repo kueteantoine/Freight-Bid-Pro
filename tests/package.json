@@ -1,0 +1,24 @@
+{
+    "name": "freight-bid-pro-tests",
+    "version": "1.0.0",
+    "description": "Test suite for Advertisement & Content Management System",
+    "scripts": {
+        "test": "jest",
+        "test:watch": "jest --watch",
+        "test:coverage": "jest --coverage",
+        "test:e2e": "playwright test",
+        "test:e2e:ui": "playwright test --ui",
+        "test:db": "psql -U postgres -d freight_bid_pro -f tests/database/migration-tests.sql",
+        "test:all": "npm run test && npm run test:e2e"
+    },
+    "devDependencies": {
+        "@jest/globals": "^29.7.0",
+        "@playwright/test": "^1.40.0",
+        "@testing-library/jest-dom": "^6.1.5",
+        "@testing-library/react": "^14.1.2",
+        "@testing-library/user-event": "^14.5.1",
+        "jest": "^29.7.0",
+        "jest-environment-jsdom": "^29.7.0",
+        "ts-jest": "^29.1.1"
+    }
+}
