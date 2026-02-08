@@ -72,6 +72,9 @@ export function NotificationCenter({ userId }: NotificationCenterProps) {
             case 'shipment_update': return <Package className="h-4 w-4 text-orange-500" />;
             case 'payment_received': return <DollarSign className="h-4 w-4 text-green-500" />;
             case 'bid_awarded': return <Award className="h-4 w-4 text-purple-500" />;
+            case 'dispute_created': return <Bell className="h-4 w-4 text-red-500" />;
+            case 'dispute_resolved': return <Check className="h-4 w-4 text-green-500" />;
+            case 'bid_rejected': return <MessageSquare className="h-4 w-4 text-gray-500" />;
             default: return <Bell className="h-4 w-4 text-muted-foreground" />;
         }
     };

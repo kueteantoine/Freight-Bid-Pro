@@ -22,7 +22,8 @@ import {
     ShieldCheck,
     FileText,
     Mail,
-    CreditCard
+    CreditCard,
+    Bell
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -40,6 +41,7 @@ const roleNavLinks: Record<string, any[]> = {
                 { href: "/shipper/analytics", icon: TrendingUp, label: "Spending Analytics" },
                 { href: "/shipper/tracking", icon: Globe, label: "Live Tracking" },
                 { href: "/shipper/messages", icon: MessageSquare, label: "Messages" },
+                { href: "/notifications", icon: Bell, label: "Notifications" },
             ]
         },
         {
@@ -63,6 +65,7 @@ const roleNavLinks: Record<string, any[]> = {
                 { href: "/transporter/analytics", icon: TrendingUp, label: "Performance" },
                 { href: "/transporter/fleet", icon: Truck, label: "Fleet Management" },
                 { href: "/transporter/drivers", icon: Users, label: "Driver Management" },
+                { href: "/notifications", icon: Bell, label: "Notifications" },
             ]
         },
         {
@@ -86,6 +89,7 @@ roleNavLinks.driver = [
         group: "MAIN", items: [
             { href: "/driver/dashboard", icon: LayoutDashboard, label: "Dashboard" },
             { href: "/driver/history", icon: Truck, label: "Trip History" },
+            { href: "/notifications", icon: Bell, label: "Notifications" },
         ]
     },
     {
@@ -100,6 +104,7 @@ roleNavLinks.broker = [
         group: "MAIN", items: [
             { href: "/broker/dashboard", icon: LayoutDashboard, label: "Overview" },
             { href: "/broker/network", icon: Users, label: "Partner Network" },
+            { href: "/notifications", icon: Bell, label: "Notifications" },
         ]
     },
     {
@@ -117,6 +122,7 @@ roleNavLinks.admin = [
             { href: "/admin/users", icon: Users, label: "User Management" },
             { href: "/admin/advertisements", icon: Megaphone, label: "Advertisements" },
             { href: "/admin/disputes", icon: AlertCircle, label: "Dispute Center" },
+            { href: "/notifications", icon: Bell, label: "Notifications" },
         ]
     },
     {

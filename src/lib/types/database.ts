@@ -219,7 +219,10 @@ export type NotificationType =
   | "payment_received"
   | "shipment_update"
   | "message_received"
-  | "document_expiring";
+  | "document_expiring"
+  | "dispute_created"
+  | "dispute_resolved"
+  | "bid_rejected";
 
 export interface Message {
   id: string;

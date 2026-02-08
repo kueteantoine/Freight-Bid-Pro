@@ -76,7 +76,7 @@ BEGIN
         d.dispute_type,
         d.dispute_description,
         d.evidence_urls_json,
-        d.status,
+        d.dispute_status AS status,
         d.priority,
         d.assigned_to_admin_id,
         u3.email AS assigned_admin_email,
@@ -91,7 +91,7 @@ BEGIN
     LEFT JOIN auth.users u2 ON d.against_user_id = u2.id
     LEFT JOIN auth.users u3 ON d.assigned_to_admin_id = u3.id
     WHERE 
-        (filter_status IS NULL OR d.status = filter_status)
+        (filter_status IS NULL OR d.dispute_status = filter_status)
         AND (filter_priority IS NULL OR d.priority = filter_priority)
         AND (
             search_query IS NULL 
@@ -153,7 +153,7 @@ BEGIN
         d.dispute_type,
         d.dispute_description,
         d.evidence_urls_json,
-        d.status,
+        d.dispute_status AS status,
         d.priority,
         d.assigned_to_admin_id,
         u3.email AS assigned_admin_email,
@@ -183,7 +183,7 @@ DECLARE
 BEGIN
     UPDATE public.disputes
     SET 
-        status = new_status,
+        dispute_status = new_status,
         resolution_notes = COALESCE(admin_notes, resolution_notes),
         updated_at = NOW(),
         resolved_at = CASE WHEN new_status IN ('resolved', 'closed') THEN NOW() ELSE resolved_at END
@@ -211,7 +211,7 @@ BEGIN
     UPDATE public.disputes
     SET 
         assigned_to_admin_id = admin_id,
-        status = CASE WHEN status = 'open' THEN 'under_review' ELSE status END,
+        dispute_status = CASE WHEN dispute_status = 'open' THEN 'under_review' ELSE dispute_status END,
         updated_at = NOW()
     WHERE id = dispute_id;
 
@@ -237,7 +237,7 @@ DECLARE
 BEGIN
     UPDATE public.disputes
     SET 
-        status = 'resolved',
+        dispute_status = 'resolved',
         resolution_action = resolution_action_text,
         resolution_notes = resolution_notes_text,
         resolved_at = NOW(),

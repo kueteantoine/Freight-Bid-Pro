@@ -249,7 +249,7 @@ export async function getDisputeStats(): Promise<{
 
         const { data, error } = await supabase
             .from("disputes")
-            .select("status");
+            .select("dispute_status");
 
         if (error) {
             return { data: null, error: error.message };
@@ -257,10 +257,10 @@ export async function getDisputeStats(): Promise<{
 
         const stats = {
             total: data.length,
-            open: data.filter((d) => d.status === "open").length,
-            under_review: data.filter((d) => d.status === "under_review").length,
-            resolved: data.filter((d) => d.status === "resolved").length,
-            escalated: data.filter((d) => d.status === "escalated").length,
+            open: data.filter((d) => d.dispute_status === "open").length,
+            under_review: data.filter((d) => d.dispute_status === "under_review").length,
+            resolved: data.filter((d) => d.dispute_status === "resolved").length,
+            escalated: data.filter((d) => d.dispute_status === "escalated").length,
         };
 
         return { data: stats, error: null };
