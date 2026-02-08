@@ -27,9 +27,20 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { getAllAdminUsers, assignAdminRole, revokeAdminRole } from '@/lib/services/admin/admin-permissions';
-import { UserPlus, UserMinus } from 'lucide-react';
+import { getAllAdminUsers, assignAdminRole, revokeAdminRole, revokeAdminAccess } from '@/lib/services/admin/admin-permissions';
+import { UserPlus, UserMinus, ShieldX, PlusCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { SmartAddAdminDialog } from './SmartAddAdminDialog';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export function AdminUserList() {
     const [users, setUsers] = useState<any[]>([]);
@@ -38,6 +49,8 @@ export function AdminUserList() {
     const [actionType, setActionType] = useState<'assign' | 'revoke' | null>(null);
     const [selectedRole, setSelectedRole] = useState<string>('');
     const [submitting, setSubmitting] = useState(false);
+    const [isSmartAddOpen, setIsSmartAddOpen] = useState(false);
+    const [revokingUserId, setRevokingUserId] = useState<string | null>(null);
     const { toast } = useToast();
 
     useEffect(() => {
@@ -97,6 +110,29 @@ export function AdminUserList() {
         setSubmitting(false);
     }
 
+    async function handleRevokeAllAccess() {
+        if (!revokingUserId) return;
+
+        setSubmitting(true);
+        const result = await revokeAdminAccess(revokingUserId);
+
+        if (result.success) {
+            toast({
+                title: 'Access Revoked',
+                description: 'All administrative privileges have been revoked for this user.',
+            });
+            setRevokingUserId(null);
+            fetchUsers();
+        } else {
+            toast({
+                title: 'Error',
+                description: result.error || 'Failed to revoke access',
+                variant: 'destructive',
+            });
+        }
+        setSubmitting(false);
+    }
+
     if (loading) {
         return <div>Loading admin users...</div>;
     }
@@ -104,11 +140,17 @@ export function AdminUserList() {
     return (
         <>
             <Card>
-                <CardHeader>
-                    <CardTitle>Admin Users</CardTitle>
-                    <CardDescription>
-                        {users.length} admin user{users.length !== 1 ? 's' : ''}
-                    </CardDescription>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                    <div>
+                        <CardTitle>Admin Users</CardTitle>
+                        <CardDescription>
+                            {users.length} admin user{users.length !== 1 ? 's' : ''}
+                        </CardDescription>
+                    </div>
+                    <Button onClick={() => setIsSmartAddOpen(true)} className="flex items-center gap-2">
+                        <PlusCircle className="h-4 w-4" />
+                        Add Admin
+                    </Button>
                 </CardHeader>
                 <CardContent>
                     <Table>
@@ -140,16 +182,29 @@ export function AdminUserList() {
                                         </div>
                                     </TableCell>
                                     <TableCell>
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={() => {
-                                                setSelectedUser(user);
-                                                setActionType('assign');
-                                            }}
-                                        >
-                                            <UserPlus className="h-4 w-4" />
-                                        </Button>
+                                        <div className="flex items-center gap-1">
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => {
+                                                    setSelectedUser(user);
+                                                    setActionType('assign');
+                                                }}
+                                                title="Assign specialized role"
+                                            >
+                                                <PlusCircle className="h-4 w-4" />
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                                                onClick={() => setRevokingUserId(user.user_id)}
+                                                disabled={submitting}
+                                                title="Revoke all admin access"
+                                            >
+                                                <ShieldX className="h-4 w-4" />
+                                            </Button>
+                                        </div>
                                     </TableCell>
                                 </TableRow>
                             ))}
@@ -207,6 +262,37 @@ export function AdminUserList() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            <SmartAddAdminDialog
+                open={isSmartAddOpen}
+                onOpenChange={setIsSmartAddOpen}
+                onSuccess={fetchUsers}
+            />
+
+            <AlertDialog open={!!revokingUserId} onOpenChange={(open) => !open && setRevokingUserId(null)}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            This will revoke **all** administrative privileges for this user.
+                            They will no longer be able to access the admin dashboard, but their marketplace roles (like Shipper) will be unaffected.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={submitting}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={(e) => {
+                                e.preventDefault();
+                                handleRevokeAllAccess();
+                            }}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            disabled={submitting}
+                        >
+                            {submitting ? 'Revoking...' : 'Revoke All Access'}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </>
     );
 }

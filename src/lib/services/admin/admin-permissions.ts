@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { revalidatePath } from 'next/cache';
+import { inviteNewAdmin } from './admin-invitation';
 
 // =====================================================
 // TYPES
@@ -154,6 +155,94 @@ export async function revokeAdminRole(userId: string, roleName: AdminRoleType) {
     } catch (error: any) {
         console.error('Error revoking admin role:', error);
         return { success: false, error: error.message };
+    }
+}
+
+export async function promoteExistingUserToAdmin(userId: string, roleName: AdminRoleType) {
+    const supabase = await createClient();
+
+    try {
+        // 1. Ensure user has base 'admin' role in user_roles
+        const { error: baseRoleError } = await supabase
+            .from('user_roles')
+            .upsert({
+                user_id: userId,
+                role_type: 'admin',
+                is_active: true,
+                verification_status: 'verified'
+            }, {
+                onConflict: 'user_id, role_type'
+            });
+
+        if (baseRoleError) throw baseRoleError;
+
+        // 2. Assign specialized admin role
+        const result = await assignAdminRole(userId, roleName);
+
+        return result;
+    } catch (error: any) {
+        console.error('Error promoting user to admin:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+export async function revokeAdminAccess(userId: string) {
+    const supabase = await createClient();
+
+    try {
+        // 1. Deactivate base 'admin' role
+        const { error: baseRoleError } = await supabase
+            .from('user_roles')
+            .update({ is_active: false })
+            .eq('user_id', userId)
+            .eq('role_type', 'admin');
+
+        if (baseRoleError) throw baseRoleError;
+
+        // 2. Deactivate all specialized admin roles
+        const { error: specializedRolesError } = await supabase
+            .from('admin_user_roles')
+            .update({ is_active: false })
+            .eq('user_id', userId);
+
+        if (specializedRolesError) throw specializedRolesError;
+
+        revalidatePath('/admin/roles');
+        return { success: true };
+    } catch (error: any) {
+        console.error('Error revoking all admin access:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+export async function findUserByEmail(email: string) {
+    const supabase = await createClient();
+
+    try {
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('id, email')
+            .eq('email', email)
+            .maybeSingle();
+
+        if (error) throw error;
+        return { success: true, data };
+    } catch (error: any) {
+        console.error('Error finding user by email:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+export async function smartAddAdmin(email: string, roleName: AdminRoleType) {
+    // 1. Check if user exists
+    const userResult = await findUserByEmail(email);
+
+    if (userResult.success && userResult.data) {
+        // User exists, promote them
+        return await promoteExistingUserToAdmin(userResult.data.id, roleName);
+    } else {
+        // User doesn't exist, invite them
+        return await inviteNewAdmin(email, roleName);
     }
 }
 

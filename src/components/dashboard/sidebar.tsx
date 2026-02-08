@@ -1,7 +1,29 @@
 "use client";
 
 import React from "react";
-import { LayoutDashboard, DollarSign, Package, TrendingUp, Globe, Wallet, Settings, HelpCircle, Truck, LogOut, MessageSquare, ClipboardList } from "lucide-react";
+import {
+    LayoutDashboard,
+    DollarSign,
+    Package,
+    TrendingUp,
+    Globe,
+    Wallet,
+    Settings,
+    HelpCircle,
+    Truck,
+    LogOut,
+    MessageSquare,
+    ClipboardList,
+    Users,
+    AlertCircle,
+    Megaphone,
+    FileCheck,
+    BarChart3,
+    ShieldCheck,
+    FileText,
+    Mail,
+    CreditCard
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -91,23 +113,29 @@ roleNavLinks.admin = [
     {
         group: "MAIN", items: [
             { href: "/admin/dashboard", icon: LayoutDashboard, label: "Platform Overview" },
+            { href: "/admin/verifications", icon: FileCheck, label: "Verifications" },
             { href: "/admin/users", icon: Users, label: "User Management" },
+            { href: "/admin/advertisements", icon: Megaphone, label: "Advertisements" },
             { href: "/admin/disputes", icon: AlertCircle, label: "Dispute Center" },
         ]
     },
     {
         group: "FINANCIALS", items: [
+            { href: "/admin/payments", icon: CreditCard, label: "Payments" },
             { href: "/admin/settlements", icon: Wallet, label: "Settlements" },
+            { href: "/admin/reporting", icon: BarChart3, label: "Reporting" },
         ]
     },
     {
-        group: "SUPPORT", items: [
-            { href: "/admin/settings", icon: Settings, label: "Settings" },
+        group: "SYSTEM", items: [
+            { href: "/admin/roles", icon: ShieldCheck, label: "Roles & Permissions" },
+            { href: "/admin/content", icon: FileText, label: "Content & Legal" },
+            { href: "/admin/templates", icon: Mail, label: "Templates" },
+            { href: "/admin/settings", icon: Settings, label: "Platform Settings" },
         ]
     }
 ];
 
-import { Users, AlertCircle } from "lucide-react";
 
 export function Sidebar({ user, activeRole, userRoles }: { user: User, activeRole: string | null, userRoles: string[] }) {
     const pathname = usePathname();

@@ -43,7 +43,33 @@ export async function middleware(req: NextRequest) {
                 .eq('user_id', data.user.id)
                 .single()
 
-            const role = pref?.last_active_role || 'shipper' // Default fallback
+            let role = pref?.last_active_role
+
+            if (!role) {
+                // Check if user has admin role specifically
+                const { data: adminRole } = await supabase
+                    .from('user_roles')
+                    .select('role_type')
+                    .eq('user_id', data.user.id)
+                    .eq('role_type', 'admin')
+                    .eq('is_active', true)
+                    .maybeSingle()
+
+                if (adminRole) {
+                    role = 'admin'
+                } else {
+                    // Fallback to first available role or shipper
+                    const { data: firstRole } = await supabase
+                        .from('user_roles')
+                        .select('role_type')
+                        .eq('user_id', data.user.id)
+                        .eq('is_active', true)
+                        .limit(1)
+                        .maybeSingle()
+
+                    role = firstRole?.role_type || 'shipper'
+                }
+            }
 
             // Validate role to be safe
             const validRoles = ['shipper', 'transporter', 'driver', 'broker', 'admin']
