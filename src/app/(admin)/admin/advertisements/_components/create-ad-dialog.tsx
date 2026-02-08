@@ -155,10 +155,10 @@ export function CreateAdDialog() {
                                         <SelectValue placeholder="Select zone" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="dashboard_banner">Dashboard Banner</SelectItem>
-                                        <SelectItem value="sidebar">Sidebar</SelectItem>
-                                        <SelectItem value="sponsored_listing">Sponsored Listing</SelectItem>
-                                        <SelectItem value="email_newsletter">Email Newsletter</SelectItem>
+                                        <SelectItem value="dashboard_banner">Dashboard Banner (1200x200)</SelectItem>
+                                        <SelectItem value="sidebar">Sidebar (300x250)</SelectItem>
+                                        <SelectItem value="sponsored_listing">Sponsored Listing (200x200)</SelectItem>
+                                        <SelectItem value="email_newsletter">Email Newsletter (600x150)</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
