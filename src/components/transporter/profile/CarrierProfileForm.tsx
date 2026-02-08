@@ -7,6 +7,7 @@ import * as z from "zod";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
     Form,
     FormControl,
@@ -33,7 +34,14 @@ const profileSchema = z.object({
     number_of_employees: z.coerce.number().min(1),
     business_address: z.string().min(5, "Address is required"),
     operating_regions: z.string().min(2, "Operating regions are required"),
-    service_types: z.string().min(2, "Service types are required"),
+    // service_types has been replaced/enhanced by freight_types but we can keep it for backward compatibility if needed, or remove. 
+    // For now, I will keep it optional or remove it if I removed the field from UI. I removed it from UI, so removing here.
+    // service_types: z.string().min(2, "Service types are required"), 
+    freight_types: z.array(z.string()).min(1, "Select at least one freight type"),
+    base_city: z.string().min(2, "Base city is required"),
+    service_radius_km: z.coerce.number().min(1, "Radius must be at least 1km"),
+    willing_to_backhaul: z.boolean().default(true),
+    cross_border: z.boolean().default(false),
     insurance_info: z.object({
         provider: z.string().min(2, "Insurance provider is required"),
         policy_number: z.string().min(5, "Policy number is required"),
@@ -57,7 +65,11 @@ export function CarrierProfileForm({ initialData, onSave }: { initialData?: any,
             number_of_employees: 1,
             business_address: "",
             operating_regions: "",
-            service_types: "",
+            freight_types: [],
+            base_city: "",
+            service_radius_km: 100,
+            willing_to_backhaul: true,
+            cross_border: false,
             insurance_info: {
                 provider: "",
                 policy_number: "",
@@ -155,6 +167,7 @@ export function CarrierProfileForm({ initialData, onSave }: { initialData?: any,
                         </CardContent>
                     </Card>
 
+
                     {/* Operating Details */}
                     <Card className="rounded-3xl border-slate-100 shadow-sm overflow-hidden">
                         <CardHeader className="bg-slate-50/50 border-b border-slate-50">
@@ -164,9 +177,38 @@ export function CarrierProfileForm({ initialData, onSave }: { initialData?: any,
                                 </div>
                                 <CardTitle className="text-lg">Operating Details</CardTitle>
                             </div>
-                            <CardDescription>Regions and types of service offered</CardDescription>
+                            <CardDescription>Regions, routes, and service capabilities</CardDescription>
                         </CardHeader>
-                        <CardContent className="pt-6 space-y-4">
+                        <CardContent className="pt-6 space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <FormField
+                                    control={form.control}
+                                    name="base_city"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Base City (Main Hub)</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="e.g. Douala" className="rounded-xl" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="service_radius_km"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Service Radius (km)</FormLabel>
+                                            <FormControl>
+                                                <Input type="number" placeholder="e.g. 500" className="rounded-xl" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+
                             <FormField
                                 control={form.control}
                                 name="operating_regions"
@@ -182,17 +224,93 @@ export function CarrierProfileForm({ initialData, onSave }: { initialData?: any,
                             />
                             <FormField
                                 control={form.control}
-                                name="service_types"
+                                name="freight_types"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Specialized Services</FormLabel>
-                                        <FormControl>
-                                            <Input placeholder="e.g. Cold Chain, Oversized, General Cargo" className="rounded-xl" {...field} />
-                                        </FormControl>
+                                        <FormLabel>Freight Types Supported</FormLabel>
+                                        <div className="grid grid-cols-2 gap-2 mt-2">
+                                            {/* We can map from TRUCK_TYPES or similar constant if available, or hardcode common types for now */}
+                                            {["General Cargo", "Perishable", "Hazardous", "Oversized", "Livestock", "Vehicles"].map((type) => (
+                                                <FormField
+                                                    key={type}
+                                                    control={form.control}
+                                                    name="freight_types"
+                                                    render={({ field }) => {
+                                                        const value = field.value as string[] || [];
+                                                        return (
+                                                            <FormItem
+                                                                key={type}
+                                                                className="flex flex-row items-start space-x-3 space-y-0"
+                                                            >
+                                                                <FormControl>
+                                                                    <Checkbox
+                                                                        checked={value.includes(type)}
+                                                                        onCheckedChange={(checked) => {
+                                                                            return checked
+                                                                                ? field.onChange([...value, type])
+                                                                                : field.onChange(
+                                                                                    value.filter(
+                                                                                        (val) => val !== type
+                                                                                    )
+                                                                                )
+                                                                        }}
+                                                                    />
+                                                                </FormControl>
+                                                                <FormLabel className="font-normal">
+                                                                    {type}
+                                                                </FormLabel>
+                                                            </FormItem>
+                                                        )
+                                                    }}
+                                                />
+                                            ))}
+                                        </div>
                                         <FormMessage />
                                     </FormItem>
                                 )}
                             />
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <FormField
+                                    control={form.control}
+                                    name="willing_to_backhaul"
+                                    render={({ field }) => (
+                                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 shadow-sm">
+                                            <FormControl>
+                                                <Checkbox
+                                                    checked={!!field.value}
+                                                    onCheckedChange={field.onChange}
+                                                />
+                                            </FormControl>
+                                            <div className="space-y-1 text-sm leading-none">
+                                                <FormLabel>
+                                                    Willing to Backhaul
+                                                </FormLabel>
+                                            </div>
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="cross_border"
+                                    render={({ field }) => (
+                                        <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 shadow-sm">
+                                            <FormControl>
+                                                <Checkbox
+                                                    checked={!!field.value}
+                                                    onCheckedChange={field.onChange}
+                                                />
+                                            </FormControl>
+                                            <div className="space-y-1 text-sm leading-none">
+                                                <FormLabel>
+                                                    Cross Border
+                                                </FormLabel>
+                                            </div>
+                                        </FormItem>
+                                    )}
+                                />
+                            </div>
+
                             <div className="grid grid-cols-2 gap-4">
                                 <FormField
                                     control={form.control}
