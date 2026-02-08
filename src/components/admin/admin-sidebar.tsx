@@ -2,7 +2,18 @@
 
 import React from "react";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, FileCheck, Users } from "lucide-react";
+import {
+    LayoutDashboard,
+    FileCheck,
+    Users,
+    Megaphone,
+    CreditCard,
+    BarChart3,
+    ShieldCheck,
+    FileText,
+    Mail,
+    Settings
+} from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
@@ -10,6 +21,13 @@ const adminNavLinks = [
     { href: "/admin/dashboard", icon: LayoutDashboard, label: "Dashboard" },
     { href: "/admin/verifications", icon: FileCheck, label: "Verifications" },
     { href: "/admin/users", icon: Users, label: "Users" },
+    { href: "/admin/advertisements", icon: Megaphone, label: "Advertisements" },
+    { href: "/admin/payments", icon: CreditCard, label: "Payments" },
+    { href: "/admin/reporting", icon: BarChart3, label: "Reporting" },
+    { href: "/admin/roles", icon: ShieldCheck, label: "Roles & Permissions" },
+    { href: "/admin/content", icon: FileText, label: "Content & Legal" },
+    { href: "/admin/templates", icon: Mail, label: "Templates" },
+    { href: "/admin/settings", icon: Settings, label: "Settings" },
 ];
 
 export function AdminSidebar() {
