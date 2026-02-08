@@ -385,7 +385,39 @@ export async function submitBid(
 
     if (!user) throw new Error("Unauthorized");
 
-    // Insert the bid
+    // 1. Fetch shipment details to validate status and expiry
+    const { data: shipment, error: shipmentError } = await supabase
+        .from("shipments")
+        .select("status, bid_expires_at, shipment_number")
+        .eq("id", shipmentId)
+        .single();
+
+    if (shipmentError || !shipment) throw new Error("Shipment not found");
+
+    if (shipment.status !== 'open_for_bidding') {
+        throw new Error(`Shipment ${shipment.shipment_number || ''} is not open for bidding (Status: ${shipment.status})`);
+    }
+
+    if (shipment.bid_expires_at && new Date(shipment.bid_expires_at) < new Date()) {
+        throw new Error("This auction has already expired.");
+    }
+
+    // 2. Fetch current lowest bid for increment validation
+    const { data: lowestBidData } = await supabase
+        .from("bids")
+        .select("bid_amount")
+        .eq("shipment_id", shipmentId)
+        .eq("bid_status", "active")
+        .order("bid_amount", { ascending: true })
+        .limit(1)
+        .single();
+
+    const minIncrement = 1000;
+    if (lowestBidData && amount > (lowestBidData.bid_amount - minIncrement)) {
+        throw new Error(`Bid must be at least ${minIncrement.toLocaleString()} XAF lower than the current lowest bid (${lowestBidData.bid_amount.toLocaleString()} XAF).`);
+    }
+
+    // 3. Insert the bid
     const { data: bid, error: insertError } = await supabase
         .from("bids")
         .insert({
@@ -400,13 +432,20 @@ export async function submitBid(
         .select()
         .single();
 
-    if (insertError) throw insertError;
+    if (insertError) {
+        if (insertError.message.includes('expired')) throw new Error("This auction has already expired.");
+        if (insertError.message.includes('increment')) throw new Error(insertError.message);
+        throw insertError;
+    }
 
-    // Evaluate auto-accept if the bid is submitted successfully
+    // 4. Evaluate auto-accept
     await evaluateAutoAccept(bid.id);
 
+    // 5. Revalidate paths
     revalidatePath("/transporter/loads");
     revalidatePath("/shipper/bidding");
+    revalidatePath(`/shipper/bidding/${shipmentId}`);
+    revalidatePath(`/transporter/loads/${shipmentId}`);
 
     return { success: true, bid };
 }

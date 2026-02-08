@@ -22,7 +22,8 @@ import {
     TrendingDown,
     Wallet,
     Settings2,
-    AlertTriangle
+    AlertTriangle,
+    Zap
 } from "lucide-react";
 import { BidBreakdown, Shipment } from "@/lib/types/database";
 import { submitBid } from "@/app/actions/bid-actions";
@@ -123,6 +124,9 @@ export function BidSubmissionDialog({
         ? Math.min(...shipment.bids.map(b => b.bid_amount))
         : 0;
 
+    const minIncrement = 1000;
+    const nextRequiredBid = lowestBid > 0 ? lowestBid - minIncrement : null;
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-[600px] h-[90vh] overflow-y-auto rounded-3xl p-0 gap-0 border-none">
@@ -145,24 +149,33 @@ export function BidSubmissionDialog({
 
                 <div className="p-8 space-y-8">
                     {/* Market Intel Card */}
-                    <Card className="bg-slate-50 border-none rounded-2xl p-4 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
+                    <div className="grid grid-cols-2 gap-4">
+                        <Card className="bg-slate-50 border-none rounded-2xl p-4 flex items-center gap-3">
                             <div className="h-10 w-10 bg-amber-100 rounded-xl flex items-center justify-center">
                                 <TrendingDown className="h-5 w-5 text-amber-600" />
                             </div>
                             <div>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Target amount</p>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Current Lowest</p>
                                 <p className="text-lg font-black text-slate-900">
                                     {lowestBid > 0 ? `CFA ${lowestBid.toLocaleString()}` : "No bids yet"}
                                 </p>
                             </div>
-                        </div>
-                        {lowestBid > 0 && (
-                            <Badge variant="outline" className="bg-white border-slate-100 text-slate-600 font-bold px-3 py-1 rounded-lg">
-                                Lowest Bid
-                            </Badge>
+                        </Card>
+
+                        {nextRequiredBid && (
+                            <Card className="bg-primary/5 border-2 border-primary/20 border-dashed rounded-2xl p-4 flex items-center gap-3">
+                                <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center">
+                                    <Zap className="h-5 w-5 text-primary" />
+                                </div>
+                                <div>
+                                    <p className="text-[10px] font-bold text-primary uppercase tracking-widest">Next Target</p>
+                                    <p className="text-lg font-black text-primary">
+                                        CFA {nextRequiredBid.toLocaleString()}
+                                    </p>
+                                </div>
+                            </Card>
                         )}
-                    </Card>
+                    </div>
 
                     {/* Bid Breakdown Section */}
                     <div className="space-y-4">

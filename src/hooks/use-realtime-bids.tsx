@@ -141,7 +141,39 @@ export function useRealtimeBids(): RealtimeBidsHook {
       }
     ).subscribe();
 
-    // Handle shipment status changes (e.g., awarded, cancelled)
+    // Handle subscription for bid updates (e.g., outbid, rejected, awarded)
+    channel.on(
+      'postgres_changes',
+      {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'bids',
+        filter: `shipment_id=in.(${activeShipments.map(s => s.id).join(',')})`
+      },
+      (payload) => {
+        const updatedBid = payload.new as Bid;
+        setActiveShipments(prevShipments => {
+          return prevShipments.map(s => {
+            if (s.id !== updatedBid.shipment_id) return s;
+
+            const updatedBids = s.bids.map(b => b.id === updatedBid.id ? { ...b, ...updatedBid } : b);
+
+            // If bid became inactive, filter it out
+            const activeBids = updatedBids.filter(b => b.bid_status === 'active').sort((a, b) => a.bid_amount - b.bid_amount);
+
+            return { ...s, bids: activeBids };
+          });
+        });
+
+        if (updatedBid.transporter_user_id === user.id && updatedBid.bid_status === 'outbid') {
+          toast.warning("You have been outbid!", {
+            description: "Check the load board to submit a new offer.",
+          });
+        }
+      }
+    ).subscribe();
+
+    // Handle shipment changes (status and bid_expires_at)
     channel.on(
       'postgres_changes',
       {
@@ -152,9 +184,18 @@ export function useRealtimeBids(): RealtimeBidsHook {
       },
       (payload) => {
         const updatedShipment = payload.new as Shipment;
+        const oldShipment = payload.old as Shipment;
+
+        // Handle snipe protection (expiry extension)
+        if (updatedShipment.bid_expires_at !== oldShipment.bid_expires_at) {
+          setActiveShipments(prev => prev.map(s => s.id === updatedShipment.id ? { ...s, bid_expires_at: updatedShipment.bid_expires_at } : s));
+          toast.info("Auction time extended!", {
+            description: "A bid was placed in the final minutes, giving more time to participate.",
+          });
+        }
+
         if (updatedShipment.status !== 'open_for_bidding') {
           toast.success(`Shipment ${updatedShipment.shipment_number || updatedShipment.id.slice(0, 8)} status updated to ${updatedShipment.status}.`);
-          // Refetch all to clean up the list
           fetchActiveShipments();
         }
       }

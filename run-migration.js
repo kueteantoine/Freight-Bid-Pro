@@ -22,9 +22,9 @@ envContent.split('\n').forEach(line => {
 });
 
 const SUPABASE_URL = env.NEXT_PUBLIC_SUPABASE_URL;
-const SUPABASE_ANON_KEY = env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const SUPABASE_SERVICE_KEY = env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY || env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
     console.error('❌ Missing Supabase credentials in .env.local');
     process.exit(1);
 }
@@ -42,7 +42,7 @@ console.log('📦 Applying migration:', path.basename(migrationPath));
 const applyMigration = async () => {
     try {
         const { createClient } = require('@supabase/supabase-js');
-        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
         console.log('⚙️ Executing migration SQL...');
 
