@@ -4,7 +4,8 @@ import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Loader2, Save, Package, Truck, Users, Shield, CalendarIcon } from "lucide-react";
+import { Loader2, Save, Package, Truck, Users, Shield, CalendarIcon, X, Plus } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -30,6 +31,7 @@ const shipperProfileSchema = z.object({
   tax_id: z.string().min(5, "Tax ID is required."),
   industry_type: z.string().min(2, "Industry type is required."),
   billing_address: z.string().min(10, "Billing address is required."),
+  preferred_freight_types: z.array(z.string()).optional(),
 });
 
 const transporterProfileSchema = z.object({
@@ -71,9 +73,12 @@ type RoleProfileKey =
   | 'emergency_contact'
   | 'broker_license_number'
   | 'commission_rates'
-  | 'service_areas';
+  | 'broker_license_number'
+  | 'commission_rates'
+  | 'service_areas'
+  | 'preferred_freight_types';
 
-type ProfileValues = Partial<Record<RoleProfileKey, string | number>>;
+type ProfileValues = Partial<Record<RoleProfileKey, string | number | string[]>>;
 
 type ProfileSchema = z.ZodObject<any>;
 
@@ -91,6 +96,7 @@ const fieldConfig: Record<UserRole, { name: RoleProfileKey; label: string; type?
     { name: "business_reg_number", label: "Business Registration Number" },
     { name: "tax_id", label: "Tax ID (NIU)" },
     { name: "industry_type", label: "Industry Type", placeholder: "e.g., Manufacturing, Retail" },
+    { name: "preferred_freight_types", label: "Preferred Freight Types", type: "tags", placeholder: "Add types..." },
     { name: "billing_address", label: "Billing Address", type: "textarea" },
   ],
   transporter: [
@@ -135,6 +141,21 @@ export function RoleProfileForm({ role, initialData, verificationStatus }: RoleP
   const CurrentSchema = schemaMap[role];
   const fields = fieldConfig[role];
   const RoleIcon = roleIconMap[role];
+  const [tagInput, setTagInput] = useState("");
+
+  const handleAddTag = (field: any, value: string) => {
+    if (!value.trim()) return;
+    const currentTags = (field.value as string[]) || [];
+    if (!currentTags.includes(value.trim())) {
+      field.onChange([...currentTags, value.trim()]);
+    }
+    setTagInput("");
+  };
+
+  const handleRemoveTag = (field: any, tagToRemove: string) => {
+    const currentTags = (field.value as string[]) || [];
+    field.onChange(currentTags.filter((tag: string) => tag !== tagToRemove));
+  };
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -248,6 +269,44 @@ export function RoleProfileForm({ role, initialData, verificationStatus }: RoleP
                               value={formField.value ? String(formField.value).split('T')[0] : ''}
                               onChange={(e) => formField.onChange(e.target.value)}
                             />
+                          </div>
+                        ) : field.type === "tags" ? (
+                          <div className="space-y-3">
+                            <div className="flex gap-2">
+                              <Input
+                                placeholder={field.placeholder}
+                                value={tagInput}
+                                onChange={(e) => setTagInput(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    handleAddTag(formField, tagInput);
+                                  }
+                                }}
+                              />
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="icon"
+                                onClick={() => handleAddTag(formField, tagInput)}
+                              >
+                                <Plus className="h-4 w-4" />
+                              </Button>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              {(formField.value as string[] || []).map((tag: string) => (
+                                <Badge key={tag} variant="secondary" className="px-3 py-1 text-sm flex items-center gap-1">
+                                  {tag}
+                                  <X
+                                    className="h-3 w-3 cursor-pointer hover:text-destructive"
+                                    onClick={() => handleRemoveTag(formField, tag)}
+                                  />
+                                </Badge>
+                              ))}
+                            </div>
+                            <p className="text-[10px] text-muted-foreground">
+                              Common types: General Cargo, Perishable, Hazardous, Fragile
+                            </p>
                           </div>
                         ) : (
                           <Input
