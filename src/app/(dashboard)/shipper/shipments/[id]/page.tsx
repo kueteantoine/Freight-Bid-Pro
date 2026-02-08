@@ -3,6 +3,7 @@ import { TrackingTimeline } from "@/components/shipper/tracking/TrackingTimeline
 import { MilestoneProgress } from "@/components/shipper/tracking/MilestoneProgress";
 import { ShipmentDetailsPanel } from "@/components/shipper/tracking/ShipmentDetailsPanel";
 import { ShipmentActions } from "@/components/shipper/tracking/ShipmentActions";
+import { LiveTrackingMap } from "@/components/tracking/LiveTrackingMap";
 import { ChatWindow } from "@/components/shipper/communication/ChatWindow";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, MessageSquare, History } from "lucide-react";
@@ -51,6 +52,26 @@ export default async function ShipmentDetailPage(props: ShipmentDetailPageProps)
 
                 {/* Milestone Progress */}
                 <MilestoneProgress shipment={shipment} />
+
+                {/* Live Tracking Map */}
+                <div className="grid gap-6 lg:grid-cols-3">
+                    <div className="lg:col-span-2">
+                        <LiveTrackingMap
+                            shipmentId={shipment.id}
+                            pickup={{
+                                lat: Number(shipment.pickup_latitude),
+                                lng: Number(shipment.pickup_longitude),
+                                address: shipment.pickup_location
+                            }}
+                            delivery={{
+                                lat: Number(shipment.delivery_latitude),
+                                lng: Number(shipment.delivery_longitude),
+                                address: shipment.delivery_location
+                            }}
+                        />
+                    </div>
+                    {/* Secondary Stats/Info could go here if needed in the future */}
+                </div>
 
                 {/* Main Content Grid */}
                 <div className="grid gap-6 lg:grid-cols-3">

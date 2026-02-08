@@ -1,9 +1,4 @@
-/**
- * Google Maps Utility
- * 
- * NOTE: This requires a GOOGLE_MAPS_API_KEY to be set in .env.local
- * For now, this provides placeholders and types for the implementation.
- */
+export const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY || "";
 
 export interface GooglePlace {
     description: string;
@@ -12,6 +7,40 @@ export interface GooglePlace {
         lat: number;
         lng: number;
     };
+}
+
+/**
+ * Fetches distance and duration between two points using Google Distance Matrix API.
+ */
+export async function getDistanceMatrix(
+    origin: { lat: number; lng: number },
+    destination: { lat: number; lng: number }
+): Promise<{ distance_text: string; distance_value: number; duration_text: string; duration_value: number } | null> {
+    if (!GOOGLE_MAPS_API_KEY) {
+        console.warn("Google Maps API key is missing");
+        return null;
+    }
+
+    const url = `https://maps.googleapis.com/maps/api/distancematrix/json?origins=${origin.lat},${origin.lng}&destinations=${destination.lat},${destination.lng}&key=${GOOGLE_MAPS_API_KEY}`;
+
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.status === "OK" && data.rows[0].elements[0].status === "OK") {
+            const element = data.rows[0].elements[0];
+            return {
+                distance_text: element.distance.text,
+                distance_value: element.distance.value, // in meters
+                duration_text: element.duration.text,
+                duration_value: element.duration.value // in seconds
+            };
+        }
+        return null;
+    } catch (error) {
+        console.error("Error fetching Google Distance Matrix:", error);
+        return null;
+    }
 }
 
 /**

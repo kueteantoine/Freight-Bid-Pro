@@ -7,6 +7,7 @@ import { ShipmentTrackingWithUser, Shipment } from "@/lib/types/database";
 interface UseShipmentTrackingReturn {
     trackingEvents: ShipmentTrackingWithUser[];
     shipment: Partial<Shipment> | null;
+    interpolatedLocation: { lat: number; lng: number } | null;
     isLoading: boolean;
     error: Error | null;
 }
@@ -128,5 +129,48 @@ export function useShipmentTracking(shipmentId: string): UseShipmentTrackingRetu
         };
     }, [shipmentId]);
 
-    return { trackingEvents, shipment, isLoading, error };
+    const [interpolatedLocation, setInterpolatedLocation] = useState<{ lat: number; lng: number } | null>(null);
+
+    // 2. Marker Interpolation
+    useEffect(() => {
+        if (!shipment?.current_latitude || !shipment?.current_longitude) return;
+
+        // If this is the first point, set it immediately
+        if (!interpolatedLocation) {
+            setInterpolatedLocation({
+                lat: shipment.current_latitude,
+                lng: shipment.current_longitude
+            });
+            return;
+        }
+
+        let animationFrameId: number;
+        const targetLat = Number(shipment.current_latitude);
+        const targetLng = Number(shipment.current_longitude);
+
+        const interpolate = () => {
+            setInterpolatedLocation((prev) => {
+                if (!prev) return { lat: targetLat, lng: targetLng };
+
+                const lerp = (start: number, end: number, factor: number) => start + (end - start) * factor;
+                const factor = 0.05; // Smoothing factor (0.01 to 0.1)
+
+                const newLat = lerp(prev.lat, targetLat, factor);
+                const newLng = lerp(prev.lng, targetLng, factor);
+
+                // Stop if we're very close
+                if (Math.abs(newLat - targetLat) < 0.00001 && Math.abs(newLng - targetLng) < 0.00001) {
+                    return { lat: targetLat, lng: targetLng };
+                }
+
+                animationFrameId = requestAnimationFrame(interpolate);
+                return { lat: newLat, lng: newLng };
+            });
+        };
+
+        animationFrameId = requestAnimationFrame(interpolate);
+        return () => cancelAnimationFrame(animationFrameId);
+    }, [shipment?.current_latitude, shipment?.current_longitude]);
+
+    return { trackingEvents, shipment, interpolatedLocation, isLoading, error };
 }
