@@ -221,6 +221,8 @@ export async function getAvailableCarriers(brokerId: string) {
     }
 }
 
+import { getTieredMatch, calculateDistanceKm } from '@/lib/utils/matching-utils';
+
 /**
  * Get AI-powered matching suggestions for a shipment
  */
@@ -232,15 +234,119 @@ export async function getMatchingSuggestions(
     const supabase = await createClient();
 
     try {
-        const { data, error } = await supabase.rpc('find_matching_carriers', {
-            p_shipment_id: shipmentId,
-            p_broker_user_id: brokerId,
-            p_min_score: minScore,
-        });
+        // 1. Fetch shipment details including coordinates
+        const { data: shipment, error: shipmentError } = await supabase
+            .from('shipments')
+            .select('*')
+            .eq('id', shipmentId)
+            .single();
 
-        if (error) throw error;
+        if (shipmentError) throw shipmentError;
 
-        return { data: data as MatchingSuggestion[], error: null };
+        // 2. Fetch carriers in network with their service offerings
+        // We'll filter by distance and preferred routes in TS/SQL hybrid
+        const { data: carriers, error: carrierError } = await supabase
+            .from('broker_carrier_network')
+            .select(`
+                carrier_user_id,
+                reliability_rating,
+                transporter_profile:user_roles!inner(role_specific_profile),
+                service_offerings:carrier_service_offerings(
+                    base_latitude,
+                    base_longitude,
+                    service_radius_km,
+                    freight_types,
+                    max_distance_km
+                ),
+                preferred_routes:carrier_preferred_routes(
+                    from_city,
+                    to_city
+                )
+            `)
+            .eq('broker_user_id', brokerId)
+            .eq('relationship_status', 'active');
+
+        if (carrierError) throw carrierError;
+
+        // 3. Apply Tiered Matching Logic
+        const suggestions: MatchingSuggestion[] = (carriers || []).map(carrier => {
+            const offerings = carrier.service_offerings?.[0];
+            const routes = carrier.preferred_routes || [];
+
+            let routeScore = 0;
+            let vehicleScore = 0;
+            let distanceKm = 0;
+
+            // Radius-based matching (Tier 2/3 of Region Match)
+            if (offerings?.base_latitude && shipment.pickup_latitude) {
+                const distanceToBase = calculateDistanceKm(
+                    offerings.base_latitude,
+                    offerings.base_longitude,
+                    shipment.pickup_latitude,
+                    shipment.pickup_longitude
+                );
+                const distanceToDest = calculateDistanceKm(
+                    offerings.base_latitude,
+                    offerings.base_longitude,
+                    shipment.delivery_latitude,
+                    shipment.delivery_longitude
+                );
+
+                distanceKm = distanceToBase;
+
+                if (distanceToBase <= offerings.service_radius_km && distanceToDest <= offerings.service_radius_km) {
+                    routeScore = 100;
+                } else if (distanceToBase <= offerings.service_radius_km || distanceToDest <= offerings.service_radius_km) {
+                    routeScore = 60;
+                }
+            }
+
+            // Preferred Route Match (Priority 1)
+            const hasExactRoute = routes.some((r: any) =>
+            (r.from_city.toLowerCase() === shipment.pickup_location.toLowerCase() &&
+                r.to_city.toLowerCase() === shipment.delivery_location.toLowerCase())
+            );
+            if (hasExactRoute) routeScore = 100;
+
+            // Freight Type Match (Tiered)
+            let freightScore = 0;
+            if (offerings?.freight_types && shipment.freight_type) {
+                for (const type of offerings.freight_types) {
+                    const match = getTieredMatch(shipment.freight_type, type);
+                    if (match.score > freightScore) {
+                        freightScore = match.score * 100;
+                    }
+                }
+            } else {
+                freightScore = 50; // Default
+            }
+
+            // For now, simplify matching for demo
+            const reliabilityScore = (carrier.reliability_rating || 0) * 20;
+
+            const totalScore = (routeScore * 0.4) + (freightScore * 0.3) + (reliabilityScore * 0.3);
+
+            return {
+                carrier_user_id: carrier.carrier_user_id,
+                carrier_name: carrier.transporter_profile?.[0]?.role_specific_profile?.company_name || 'Unknown',
+                match_score: Math.round(totalScore),
+                score_breakdown: {
+                    route_compatibility: routeScore,
+                    vehicle_match: 80, // Placeholder
+                    capacity_match: 90, // Placeholder
+                    cost_optimization: 70,
+                    reliability_score: reliabilityScore,
+                    delivery_time_match: 85,
+                    distance_km: Math.round(distanceKm)
+                },
+                capacity_id: '', // Should fetch real capacity record
+                available_weight_kg: 5000,
+                reliability_rating: carrier.reliability_rating || 0
+            };
+        }).filter(s => s.match_score >= minScore)
+            .sort((a, b) => b.match_score - a.match_score);
+
+        return { data: suggestions, error: null };
     } catch (error: any) {
         console.error('Error fetching matching suggestions:', error);
         return { data: null, error: error.message };

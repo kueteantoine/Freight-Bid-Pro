@@ -1,14 +1,50 @@
-import React from "react";
+import React, { useState } from "react";
 import { UseFormReturn } from "react-hook-form";
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { AlertCircle } from "lucide-react";
 import { BookingFormValues } from "@/lib/schemas/shipment-schema";
+import { getTieredMatch } from "@/lib/utils/matching-utils";
 
 interface Step3FreightProps {
   form: UseFormReturn<BookingFormValues>;
 }
 
+// These would ideally be fetched from the database
+const SUGGESTED_FREIGHT_CATEGORIES = [
+  "General Cargo", "Cocoa Beans", "Cement", "Electronics", "Construction Materials",
+  "Perishable Goods", "Hazardous Materials", "Fragile Items", "Vehicles"
+];
+
 export function Step3Freight({ form }: Step3FreightProps) {
+  const [suggestion, setSuggestion] = useState<string | null>(null);
+
+  const handleFreightTypeChange = (val: string) => {
+    form.setValue("freight_type", val);
+
+    if (val.length > 2) {
+      let bestMatchLabel: string | null = null;
+      let bestScore = 0;
+
+      for (const cat of SUGGESTED_FREIGHT_CATEGORIES) {
+        const match = getTieredMatch(val, cat);
+        if (match.tier <= 3 && match.score > bestScore) {
+          bestMatchLabel = cat;
+          bestScore = match.score;
+        }
+      }
+
+      // Don't suggest if it's already an exact match (Tier 1 or 2)
+      if (bestMatchLabel && bestScore < 0.98) {
+        setSuggestion(bestMatchLabel);
+      } else {
+        setSuggestion(null);
+      }
+    } else {
+      setSuggestion(null);
+    }
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
       <div className="space-y-2">
@@ -23,7 +59,30 @@ export function Step3Freight({ form }: Step3FreightProps) {
             <FormItem>
               <FormLabel>Freight Type</FormLabel>
               <FormControl>
-                <Input placeholder="e.g. Cocoa Beans, Cement, Electronics" className="h-12" {...field} />
+                <div className="space-y-3">
+                  <Input
+                    placeholder="e.g. Cocoa Beans, Cement, Electronics"
+                    className="h-12"
+                    {...field}
+                    onChange={(e) => handleFreightTypeChange(e.target.value)}
+                  />
+                  {suggestion && (
+                    <div className="flex items-center gap-2 p-2 bg-primary/5 border border-primary/20 rounded-lg text-sm animate-in slide-in-from-top-1">
+                      <AlertCircle className="w-4 h-4 text-primary" />
+                      <span>Did you mean <strong>{suggestion}</strong>?</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          form.setValue("freight_type", suggestion);
+                          setSuggestion(null);
+                        }}
+                        className="ml-auto text-primary font-bold hover:underline"
+                      >
+                        Correct it
+                      </button>
+                    </div>
+                  )}
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>

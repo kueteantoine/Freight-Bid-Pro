@@ -335,11 +335,30 @@ export interface ServiceOfferings {
   id: string;
   transporter_user_id: string;
   freight_types: string[];
-  service_regions: any[]; // JSONB
+  service_regions: any[]; // JSONB - Legacy complex polygons
+  base_city: string | null;
+  base_latitude: number | null;
+  base_longitude: number | null;
+  service_radius_km: number;
   max_distance_km: number | null;
   min_weight_kg: number | null;
   max_weight_kg: number | null;
   special_capabilities: string[];
+  willing_to_backhaul: boolean;
+  cross_border: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PreferredRoute {
+  id: string;
+  transporter_user_id: string;
+  from_city: string;
+  from_latitude: number | null;
+  from_longitude: number | null;
+  to_city: string;
+  to_latitude: number | null;
+  to_longitude: number | null;
   created_at: string;
   updated_at: string;
 }

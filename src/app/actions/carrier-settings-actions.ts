@@ -41,6 +41,59 @@ export async function updateServiceOfferings(formData: any) {
     return data;
 }
 
+// Preferred Routes
+export async function getPreferredRoutes() {
+    const supabase = await createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return [];
+
+    const { data, error } = await supabase
+        .from("carrier_preferred_routes")
+        .select("*")
+        .eq("transporter_user_id", user.id)
+        .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    return data;
+}
+
+export async function addPreferredRoute(route: any) {
+    const supabase = await createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) throw new Error("Unauthorized");
+
+    const { data, error } = await supabase
+        .from("carrier_preferred_routes")
+        .insert({
+            transporter_user_id: user.id,
+            ...route
+        })
+        .select()
+        .single();
+
+    if (error) throw error;
+    revalidatePath("/transporter/settings");
+    return data;
+}
+
+export async function deletePreferredRoute(routeId: string) {
+    const supabase = await createSupabaseServerClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) throw new Error("Unauthorized");
+
+    const { error } = await supabase
+        .from("carrier_preferred_routes")
+        .delete()
+        .eq("id", routeId)
+        .eq("transporter_user_id", user.id);
+
+    if (error) throw error;
+    revalidatePath("/transporter/settings");
+}
+
 // Pricing Rules
 export async function getPricingRules() {
     const supabase = await createSupabaseServerClient();
