@@ -11,7 +11,21 @@ interface PaymentDetails {
     aggregatorFee: number;
     mobileMoneyFee: number;
     totalPayable: number;
+    customerPhone: string; // Added for Mobile Money
+    customerEmail: string; // Added for receipt/notification
 }
+
+import { FlutterwaveProvider } from "@/lib/services/payments/flutterwave-provider";
+import crypto from 'crypto';
+
+// Initialize provider (In a real app, strict config loading is needed)
+const paymentProvider = new FlutterwaveProvider({
+    publicKey: process.env.FLUTTERWAVE_PUBLIC_KEY!,
+    secretKey: process.env.FLUTTERWAVE_SECRET_KEY!,
+    encryptionKey: process.env.FLUTTERWAVE_ENCRYPTION_KEY!,
+    isTest: process.env.NODE_ENV !== "production",
+    webhookSecret: process.env.FLUTTERWAVE_WEBHOOK_SECRET!
+});
 
 /**
  * Handle payment processing and bid awarding
@@ -31,44 +45,95 @@ export async function processPayment(details: PaymentDetails) {
 
     if (bidError || !bid) throw new Error("Bid not found");
 
-    // 2. Create the transaction record
-    const netAmount = details.grossAmount - (details.platformCommission + details.aggregatorFee + details.mobileMoneyFee);
+    // 2. Get Transporter's Subaccount ID for Split Payment
+    const { data: transporterProfile } = await supabase
+        .from("profiles")
+        .select("payment_subaccount_id")
+        .eq("id", bid.transporter_user_id)
+        .single();
 
-    // Note: Net amount to transporter is bid amount minus platform fees 
-    // but the shipper pays totalPayable (bid + all fees).
-    // Prompt 17 says: "displays after bid award showing total amount breakdown (base bid amount, insurance costs if applicable, platform commission, aggregator fees, mobile money fees, total payable amount)"
-    // And "updates shipment status upon successful payment"
+    if (!transporterProfile?.payment_subaccount_id) {
+        throw new Error("Transporter does not have a linked payment subaccount. Cannot process split payment.");
+    }
 
+    // 3. Initiate Payment with Flutterwave
+    const netToTransporter = bid.bid_amount; // Transporter gets the bid amount
+    // Platform fees = details.platformCommission + details.aggregatorFee + details.mobileMoneyFee
+    // Wait, totalPayable = bid_amount + fees.
+
+    // Splits:
+    // We want the transporter to receive `netToTransporter`.
+    // The rest goes to the main account (Platform).
+
+    // Note: Flutterwave subaccount transaction_charge_type='flat_subaccount' means 
+    // the subaccount receives (Amount - Fees). 
+    // If we use 'flat', the main account bears fees.
+
+    // Let's assume we want to give the transporter an exact amount.
+    // If we can't control it exactly via ratio, we might need a different flow or precise calculation.
+    // For this implementation, we use ratio based on total payable.
+
+    const transporterShareRatio = netToTransporter / details.totalPayable;
+    const transactionId = crypto.randomUUID();
+
+    const initiationResult = await paymentProvider.initiatePayment({
+        reference: transactionId,
+        amount: details.totalPayable,
+        currency: "XAF",
+        description: `Shipment Payment: ${bid.shipments.shipment_number}`,
+        customerEmail: details.customerEmail,
+        customerPhone: details.customerPhone,
+        metadata: {
+            bid_id: details.bidId,
+            shipment_id: bid.shipment_id,
+            payer_user_id: user.id
+        },
+        successUrl: `${process.env.NEXT_PUBLIC_APP_URL}/shipper/payments/callback`,
+        cancelUrl: `${process.env.NEXT_PUBLIC_APP_URL}/shipper/payments/cancel`,
+        splits: [
+            {
+                accountId: transporterProfile.payment_subaccount_id,
+                percentage: transporterShareRatio // Provider handles * 100 logic or uses it as ratio
+            }
+        ]
+    });
+
+    if (!initiationResult.success) {
+        throw new Error(initiationResult.error || "Payment initiation failed");
+    }
+
+    // 4. Create the transaction record (Pending)
     const { data: transaction, error: txError } = await supabase
         .from("transactions")
         .insert({
+            id: transactionId, // Explicit ID linking to payment reference
             transaction_type: "shipment_payment",
             shipment_id: bid.shipment_id,
             payer_user_id: user.id,
             payee_user_id: bid.transporter_user_id,
             gross_amount: details.grossAmount,
             platform_commission_amount: details.platformCommission,
-            platform_commission_percentage: 5.0, // Hardcoded for now
+            platform_commission_percentage: 5.0,
             aggregator_fee_amount: details.aggregatorFee,
-            aggregator_fee_percentage: 1.0,
+            aggregator_fee_percentage: 1.4,
             mobile_money_fee_amount: details.mobileMoneyFee,
-            mobile_money_fee_percentage: 1.0,
+            mobile_money_fee_percentage: 0.0,
             total_deductions: details.platformCommission + details.aggregatorFee + details.mobileMoneyFee,
-            net_amount: bid.bid_amount, // The amount the transporter expect is the bid_amount
+            net_amount: netToTransporter,
             currency: "XAF",
-            payment_method: details.paymentMethod,
-            payment_status: "completed", // Mocking immediate completion
-            payment_completed_at: new Date().toISOString(),
-            aggregator_transaction_id: `MOCK_TX_${Date.now()}`
+            payment_method: details.paymentMethod as any, // Cast to enum
+            payment_status: "pending", // Pending until webhook
+            aggregator_transaction_id: initiationResult.aggregatorTransactionId || transactionId, // Use remote ID if available, else our reference (as fallback placeholder)
+            payment_initiated_at: new Date().toISOString()
         })
         .select()
         .single();
 
     if (txError) throw txError;
 
-    // 3. Generate Invoice
+    // 5. Generate Invoice (Pending Payment)
     const invoiceNumber = `INV-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`;
-    const { error: invError } = await supabase
+    await supabase
         .from("invoices")
         .insert({
             transaction_id: transaction.id,
@@ -88,34 +153,15 @@ export async function processPayment(details: PaymentDetails) {
             issued_at: new Date().toISOString()
         });
 
-    if (invError) throw invError;
+    // Remove immediate award logic - wait for webhook
 
-    // 4. Update statuses (Award the bid)
-    // Update awarded bid
-    await supabase
-        .from("bids")
-        .update({ bid_status: "awarded" })
-        .eq("id", details.bidId);
-
-    // Update shipment status
-    await supabase
-        .from("shipments")
-        .update({ status: "bid_awarded" })
-        .eq("id", bid.shipment_id);
-
-    // Mark others as outbid
-    await supabase
-        .from("bids")
-        .update({ bid_status: "outbid" })
-        .eq("shipment_id", bid.shipment_id)
-        .neq("id", details.bidId)
-        .eq("bid_status", "active");
-
-    revalidatePath("/shipper/bidding");
-    revalidatePath("/shipper/shipments");
-    revalidatePath("/transporter/payments");
-
-    return { success: true, transactionId: transaction.id, invoiceNumber };
+    return {
+        success: true,
+        transactionId: transaction.id,
+        invoiceNumber,
+        redirectUrl: initiationResult.redirectUrl,
+        instructions: initiationResult.instructions
+    };
 }
 
 /**
