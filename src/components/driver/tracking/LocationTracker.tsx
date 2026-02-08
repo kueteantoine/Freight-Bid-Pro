@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { useLocationService } from "@/hooks/useLocationService";
 import { ShipmentStatus } from "@/lib/types/database";
 
@@ -9,6 +10,7 @@ interface LocationTrackerProps {
     deliveryCoords?: { lat: number; lng: number };
     currentStatus: ShipmentStatus;
     isActive?: boolean;
+    onLocationUpdate?: (lat: number, lng: number) => void;
 }
 
 /**
@@ -21,7 +23,8 @@ export default function LocationTracker({
     pickupCoords,
     deliveryCoords,
     currentStatus,
-    isActive = true
+    isActive = true,
+    onLocationUpdate
 }: LocationTrackerProps) {
     const { currentLocation, isOnline, batteryLevel } = useLocationService({
         shipmentId,
@@ -30,6 +33,13 @@ export default function LocationTracker({
         currentStatus,
         enabled: isActive
     });
+
+    // Notify parent of location changes if callback is provided
+    useEffect(() => {
+        if (currentLocation && onLocationUpdate) {
+            onLocationUpdate(currentLocation.lat, currentLocation.lng);
+        }
+    }, [currentLocation, onLocationUpdate]);
 
     // This component is headless and purely functional.
     // However, it could optionally render a small status indicator.

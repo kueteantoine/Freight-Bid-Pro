@@ -72,7 +72,7 @@ export default function SurgePricingManager() {
             : await createSurgePricingRule(formData);
 
         if (result.success) {
-            toast({ title: 'Success', description: `Rule ${editingRule ? 'updated' : 'created'}` });
+            toast.success(`Rule ${editingRule ? 'updated' : 'created'}`);
             setIsDialogOpen(false);
             loadRules();
         } else {

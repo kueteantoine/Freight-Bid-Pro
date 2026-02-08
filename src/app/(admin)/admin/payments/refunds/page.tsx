@@ -25,7 +25,7 @@ export default async function RefundsPage() {
                 </div>
             ) : (
                 <div className="grid gap-6">
-                    {pendingRefunds.map((refund) => (
+                    {(pendingRefunds as any[]).map((refund) => (
                         <RefundRequestCard key={refund.id} refund={refund} />
                     ))}
                 </div>

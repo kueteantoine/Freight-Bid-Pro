@@ -18,6 +18,8 @@ import { AvatarUpload } from "@/components/profile/avatar-upload";
 import { GlobalProfileForm } from "@/components/profile/global-profile-form";
 import { RoleProfileForm } from "@/components/profile/role-profile-form";
 import { User } from "@supabase/supabase-js";
+import { FeaturedBadge } from "@/components/ads/featured-badge";
+
 
 const roleIconMap: Record<UserRole, any> = {
   shipper: Package,
@@ -37,6 +39,7 @@ export default function SettingsPage() {
   const [user, setUser] = useState<User | null>(null);
   const { profile, roles: allRoles, isLoading: isDataLoading } = useUserData();
   const [isActivating, setIsActivating] = useState<UserRole | null>(null);
+  const [tier, setTier] = useState<any>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -44,7 +47,20 @@ export default function SettingsPage() {
     });
   }, []);
 
+  useEffect(() => {
+    if (user) {
+      const fetchTier = async () => {
+        const { getUserSubscriptionTier } = await import("@/lib/subscription-helpers");
+        const sub = await getUserSubscriptionTier(user.id);
+        setTier(sub?.tier);
+      };
+      fetchTier();
+    }
+  }, [user]);
+
   const availableRoles: UserRole[] = ["shipper", "transporter", "driver", "broker"];
+
+
   const activeRoleTypes = allRoles.map(r => r.role_type);
   const inactiveRoles = availableRoles.filter(r => !activeRoleTypes.includes(r));
 
@@ -105,11 +121,21 @@ export default function SettingsPage() {
             </CardHeader>
             <CardContent className="pt-6 space-y-6">
               <div className="flex flex-col items-center space-y-4">
-                <AvatarUpload />
-                <p className="text-sm font-medium text-foreground">
-                  {profile?.first_name} {profile?.last_name}
-                </p>
+                <div className="relative">
+                  <AvatarUpload />
+                  {tier && (
+                    <div className="absolute -bottom-2 -right-2">
+                      <FeaturedBadge tierSlug={tier.tier_slug} size="sm" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-medium text-foreground">
+                    {profile?.first_name} {profile?.last_name}
+                  </p>
+                </div>
               </div>
+
 
               <GlobalProfileForm
                 initialData={{

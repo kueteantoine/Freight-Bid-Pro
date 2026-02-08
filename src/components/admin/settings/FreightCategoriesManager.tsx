@@ -69,7 +69,7 @@ export default function FreightCategoriesManager() {
             : await createFreightCategory(formData);
 
         if (result.success) {
-            toast({ title: 'Success', description: `Category ${editingCategory ? 'updated' : 'created'} successfully` });
+            toast.success(`Category ${editingCategory ? 'updated' : 'created'} successfully`);
             setIsDialogOpen(false);
             loadCategories();
         } else {

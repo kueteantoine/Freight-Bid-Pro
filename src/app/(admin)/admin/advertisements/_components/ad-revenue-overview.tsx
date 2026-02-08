@@ -46,22 +46,22 @@ export function AdRevenueOverview() {
 
     const stats = [
         {
-            title: 'Total Revenue',
-            value: `${data.total_revenue?.toLocaleString()} XAF`,
+            title: 'Performance Revenue',
+            value: `${data.total_performance_revenue?.toLocaleString()} XAF`,
             icon: DollarSign,
-            description: 'Last 30 days',
+            description: 'CPM/CPC Revenue',
         },
         {
-            title: 'Total Impressions',
-            value: data.total_impressions?.toLocaleString() || '0',
-            icon: Eye,
-            description: 'Last 30 days',
+            title: 'Subscription Revenue',
+            value: `${data.total_subscription_revenue?.toLocaleString()} XAF`,
+            icon: DollarSign,
+            description: 'Active Subscriptions',
         },
         {
-            title: 'Total Clicks',
-            value: data.total_clicks?.toLocaleString() || '0',
-            icon: MousePointerClick,
-            description: 'Last 30 days',
+            title: 'Total Combined',
+            value: `${data.total_combined_revenue?.toLocaleString()} XAF`,
+            icon: DollarSign,
+            description: 'All Ad Revenue',
         },
         {
             title: 'Average CTR',

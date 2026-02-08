@@ -66,7 +66,7 @@ export default function ServiceRegionsManager() {
             : await createServiceRegion(formData);
 
         if (result.success) {
-            toast({ title: 'Success', description: `Region ${editingRegion ? 'updated' : 'created'}` });
+            toast.success(`Region ${editingRegion ? 'updated' : 'created'}`);
             setIsDialogOpen(false);
             loadRegions();
         } else {

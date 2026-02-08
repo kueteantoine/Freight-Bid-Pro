@@ -92,13 +92,34 @@ export default function CarrierLoadsPage() {
       const { data, error } = await query.order("created_at", { ascending: false });
 
       if (error) throw error;
-      setLoads(data || []);
+
+      const shipments = data || [];
+
+      // Fetch subscription tiers for shippers
+      const shipperIds = Array.from(new Set(shipments.map(s => s.shipper_user_id)));
+      const { getBulkUserSubscriptionTiers } = await import("@/lib/subscription-helpers");
+      const tierMap = await getBulkUserSubscriptionTiers(shipperIds);
+
+      // Apply visibility boost and sort
+      const boostedLoads = shipments.map(load => ({
+        ...load,
+        tier: tierMap[load.shipper_user_id]
+      })).sort((a, b) => {
+        const multA = a.tier?.visibility_multiplier || 1;
+        const multB = b.tier?.visibility_multiplier || 1;
+
+        if (multA !== multB) return multB - multA;
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      });
+
+      setLoads(boostedLoads);
     } catch (error: any) {
       toast.error("Failed to fetch loads: " + error.message);
     } finally {
       setLoading(false);
     }
   };
+
 
   React.useEffect(() => {
     fetchLoads();
@@ -476,18 +497,36 @@ function MapMarker({ x, y, label, dot, xOffset }: any) {
   );
 }
 
+import { FeaturedBadge } from "@/components/ads/featured-badge";
+
 function LoadCard({ load, type, typeColor, refId, origin, dest, freight, weight, equip, price, currentBid, pickup, distance, urgent, onAction }: any) {
+  const tier = (load as any).tier;
+  const isSponsored = tier && (tier.tier_slug === 'silver' || tier.tier_slug === 'gold');
+
   return (
-    <Card className="rounded-3xl border-slate-100 shadow-sm hover:shadow-lg hover:border-primary/20 transition-all group overflow-hidden">
+    <Card className={cn(
+      "rounded-3xl border-slate-100 shadow-sm hover:shadow-lg hover:border-primary/20 transition-all group overflow-hidden",
+      isSponsored && "border-primary/20 bg-primary/5"
+    )}>
       <CardContent className="p-6 space-y-6">
         <header className="flex justify-between items-start">
-          <div className="flex items-center gap-3">
-            <Badge className={cn("bg-blue-50 text-primary border-none text-[9px] font-black px-2 py-0.5", typeColor)}>
-              {type}
-            </Badge>
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-tighter">
-              Ref: <span className="text-slate-600">{refId}</span>
-            </span>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-3">
+              <Badge className={cn("bg-blue-50 text-primary border-none text-[9px] font-black px-2 py-0.5", typeColor)}>
+                {type}
+              </Badge>
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-tighter">
+                Ref: <span className="text-slate-600">{refId}</span>
+              </span>
+            </div>
+            {tier && (
+              <div className="flex items-center gap-2">
+                <FeaturedBadge tierSlug={tier.tier_slug} size="sm" />
+                {isSponsored && (
+                  <span className="text-[10px] font-bold text-primary/60 uppercase tracking-widest">Sponsored</span>
+                )}
+              </div>
+            )}
           </div>
           {(urgent || (load.bid_expires_at && new Date(load.bid_expires_at) < new Date(Date.now() + 2 * 60 * 60 * 1000))) && (
             <Badge className="bg-rose-50 text-rose-600 border-none text-[9px] font-black animate-pulse">
@@ -495,6 +534,7 @@ function LoadCard({ load, type, typeColor, refId, origin, dest, freight, weight,
             </Badge>
           )}
         </header>
+
 
         <div className="flex gap-4">
           <div className="flex flex-col items-center py-1">

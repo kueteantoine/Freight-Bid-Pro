@@ -67,9 +67,9 @@ export default function ExportManager() {
                 reportName,
                 frequency,
                 scheduleTime,
+                emails,
                 frequency === 'weekly' ? dayOfWeek : undefined,
                 frequency === 'monthly' ? dayOfMonth : undefined,
-                emails,
                 exportFormat
             );
 

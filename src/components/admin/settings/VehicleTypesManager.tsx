@@ -77,10 +77,7 @@ export default function VehicleTypesManager() {
             : await createVehicleType(formData);
 
         if (result.success) {
-            toast({
-                title: 'Success',
-                description: `Vehicle type ${editingType ? 'updated' : 'created'} successfully`,
-            });
+            toast.success(`Vehicle type ${editingType ? 'updated' : 'created'} successfully`);
             setIsDialogOpen(false);
             loadVehicleTypes();
         } else {
@@ -103,10 +100,7 @@ export default function VehicleTypesManager() {
     const handleToggleStatus = async (id: string, currentStatus: boolean) => {
         const result = await toggleVehicleTypeStatus(id, !currentStatus);
         if (result.success) {
-            toast({
-                title: 'Success',
-                description: `Vehicle type ${!currentStatus ? 'activated' : 'deactivated'}`,
-            });
+            toast.success(`Vehicle type ${!currentStatus ? 'activated' : 'deactivated'}`);
             loadVehicleTypes();
         } else {
             toast.error(result.error || 'Failed to update status');

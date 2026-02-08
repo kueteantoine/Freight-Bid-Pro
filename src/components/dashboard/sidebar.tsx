@@ -50,6 +50,11 @@ const roleNavLinks: Record<string, any[]> = {
             ]
         },
         {
+            group: "PROMOTION", items: [
+                { href: "/advertising", icon: Megaphone, label: "Promote My Business" },
+            ]
+        },
+        {
             group: "SUPPORT", items: [
                 { href: "/settings", icon: Settings, label: "Settings" },
                 { href: "/shipper/support", icon: HelpCircle, label: "Support Center" },
@@ -71,6 +76,11 @@ const roleNavLinks: Record<string, any[]> = {
         {
             group: "FINANCIALS", items: [
                 { href: "/transporter/payments", icon: Wallet, label: "Financials" },
+            ]
+        },
+        {
+            group: "PROMOTION", items: [
+                { href: "/advertising", icon: Megaphone, label: "Promote My Fleet" },
             ]
         },
         {
@@ -111,6 +121,11 @@ roleNavLinks.broker = [
         group: "FINANCIALS", items: [
             { href: "/broker/margins", icon: Wallet, label: "Margins" },
         ]
+    },
+    {
+        group: "PROMOTION", items: [
+            { href: "/advertising", icon: Megaphone, label: "Promote My Network" },
+        ]
     }
 ];
 
@@ -132,6 +147,14 @@ roleNavLinks.admin = [
             { href: "/admin/reporting", icon: BarChart3, label: "Reporting" },
         ]
     },
+    {
+        group: "ADVERTISING", items: [
+            { href: "/admin/advertising/tiers", icon: Megaphone, label: "Subscription Tiers" },
+            { href: "/admin/advertising/approvals", icon: FileCheck, label: "Ad Approvals" },
+            { href: "/admin/advertising/reports", icon: AlertCircle, label: "Content Moderation" },
+        ]
+    },
+
     {
         group: "SYSTEM", items: [
             { href: "/admin/roles", icon: ShieldCheck, label: "Roles & Permissions" },

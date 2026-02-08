@@ -41,7 +41,7 @@ test.describe('Advertisement Management Workflow', () => {
         await page.goto('/admin/advertisements');
 
         // Click on an ad to view details
-        await page.click('[data-testid="ad-row"]').first();
+        await page.locator('[data-testid="ad-row"]').first().click();
 
         // Verify performance metrics are displayed
         await expect(page.locator('text=Impressions')).toBeVisible();
@@ -82,17 +82,18 @@ test.describe('Content Management Workflow', () => {
         await page.goto('/admin/content');
 
         // Select a content page
-        await page.click('[data-testid="content-row"]').first();
+        await page.locator('[data-testid="content-row"]').first().click();
 
         // Navigate to version history
         await page.click('button[title="History"]');
 
         // Verify version history is displayed
         await expect(page.locator('text=Version History')).toBeVisible();
-        await expect(page.locator('[data-testid="version-item"]')).toHaveCount.greaterThan(0);
+        const versionCount = await page.locator('[data-testid="version-item"]').count();
+        expect(versionCount).toBeGreaterThan(0);
 
         // Rollback to previous version
-        await page.click('[data-testid="rollback-button"]').first();
+        await page.locator('[data-testid="rollback-button"]').first().click();
         await page.click('button:has-text("Confirm Rollback")');
 
         // Verify success
@@ -108,7 +109,7 @@ test.describe('Template Management Workflow', () => {
         await page.click('text=Email Templates');
 
         // Click on a template
-        await page.click('[data-testid="template-row"]').first();
+        await page.locator('[data-testid="template-row"]').first().click();
 
         // Navigate to preview
         await page.click('button[title="Preview"]');
@@ -130,7 +131,7 @@ test.describe('Template Management Workflow', () => {
         await page.goto('/admin/templates');
 
         // Select a template
-        await page.click('[data-testid="template-row"]').first();
+        await page.locator('[data-testid="template-row"]').first().click();
 
         // Change language to French
         await page.selectOption('[name="language"]', 'fr');
@@ -151,7 +152,7 @@ test.describe('Admin Role Management Workflow', () => {
         await expect(page.locator('text=Admin Users')).toBeVisible();
 
         // Assign a role
-        await page.click('[data-testid="assign-role-button"]').first();
+        await page.locator('[data-testid="assign-role-button"]').first().click();
         await page.selectOption('[name="role"]', 'content_admin');
         await page.click('button:has-text("Assign Role")');
 
@@ -159,7 +160,7 @@ test.describe('Admin Role Management Workflow', () => {
         await expect(page.locator('text=Role Assigned')).toBeVisible();
 
         // Revoke a role
-        await page.click('[data-testid="revoke-role-button"]').first();
+        await page.locator('[data-testid="revoke-role-button"]').first().click();
         await page.click('button:has-text("Confirm")');
 
         // Verify success
@@ -180,7 +181,8 @@ test.describe('Admin Role Management Workflow', () => {
         await page.click('button:has-text("Search")');
 
         // Verify filtered results
-        await expect(page.locator('[data-testid="audit-row"]')).toHaveCount.greaterThan(0);
+        const auditCount = await page.locator('[data-testid="audit-row"]').count();
+        expect(auditCount).toBeGreaterThan(0);
     });
 });
 

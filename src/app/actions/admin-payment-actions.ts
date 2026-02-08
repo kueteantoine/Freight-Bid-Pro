@@ -443,7 +443,7 @@ export async function getRevenueByRoute(dateRange?: { start: string; end: string
     if (error) throw error;
 
     // Group by route
-    const routeRevenue = data.reduce((acc: any, tx: any) => {
+    const routeRevenue = data.reduce((acc: Record<string, any>, tx: any) => {
         if (!tx.shipments) return acc;
 
         const route = `${tx.shipments.pickup_location} → ${tx.shipments.delivery_location}`;
@@ -469,7 +469,14 @@ export async function getRevenueByRoute(dateRange?: { start: string; end: string
         return acc;
     }, {});
 
-    return Object.values(routeRevenue);
+    return Object.values(routeRevenue) as {
+        route: string;
+        commission: number;
+        aggregatorFees: number;
+        mobileMoneyFees: number;
+        totalRevenue: number;
+        transactionCount: number;
+    }[];
 }
 
 export async function getFeeCollectionBreakdown(dateRange?: { start: string; end: string }) {
@@ -557,7 +564,7 @@ export async function getPendingRefundRequests() {
     const { data, error } = await supabase.rpc("get_refund_requests_pending");
 
     if (error) throw error;
-    return data;
+    return data as any[];
 }
 
 export async function getRefundRequestDetails(refundId: string) {

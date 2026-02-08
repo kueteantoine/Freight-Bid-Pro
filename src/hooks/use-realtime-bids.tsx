@@ -52,7 +52,17 @@ export function useRealtimeBids(): RealtimeBidsHook {
           *,
           bids (
             *,
-            profiles (first_name, last_name, avatar_url)
+            profiles (
+              first_name, 
+              last_name, 
+              avatar_url,
+              user_ad_subscriptions!user_id (
+                subscription_status,
+                ad_subscription_tiers!tier_id (
+                  tier_slug
+                )
+              )
+            )
           )
         `)
         .eq("shipper_user_id", user.id)
@@ -108,10 +118,10 @@ export function useRealtimeBids(): RealtimeBidsHook {
         const newBid = payload.new as Bid;
 
         // Fetch the transporter profile for the new bid
-        supabase.from('profiles').select('first_name, last_name, avatar_url').eq('id', newBid.transporter_user_id).single()
+        supabase.from('profiles').select('id, first_name, last_name, avatar_url, user_ad_subscriptions!user_id(subscription_status, ad_subscription_tiers!tier_id(tier_slug))').eq('id', newBid.transporter_user_id).single()
           .then(({ data: profileData }) => {
             if (profileData) {
-              const bidWithProfile = { ...newBid, profiles: profileData as Profile };
+              const bidWithProfile = { ...newBid, profiles: profileData as any };
 
               setActiveShipments(prevShipments => {
                 const shipmentIndex = prevShipments.findIndex(s => s.id === newBid.shipment_id);

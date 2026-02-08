@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { getAdsForPlacement, trackAdImpression, trackAdClick } from '@/lib/services/admin/advertisements';
 import { Card, CardContent } from '@/components/ui/card';
+import { AdReportDialog } from './ad-report-dialog';
 
 interface SponsoredListingProps {
     userRole?: 'shipper' | 'carrier' | 'driver' | 'broker';
@@ -23,11 +24,6 @@ export function SponsoredListing({ userRole, language = 'en', maxAds = 3 }: Spon
 
             if (result.success && result.data) {
                 setAds(result.data);
-
-                // Track impressions for all ads
-                for (const ad of result.data) {
-                    await trackAdImpression(ad.id);
-                }
             }
             setLoading(false);
         }
@@ -35,10 +31,40 @@ export function SponsoredListing({ userRole, language = 'en', maxAds = 3 }: Spon
         fetchAds();
     }, [userRole, language, maxAds]);
 
-    async function handleClick(ad: any) {
+    useEffect(() => {
+        if (ads.length === 0) return;
+
+        const observers: IntersectionObserver[] = [];
+
+        ads.forEach((ad) => {
+            const observer = new IntersectionObserver(
+                async (entries) => {
+                    const [entry] = entries;
+                    if (entry.isIntersecting) {
+                        await trackAdImpression(ad.id);
+                        observer.disconnect();
+                    }
+                },
+                { threshold: 0.5 }
+            );
+
+            const adElement = document.getElementById(`ad-sponsored-${ad.id}`);
+            if (adElement) {
+                observer.observe(adElement);
+                observers.push(observer);
+            }
+        });
+
+        return () => observers.forEach((o) => o.disconnect());
+    }, [ads]);
+
+    async function handleClick(ad: any, e: React.MouseEvent) {
+        // Prevent click when reporting
+        if ((e.target as HTMLElement).closest('.report-button')) return;
+
         const result = await trackAdClick(ad.id);
-        if (result.success && result.data?.target_url) {
-            window.open(result.data.target_url, '_blank', 'noopener,noreferrer');
+        if (result.success && result.targetUrl) {
+            window.open(result.targetUrl, '_blank', 'noopener,noreferrer');
         }
     }
 
@@ -69,8 +95,9 @@ export function SponsoredListing({ userRole, language = 'en', maxAds = 3 }: Spon
             {ads.map((ad) => (
                 <Card
                     key={ad.id}
+                    id={`ad-sponsored-${ad.id}`}
                     className="cursor-pointer hover:shadow-md transition-shadow"
-                    onClick={() => handleClick(ad)}
+                    onClick={(e) => handleClick(ad, e)}
                 >
                     <CardContent className="p-4">
                         <div className="flex items-start gap-3">
@@ -82,7 +109,21 @@ export function SponsoredListing({ userRole, language = 'en', maxAds = 3 }: Spon
                                 />
                             )}
                             <div className="flex-1 min-w-0">
-                                <h4 className="font-semibold text-sm mb-1 truncate">{ad.ad_title}</h4>
+                                <div className="flex items-center justify-between gap-2">
+                                    <h4 className="font-semibold text-sm mb-1 truncate">{ad.ad_title}</h4>
+                                    <AdReportDialog
+                                        adId={ad.id}
+                                        adTitle={ad.ad_title}
+                                        trigger={
+                                            <button className="text-muted-foreground/40 hover:text-red-500 transition-colors report-button">
+                                                <span className="sr-only">Report</span>
+                                                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" />
+                                                </svg>
+                                            </button>
+                                        }
+                                    />
+                                </div>
                                 {ad.ad_content && (
                                     <p className="text-xs text-muted-foreground line-clamp-2">
                                         {ad.ad_content}

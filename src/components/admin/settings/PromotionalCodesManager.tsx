@@ -75,7 +75,7 @@ export default function PromotionalCodesManager() {
             : await createPromotionalCode(formData);
 
         if (result.success) {
-            toast({ title: 'Success', description: `Code ${editingCode ? 'updated' : 'created'}` });
+            toast.success(`Code ${editingCode ? 'updated' : 'created'}`);
             setIsDialogOpen(false);
             loadCodes();
         } else {
@@ -94,7 +94,7 @@ export default function PromotionalCodesManager() {
 
     const copyCode = (code: string) => {
         navigator.clipboard.writeText(code);
-        toast({ title: 'Copied!', description: 'Code copied to clipboard' });
+        toast.success('Code copied to clipboard');
     };
 
     return (

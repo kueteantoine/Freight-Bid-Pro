@@ -428,7 +428,7 @@ export async function getAdRevenueDashboard(dateRange?: { from: string; to: stri
     const supabase = await createClient();
 
     try {
-        const { data, error } = await supabase.rpc('get_ad_revenue_dashboard', {
+        const { data, error } = await supabase.rpc('get_enhanced_ad_revenue_dashboard', {
             date_from: dateRange?.from || null,
             date_to: dateRange?.to || null,
         });

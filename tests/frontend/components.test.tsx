@@ -3,8 +3,15 @@
  * Tests React components for advertisements, content, templates, and admin UI
  */
 
+/// <reference types="@testing-library/jest-dom" />
+
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { describe, it, expect, vi } from '@jest/globals';
+import '@testing-library/jest-dom';
+import { describe, it, expect as jestExpect, jest } from '@jest/globals';
+
+// Wrapper to fix toBeInTheDocument type errors with @jest/globals
+const expect = (actual: any) => (jestExpect(actual) as any);
+
 import { AdBanner } from '@/components/ads/ad-banner';
 import { SponsoredListing } from '@/components/ads/sponsored-listing';
 import { AdApprovalQueue } from '@/app/(admin)/admin/advertisements/_components/ad-approval-queue';
@@ -14,24 +21,24 @@ import { RichTextEditor } from '@/components/editor/rich-text-editor';
 import { ContentDiffViewer } from '@/components/content/content-diff-viewer';
 
 // Mock server actions
-vi.mock('@/lib/services/admin/advertisements', () => ({
-    getAdsForPlacement: vi.fn(),
-    trackAdImpression: vi.fn(),
-    trackAdClick: vi.fn(),
-    getAdApprovalQueue: vi.fn(),
-    approveAdvertisement: vi.fn(),
-    rejectAdvertisement: vi.fn(),
+jest.mock('@/lib/services/admin/advertisements', () => ({
+    getAdsForPlacement: jest.fn(),
+    trackAdImpression: jest.fn(),
+    trackAdClick: jest.fn(),
+    getAdApprovalQueue: jest.fn(),
+    approveAdvertisement: jest.fn(),
+    rejectAdvertisement: jest.fn(),
 }));
 
-vi.mock('@/lib/services/admin/content', () => ({
-    getContentPages: vi.fn(),
-    publishContentPage: vi.fn(),
-    unpublishContentPage: vi.fn(),
+jest.mock('@/lib/services/admin/content', () => ({
+    getContentPages: jest.fn(),
+    publishContentPage: jest.fn(),
+    unpublishContentPage: jest.fn(),
 }));
 
-vi.mock('@/lib/services/admin/templates', () => ({
-    getEmailTemplates: vi.fn(),
-    getSmsTemplates: vi.fn(),
+jest.mock('@/lib/services/admin/templates', () => ({
+    getEmailTemplates: jest.fn(),
+    getSmsTemplates: jest.fn(),
 }));
 
 describe('Ad Display Components', () => {
@@ -170,7 +177,7 @@ describe('Admin Components', () => {
 
 describe('Advanced Feature Components', () => {
     it('should render RichTextEditor', () => {
-        const mockOnChange = vi.fn();
+        const mockOnChange = jest.fn();
         render(<RichTextEditor content="<p>Test</p>" onChange={mockOnChange} />);
 
         expect(screen.getByRole('textbox')).toBeInTheDocument();

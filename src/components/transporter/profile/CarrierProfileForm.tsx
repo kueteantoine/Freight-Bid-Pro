@@ -40,8 +40,8 @@ const profileSchema = z.object({
     freight_types: z.array(z.string()).min(1, "Select at least one freight type"),
     base_city: z.string().min(2, "Base city is required"),
     service_radius_km: z.coerce.number().min(1, "Radius must be at least 1km"),
-    willing_to_backhaul: z.boolean().default(true),
-    cross_border: z.boolean().default(false),
+    willing_to_backhaul: z.boolean(),
+    cross_border: z.boolean(),
     insurance_info: z.object({
         provider: z.string().min(2, "Insurance provider is required"),
         policy_number: z.string().min(5, "Policy number is required"),
@@ -50,9 +50,14 @@ const profileSchema = z.object({
     }),
 });
 
-type ProfileFormValues = z.infer<typeof profileSchema>;
+export type ProfileFormValues = z.infer<typeof profileSchema>;
 
-export function CarrierProfileForm({ initialData, onSave }: { initialData?: any, onSave?: (data: any) => Promise<void> }) {
+interface CarrierProfileFormProps {
+    initialData?: any;
+    onSave?: (data: ProfileFormValues) => Promise<void>;
+}
+
+export function CarrierProfileForm({ initialData, onSave }: CarrierProfileFormProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const form = useForm<ProfileFormValues>({

@@ -67,7 +67,7 @@ export default function CommissionTiersManager() {
             : await createCommissionTier(formData);
 
         if (result.success) {
-            toast({ title: 'Success', description: `Tier ${editingTier ? 'updated' : 'created'}` });
+            toast.success(`Tier ${editingTier ? 'updated' : 'created'}`);
             setIsDialogOpen(false);
             loadTiers();
         } else {

@@ -37,23 +37,39 @@ export async function POST(req: NextRequest) {
             process.env.SUPABASE_SERVICE_ROLE_KEY!
         );
 
-        // tx_ref from initiation should be our transaction UUID
-        // id is the Flutterwave transaction ID
+        // Determine payment type from tx_ref or metadata
+        // For ad subscriptions, we use the subscription UUID as tx_ref
+        // For shipments, we use 'tx-[random]' or specific reference
 
-        const { data, error } = await supabase.rpc('confirm_shipment_payment', {
-            p_transaction_id: tx_ref,
-            p_aggregator_tx_id: id.toString()
-        });
+        // Try ad subscription first
+        const isSubscription = tx_ref.length === 36; // Simple UUID check
 
-        if (error) {
-            console.error('RPC Error:', error);
-            // If the transaction ID is not found (maybe initiation failed to save?), 
-            // we might want to log it for manual reconciliation.
-            // Returning 500 triggers retry, which is good for transient errors.
-            return NextResponse.json({ error: error.message }, { status: 500 });
+        if (isSubscription) {
+            const { data, error } = await supabase.rpc('confirm_ad_subscription_payment', {
+                p_subscription_id: tx_ref,
+                p_aggregator_tx_id: id.toString()
+            });
+
+            if (error) {
+                console.error('Subscription Webhook Error:', error);
+                return NextResponse.json({ error: error.message }, { status: 500 });
+            }
+
+            return NextResponse.json({ received: true, type: 'subscription' });
+        } else {
+            // Shipment payment
+            const { data, error } = await supabase.rpc('confirm_shipment_payment', {
+                p_transaction_id: tx_ref,
+                p_aggregator_tx_id: id.toString()
+            });
+
+            if (error) {
+                console.error('Shipment Webhook Error:', error);
+                return NextResponse.json({ error: error.message }, { status: 500 });
+            }
+
+            return NextResponse.json({ received: true, type: 'shipment' });
         }
-
-        return NextResponse.json({ received: true });
     }
 
     return NextResponse.json({ received: true });

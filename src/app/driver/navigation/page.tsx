@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { getDriverJobs, DriverJob } from "@/app/actions/driver-jobs";
-import { LocationTracker } from "@/components/driver/tracking/LocationTracker";
+import LocationTracker from "@/components/driver/tracking/LocationTracker";
 import { NavigationPanel } from "@/components/driver/tracking/NavigationPanel";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Loader2 } from "lucide-react";
@@ -102,7 +102,7 @@ export default function DriverNavigationPage() {
                     pickupCoords={pickup}
                     deliveryCoords={delivery}
                     currentStatus={job.status as any}
-                    onLocationUpdate={(lat, lng) => setCurrentPos({ lat, lng })}
+                    onLocationUpdate={(lat: number, lng: number) => setCurrentPos({ lat, lng })}
                 />
 
                 {/* Bottom Navigation Panel */}

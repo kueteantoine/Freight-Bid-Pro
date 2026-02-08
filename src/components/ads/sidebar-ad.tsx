@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { getAdsForPlacement, trackAdImpression, trackAdClick } from '@/lib/services/admin/advertisements';
+import { AdReportDialog } from './ad-report-dialog';
 
 interface SidebarAdProps {
     userRole?: 'shipper' | 'carrier' | 'driver' | 'broker';
@@ -15,17 +16,13 @@ export function SidebarAd({ userRole, language = 'en', className = '' }: Sidebar
 
     useEffect(() => {
         async function fetchAd() {
-            const result = await getAdsForPlacement('sidebar_banner', {
+            const result = await getAdsForPlacement('sidebar', {
                 user_role: userRole,
                 language,
             }, 1);
 
             if (result.success && result.data && result.data.length > 0) {
-                const selectedAd = result.data[0];
-                setAd(selectedAd);
-
-                // Track impression
-                await trackAdImpression(selectedAd.id);
+                setAd(result.data[0]);
             }
             setLoading(false);
         }
@@ -33,12 +30,37 @@ export function SidebarAd({ userRole, language = 'en', className = '' }: Sidebar
         fetchAd();
     }, [userRole, language]);
 
-    async function handleClick() {
+    useEffect(() => {
         if (!ad) return;
 
+        const observer = new IntersectionObserver(
+            async (entries) => {
+                const [entry] = entries;
+                if (entry.isIntersecting) {
+                    await trackAdImpression(ad.id);
+                    observer.disconnect();
+                }
+            },
+            { threshold: 0.5 }
+        );
+
+        const adElement = document.getElementById(`ad-sidebar-${ad.id}`);
+        if (adElement) {
+            observer.observe(adElement);
+        }
+
+        return () => observer.disconnect();
+    }, [ad]);
+
+    async function handleClick(e: React.MouseEvent) {
+        if (!ad) return;
+
+        // Prevent click when reporting
+        if ((e.target as HTMLElement).closest('.report-button')) return;
+
         const result = await trackAdClick(ad.id);
-        if (result.success && result.data?.target_url) {
-            window.open(result.data.target_url, '_blank', 'noopener,noreferrer');
+        if (result.success && result.targetUrl) {
+            window.open(result.targetUrl, '_blank', 'noopener,noreferrer');
         }
     }
 
@@ -56,6 +78,7 @@ export function SidebarAd({ userRole, language = 'en', className = '' }: Sidebar
 
     return (
         <div
+            id={`ad-sidebar-${ad.id}`}
             className={`relative overflow-hidden rounded-lg border bg-card shadow-sm hover:shadow-md transition-shadow cursor-pointer h-64 ${className}`}
             onClick={handleClick}
         >
@@ -83,9 +106,12 @@ export function SidebarAd({ userRole, language = 'en', className = '' }: Sidebar
                 </div>
             )}
 
-            {/* Sponsored badge */}
-            <div className="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
-                Ad
+            {/* Sponsored & Report badges */}
+            <div className="absolute top-2 right-2 flex items-center gap-2">
+                <AdReportDialog adId={ad.id} adTitle={ad.ad_title} />
+                <div className="bg-black/50 text-white text-xs px-2 py-1 rounded">
+                    Ad
+                </div>
             </div>
         </div>
     );

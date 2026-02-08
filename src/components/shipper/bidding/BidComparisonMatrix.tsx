@@ -49,7 +49,9 @@ export function BidComparisonMatrix({ selectedBid, shipment }: BidComparisonMatr
         platformCommission,
         aggregatorFee,
         mobileMoneyFee,
-        totalPayable
+        totalPayable,
+        customerPhone: "N/A", // Flutterwave requires this, though typically we'd get from session
+        customerEmail: "shiper@example.com" // Placeholder, should be from session or props
       });
 
       toast.success("Payment Successful & Bid Awarded!", {

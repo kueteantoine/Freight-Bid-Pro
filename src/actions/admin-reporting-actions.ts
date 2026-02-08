@@ -59,8 +59,7 @@ export async function generateCustomReport(
     dimensions?: ReportDimensions
 ) {
     try {
-        const cookieStore = await cookies();
-        const supabase = await createClient(cookieStore);
+        const supabase = await createClient();
 
         const { data, error } = await supabase.rpc('generate_custom_report', {
             p_metrics: metrics,
@@ -78,8 +77,7 @@ export async function generateCustomReport(
 
 export async function getReportTemplates() {
     try {
-        const cookieStore = await cookies();
-        const supabase = await createClient(cookieStore);
+        const supabase = await createClient();
 
         const { data, error } = await supabase.rpc('get_report_templates');
 
@@ -101,8 +99,7 @@ export async function saveReportConfiguration(
     isPublic: boolean = false
 ) {
     try {
-        const cookieStore = await cookies();
-        const supabase = await createClient(cookieStore);
+        const supabase = await createClient();
 
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('Not authenticated');
@@ -128,8 +125,7 @@ export async function saveReportConfiguration(
 
 export async function getSavedReports() {
     try {
-        const cookieStore = await cookies();
-        const supabase = await createClient(cookieStore);
+        const supabase = await createClient();
 
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('Not authenticated');
@@ -149,8 +145,7 @@ export async function getSavedReports() {
 
 export async function deleteReport(reportId: string) {
     try {
-        const cookieStore = await cookies();
-        const supabase = await createClient(cookieStore);
+        const supabase = await createClient();
 
         const { error } = await supabase
             .from('saved_reports')
@@ -172,8 +167,7 @@ export async function deleteReport(reportId: string) {
 
 export async function getUserAcquisitionReport(dateRange: string = '30_days') {
     try {
-        const cookieStore = await cookies();
-        const supabase = await createClient(cookieStore);
+        const supabase = await createClient();
 
         const { data, error } = await supabase.rpc('get_user_acquisition_report', {
             p_date_range: dateRange
@@ -190,8 +184,7 @@ export async function getUserAcquisitionReport(dateRange: string = '30_days') {
 
 export async function getShipmentPerformanceReport(dateRange: string = '30_days') {
     try {
-        const cookieStore = await cookies();
-        const supabase = await createClient(cookieStore);
+        const supabase = await createClient();
 
         const { data, error } = await supabase.rpc('get_shipment_performance_report', {
             p_date_range: dateRange
@@ -208,8 +201,7 @@ export async function getShipmentPerformanceReport(dateRange: string = '30_days'
 
 export async function getFinancialPerformanceReport(dateRange: string = '30_days') {
     try {
-        const cookieStore = await cookies();
-        const supabase = await createClient(cookieStore);
+        const supabase = await createClient();
 
         const { data, error } = await supabase.rpc('get_financial_performance_report', {
             p_date_range: dateRange
@@ -226,8 +218,7 @@ export async function getFinancialPerformanceReport(dateRange: string = '30_days
 
 export async function getCarrierLeaderboard(limit: number = 10, dateRange: string = '30_days') {
     try {
-        const cookieStore = await cookies();
-        const supabase = await createClient(cookieStore);
+        const supabase = await createClient();
 
         const { data, error } = await supabase.rpc('get_carrier_performance_leaderboard', {
             p_limit: limit,
@@ -245,8 +236,7 @@ export async function getCarrierLeaderboard(limit: number = 10, dateRange: strin
 
 export async function getBiddingAnalyticsReport(dateRange: string = '30_days') {
     try {
-        const cookieStore = await cookies();
-        const supabase = await createClient(cookieStore);
+        const supabase = await createClient();
 
         const { data, error } = await supabase.rpc('get_bidding_analytics_report', {
             p_date_range: dateRange
@@ -267,8 +257,7 @@ export async function getBiddingAnalyticsReport(dateRange: string = '30_days') {
 
 export async function getLiveBiddingAnalytics() {
     try {
-        const cookieStore = await cookies();
-        const supabase = await createClient(cookieStore);
+        const supabase = await createClient();
 
         const { data, error } = await supabase.rpc('get_live_bidding_analytics');
 
@@ -283,8 +272,7 @@ export async function getLiveBiddingAnalytics() {
 
 export async function getPlatformUtilizationMetrics() {
     try {
-        const cookieStore = await cookies();
-        const supabase = await createClient(cookieStore);
+        const supabase = await createClient();
 
         const { data, error } = await supabase.rpc('get_platform_utilization_metrics');
 
@@ -299,8 +287,7 @@ export async function getPlatformUtilizationMetrics() {
 
 export async function getLiveRevenueTracking() {
     try {
-        const cookieStore = await cookies();
-        const supabase = await createClient(cookieStore);
+        const supabase = await createClient();
 
         const { data, error } = await supabase.rpc('get_live_revenue_tracking');
 
@@ -359,14 +346,13 @@ export async function scheduleReport(
     reportName: string,
     frequency: 'daily' | 'weekly' | 'monthly',
     scheduleTime: string,
+    recipientEmails: string[],
     scheduleDayOfWeek?: number,
     scheduleDayOfMonth?: number,
-    recipientEmails: string[],
     exportFormat: 'pdf' | 'csv' | 'excel' = 'pdf'
 ) {
     try {
-        const cookieStore = await cookies();
-        const supabase = await createClient(cookieStore);
+        const supabase = await createClient();
 
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('Not authenticated');
@@ -394,8 +380,7 @@ export async function scheduleReport(
 
 export async function getScheduledReports() {
     try {
-        const cookieStore = await cookies();
-        const supabase = await createClient(cookieStore);
+        const supabase = await createClient();
 
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('Not authenticated');
@@ -415,8 +400,7 @@ export async function getScheduledReports() {
 
 export async function deleteScheduledReport(scheduleId: string) {
     try {
-        const cookieStore = await cookies();
-        const supabase = await createClient(cookieStore);
+        const supabase = await createClient();
 
         const { error } = await supabase
             .from('scheduled_reports')
@@ -434,8 +418,7 @@ export async function deleteScheduledReport(scheduleId: string) {
 
 export async function toggleScheduledReport(scheduleId: string, isActive: boolean) {
     try {
-        const cookieStore = await cookies();
-        const supabase = await createClient(cookieStore);
+        const supabase = await createClient();
 
         const { error } = await supabase
             .from('scheduled_reports')

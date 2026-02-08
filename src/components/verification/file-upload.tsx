@@ -16,6 +16,7 @@ interface FileUploadProps {
   onUploadComplete: (url: string) => void;
   path: string;
   bucket?: string;
+  disabled?: boolean;
 }
 
 export function FileUpload({
@@ -25,7 +26,8 @@ export function FileUpload({
   maxSizeMB = 5,
   onUploadComplete,
   path,
-  bucket = "verification-docs"
+  bucket = "verification-docs",
+  disabled = false
 }: FileUploadProps) {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -111,7 +113,7 @@ export function FileUpload({
         className={cn(
           "relative border-2 border-dashed rounded-xl p-6 transition-all duration-200 flex flex-col items-center justify-center gap-2",
           uploadedUrl ? "border-green-200 bg-green-50/30" : "border-muted hover:border-primary/50 bg-muted/5",
-          uploading && "opacity-70 pointer-events-none"
+          (uploading || disabled) && "opacity-70 pointer-events-none grayscale"
         )}
       >
         {!file ? (
@@ -124,9 +126,10 @@ export function FileUpload({
             <input
               type="file"
               ref={fileInputRef}
-              className="absolute inset-0 opacity-0 cursor-pointer"
+              className="absolute inset-0 opacity-0 cursor-pointer disabled:cursor-not-allowed"
               onChange={handleFileChange}
               accept={accept.join(",")}
+              disabled={disabled || uploading}
             />
           </>
         ) : (

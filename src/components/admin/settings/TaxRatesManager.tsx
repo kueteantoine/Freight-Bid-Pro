@@ -71,7 +71,7 @@ export default function TaxRatesManager() {
             : await createTaxRate(formData);
 
         if (result.success) {
-            toast({ title: 'Success', description: `Tax rate ${editingRate ? 'updated' : 'created'}` });
+            toast.success(`Tax rate ${editingRate ? 'updated' : 'created'}`);
             setIsDialogOpen(false);
             loadTaxRates();
         } else {

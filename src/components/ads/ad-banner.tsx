@@ -3,9 +3,10 @@
 import { useEffect, useState } from 'react';
 import { getAdsForPlacement, trackAdImpression, trackAdClick } from '@/lib/services/admin/advertisements';
 import { ExternalLink } from 'lucide-react';
+import { AdReportDialog } from './ad-report-dialog';
 
 interface AdBannerProps {
-    zone: 'dashboard_banner' | 'sidebar_banner' | 'sponsored_listing';
+    zone: 'dashboard_banner' | 'sidebar' | 'sponsored_listing';
     userRole?: 'shipper' | 'carrier' | 'driver' | 'broker';
     language?: 'en' | 'fr';
     className?: string;
@@ -17,17 +18,14 @@ export function AdBanner({ zone, userRole, language = 'en', className = '' }: Ad
 
     useEffect(() => {
         async function fetchAd() {
+            setLoading(true);
             const result = await getAdsForPlacement(zone, {
                 user_role: userRole,
                 language,
             }, 1);
 
             if (result.success && result.data && result.data.length > 0) {
-                const selectedAd = result.data[0];
-                setAd(selectedAd);
-
-                // Track impression
-                await trackAdImpression(selectedAd.id);
+                setAd(result.data[0]);
             }
             setLoading(false);
         }
@@ -35,12 +33,37 @@ export function AdBanner({ zone, userRole, language = 'en', className = '' }: Ad
         fetchAd();
     }, [zone, userRole, language]);
 
-    async function handleClick() {
+    useEffect(() => {
         if (!ad) return;
 
+        const observer = new IntersectionObserver(
+            async (entries) => {
+                const [entry] = entries;
+                if (entry.isIntersecting) {
+                    await trackAdImpression(ad.id);
+                    observer.disconnect(); // Track only once per mount
+                }
+            },
+            { threshold: 0.5 } // 50% visibility
+        );
+
+        const bannerElement = document.getElementById(`ad-banner-${ad.id}`);
+        if (bannerElement) {
+            observer.observe(bannerElement);
+        }
+
+        return () => observer.disconnect();
+    }, [ad]);
+
+    async function handleClick(e: React.MouseEvent) {
+        if (!ad) return;
+
+        // Prevent click when reporting
+        if ((e.target as HTMLElement).closest('.report-button')) return;
+
         const result = await trackAdClick(ad.id);
-        if (result.success && result.data?.target_url) {
-            window.open(result.data.target_url, '_blank', 'noopener,noreferrer');
+        if (result.success && result.targetUrl) {
+            window.open(result.targetUrl, '_blank', 'noopener,noreferrer');
         }
     }
 
@@ -58,6 +81,7 @@ export function AdBanner({ zone, userRole, language = 'en', className = '' }: Ad
 
     return (
         <div
+            id={`ad-banner-${ad.id}`}
             className={`relative overflow-hidden rounded-lg border bg-card shadow-sm hover:shadow-md transition-shadow cursor-pointer ${getZoneStyles(zone)} ${className}`}
             onClick={handleClick}
         >
@@ -93,9 +117,12 @@ export function AdBanner({ zone, userRole, language = 'en', className = '' }: Ad
                 </div>
             )}
 
-            {/* Sponsored badge */}
-            <div className="absolute top-2 right-2 bg-black/50 text-white text-xs px-2 py-1 rounded">
-                Sponsored
+            {/* Sponsored & Report badges */}
+            <div className="absolute top-2 right-2 flex items-center gap-2">
+                <AdReportDialog adId={ad.id} adTitle={ad.ad_title} />
+                <div className="bg-black/50 text-white text-xs px-2 py-1 rounded">
+                    Sponsored
+                </div>
             </div>
         </div>
     );
@@ -105,7 +132,7 @@ function getZoneStyles(zone: string): string {
     switch (zone) {
         case 'dashboard_banner':
             return 'h-32 md:h-40';
-        case 'sidebar_banner':
+        case 'sidebar':
             return 'h-64';
         case 'sponsored_listing':
             return 'h-24';

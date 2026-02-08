@@ -49,7 +49,7 @@ describe('Advertisement Server Actions', () => {
             price_amount: 50000,
             start_date: new Date().toISOString(),
             end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-        });
+        }) as any;
 
         expect(result.success).toBe(true);
         expect(result.data).toHaveProperty('id');
@@ -57,13 +57,13 @@ describe('Advertisement Server Actions', () => {
     });
 
     it('should fetch approval queue', async () => {
-        const result = await getAdApprovalQueue();
+        const result = await getAdApprovalQueue() as any;
         expect(result.success).toBe(true);
         expect(Array.isArray(result.data)).toBe(true);
     });
 
     it('should approve advertisement', async () => {
-        const result = await approveAdvertisement(testAdId, 'Looks good!');
+        const result = await approveAdvertisement(testAdId, 'Looks good!') as any;
         expect(result.success).toBe(true);
     });
 
@@ -71,18 +71,18 @@ describe('Advertisement Server Actions', () => {
         const result = await getAdsForPlacement('dashboard_banner', {
             user_role: 'shipper',
             language: 'en',
-        });
+        }) as any;
         expect(result.success).toBe(true);
         expect(Array.isArray(result.data)).toBe(true);
     });
 
     it('should track ad impression', async () => {
-        const result = await trackAdImpression(testAdId);
+        const result = await trackAdImpression(testAdId) as any;
         expect(result.success).toBe(true);
     });
 
     it('should track ad click', async () => {
-        const result = await trackAdClick(testAdId);
+        const result = await trackAdClick(testAdId) as any;
         expect(result.success).toBe(true);
         expect(result.data).toHaveProperty('target_url');
     });
@@ -91,7 +91,7 @@ describe('Advertisement Server Actions', () => {
         const result = await getAdPerformanceMetrics(testAdId, {
             from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
             to: new Date().toISOString().split('T')[0],
-        });
+        }) as any;
         expect(result.success).toBe(true);
         expect(result.data).toHaveProperty('impressions_count');
         expect(result.data).toHaveProperty('clicks_count');
@@ -108,7 +108,7 @@ describe('Content Management Server Actions', () => {
             title: 'Test Terms of Service',
             content: '<h1>Terms</h1><p>Test content</p>',
             language: 'en',
-        });
+        }) as any;
 
         expect(result.success).toBe(true);
         expect(result.data).toHaveProperty('id');
@@ -116,7 +116,7 @@ describe('Content Management Server Actions', () => {
     });
 
     it('should fetch content pages', async () => {
-        const result = await getContentPages({ page_type: 'legal' });
+        const result = await getContentPages({ page_type: 'legal' }) as any;
         expect(result.success).toBe(true);
         expect(Array.isArray(result.data)).toBe(true);
     });
@@ -128,26 +128,26 @@ describe('Content Management Server Actions', () => {
                 content: '<h1>Terms</h1><p>Updated content</p>',
             },
             'Updated legal disclaimer'
-        );
+        ) as any;
         expect(result.success).toBe(true);
     });
 
     it('should get content history', async () => {
-        const result = await getContentHistory(testPageId);
+        const result = await getContentHistory(testPageId) as any;
         expect(result.success).toBe(true);
         expect(Array.isArray(result.data)).toBe(true);
         expect(result.data.length).toBeGreaterThan(0);
     });
 
     it('should publish content page', async () => {
-        const result = await publishContentPage(testPageId);
+        const result = await publishContentPage(testPageId) as any;
         expect(result.success).toBe(true);
     });
 });
 
 describe('Template Server Actions', () => {
     it('should fetch email templates', async () => {
-        const result = await getEmailTemplates('en');
+        const result = await getEmailTemplates('en') as any;
         expect(result.success).toBe(true);
         expect(Array.isArray(result.data)).toBe(true);
     });
@@ -162,7 +162,7 @@ describe('Template Server Actions', () => {
             },
             'shipper',
             'en'
-        );
+        ) as any;
         expect(result.success).toBe(true);
         expect(result.data).toContain('John Doe');
         expect(result.data).toContain('50,000 XAF');
@@ -177,7 +177,7 @@ describe('Template Server Actions', () => {
             },
             'shipper',
             'en'
-        );
+        ) as any;
         expect(result.success).toBe(true);
         expect(typeof result.data).toBe('string');
     });
