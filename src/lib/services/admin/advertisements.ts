@@ -60,6 +60,7 @@ export interface CreateAdvertisementInput {
     end_date: string;
     advertiser_type?: AdvertiserType;
     display_priority?: number;
+    approval_status?: AdApprovalStatus;
 }
 
 // =====================================================
@@ -170,7 +171,7 @@ export async function createAdvertisement(input: CreateAdvertisementInput) {
                 end_date: input.end_date,
                 advertiser_type: input.advertiser_type || 'external_business',
                 display_priority: input.display_priority || 0,
-                approval_status: 'pending_approval',
+                approval_status: input.approval_status || 'pending_approval',
             })
             .select()
             .single();

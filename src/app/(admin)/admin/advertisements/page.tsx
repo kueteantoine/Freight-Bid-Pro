@@ -5,15 +5,19 @@ import { AdApprovalQueue } from './_components/ad-approval-queue';
 import { AdList } from './_components/ad-list';
 import { AdRevenueOverview } from './_components/ad-revenue-overview';
 import { Skeleton } from '@/components/ui/skeleton';
+import { CreateAdDialog } from './_components/create-ad-dialog';
 
 export default function AdvertisementsPage() {
     return (
         <div className="space-y-6">
-            <div>
-                <h1 className="text-3xl font-bold tracking-tight">Advertisement Management</h1>
-                <p className="text-muted-foreground">
-                    Manage advertisements, approve submissions, and track performance
-                </p>
+            <div className="flex items-center justify-between">
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight">Advertisement Management</h1>
+                    <p className="text-muted-foreground">
+                        Manage advertisements, approve submissions, and track performance
+                    </p>
+                </div>
+                <CreateAdDialog />
             </div>
 
             <Suspense fallback={<Skeleton className="h-[200px] w-full" />}>

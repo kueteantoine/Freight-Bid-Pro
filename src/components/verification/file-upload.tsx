@@ -15,6 +15,7 @@ interface FileUploadProps {
   maxSizeMB?: number;
   onUploadComplete: (url: string) => void;
   path: string;
+  bucket?: string;
 }
 
 export function FileUpload({
@@ -23,7 +24,8 @@ export function FileUpload({
   accept = ["application/pdf", "image/jpeg", "image/png"],
   maxSizeMB = 5,
   onUploadComplete,
-  path
+  path,
+  bucket = "verification-docs"
 }: FileUploadProps) {
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -60,7 +62,7 @@ export function FileUpload({
       const filePath = `${path}/${fileName}`;
 
       const { data, error } = await supabase.storage
-        .from('verification-docs')
+        .from(bucket)
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: false
@@ -70,7 +72,7 @@ export function FileUpload({
 
       setProgress(100);
       const { data: { publicUrl } } = supabase.storage
-        .from('verification-docs')
+        .from(bucket)
         .getPublicUrl(filePath);
 
       setUploadedUrl(publicUrl);
