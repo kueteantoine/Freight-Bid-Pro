@@ -1,5 +1,7 @@
 import { supabase } from '@/lib/supabase/client';
 import { NotificationType } from '@/lib/types/database';
+import { sendSMSWithTemplate } from '@/app/actions/sms-actions';
+import { sendEmailWithTemplate } from '@/app/actions/email-actions';
 
 export interface NotificationPayload {
     userId: string;
@@ -44,18 +46,35 @@ export const notificationDispatcher = {
 
             if (fetchError || !notification) return;
 
-            // 3. Trigger External Channels (Placeholders for real implementation)
-            if (notification.sent_via_email) {
-                await this.sendEmail(payload);
+            // 3. Fetch user contact information
+            const { data: user, error: userError } = await supabase
+                .from('profiles')
+                .select('email, phone_number')
+                .eq('id', payload.userId)
+                .single();
+
+            if (userError || !user) {
+                console.error('Failed to fetch user contact info:', userError);
+                return notification;
             }
 
-            if (notification.sent_via_sms) {
-                await this.sendSMS(payload);
+            // 4. Trigger External Channels
+            const promises: Promise<any>[] = [];
+
+            if (notification.sent_via_email && user.email) {
+                promises.push(this.sendEmail(payload, user.email, notification.id));
+            }
+
+            if (notification.sent_via_sms && user.phone_number) {
+                promises.push(this.sendSMS(payload, user.phone_number, notification.id));
             }
 
             if (notification.sent_via_push) {
-                await this.sendPush(payload);
+                promises.push(this.sendPush(payload));
             }
+
+            // Execute all channel sends in parallel
+            await Promise.allSettled(promises);
 
             return notification;
         } catch (error) {
@@ -65,26 +84,123 @@ export const notificationDispatcher = {
     },
 
     /**
-     * Placeholder for Email Integration (e.g., SendGrid)
+     * Send Email using Resend
      */
-    async sendEmail(payload: NotificationPayload) {
-        console.log(`[Email Service] Sending email to user ${payload.userId}: ${payload.title}`);
-        // Real implementation would call a Server Action or Edge Function
+    async sendEmail(payload: NotificationPayload, email: string, notificationId?: string) {
+        try {
+            // Map notification type to template key
+            const templateKey = this.getEmailTemplateKey(payload.type);
+
+            if (!templateKey) {
+                console.warn(`No email template for notification type: ${payload.type}`);
+                return;
+            }
+
+            // Prepare template variables
+            const variables = {
+                user_name: '{{user_name}}', // Will be replaced by template renderer
+                title: payload.title,
+                message: payload.message,
+                related_entity_type: payload.relatedEntityType,
+                related_entity_id: payload.relatedEntityId,
+            };
+
+            const result = await sendEmailWithTemplate({
+                to: email,
+                templateKey,
+                variables,
+                userId: payload.userId,
+                userRole: payload.roleType,
+                notificationId,
+            });
+
+            if (!result.success) {
+                console.error(`Failed to send email: ${result.error}`);
+            }
+        } catch (error) {
+            console.error('Email sending error:', error);
+        }
     },
 
     /**
-     * Placeholder for SMS Integration (e.g., Twilio, Africa's Talking)
+     * Send SMS using Africa's Talking
      */
-    async sendSMS(payload: NotificationPayload) {
-        console.log(`[SMS Service] Sending SMS to user ${payload.userId}: ${payload.message}`);
-        // Real implementation would call a Server Action or Edge Function
+    async sendSMS(payload: NotificationPayload, phoneNumber: string, notificationId?: string) {
+        try {
+            // Map notification type to template key
+            const templateKey = this.getSMSTemplateKey(payload.type);
+
+            if (!templateKey) {
+                console.warn(`No SMS template for notification type: ${payload.type}`);
+                return;
+            }
+
+            // Prepare template variables
+            const variables = {
+                user_name: '{{user_name}}', // Will be replaced by template renderer
+                title: payload.title,
+                message: payload.message,
+                related_entity_type: payload.relatedEntityType,
+                related_entity_id: payload.relatedEntityId,
+            };
+
+            const result = await sendSMSWithTemplate({
+                phoneNumber,
+                templateKey,
+                variables,
+                userId: payload.userId,
+                userRole: payload.roleType,
+                notificationId,
+            });
+
+            if (!result.success) {
+                console.error(`Failed to send SMS: ${result.error}`);
+            }
+        } catch (error) {
+            console.error('SMS sending error:', error);
+        }
     },
 
     /**
-     * Placeholder for Push Integration (e.g., Web Push)
+     * Send Push Notification (Web Push)
      */
     async sendPush(payload: NotificationPayload) {
         console.log(`[Push Service] Sending Push Notification to user ${payload.userId}: ${payload.title}`);
         // This usually involves sending to a Push Subscription endpoint stored in DB
+        // Implementation depends on web push setup (e.g., using service workers)
+    },
+
+    /**
+     * Map notification type to email template key
+     */
+    getEmailTemplateKey(type: NotificationType): string | null {
+        const mapping: Record<string, string> = {
+            'bid_received': 'notification_bid_received',
+            'bid_outbid': 'notification_bid_outbid',
+            'bid_awarded': 'notification_bid_awarded',
+            'payment_received': 'notification_payment_received',
+            'shipment_update': 'notification_shipment_update',
+            'message_received': 'notification_message_received',
+            'document_expiring': 'notification_document_expiring',
+        };
+
+        return mapping[type] || null;
+    },
+
+    /**
+     * Map notification type to SMS template key
+     */
+    getSMSTemplateKey(type: NotificationType): string | null {
+        const mapping: Record<string, string> = {
+            'bid_received': 'sms_bid_received',
+            'bid_outbid': 'sms_bid_outbid',
+            'bid_awarded': 'sms_bid_awarded',
+            'payment_received': 'sms_payment_received',
+            'shipment_update': 'sms_shipment_update',
+            'message_received': 'sms_message_received',
+            'document_expiring': 'sms_document_expiring',
+        };
+
+        return mapping[type] || null;
     }
 };
