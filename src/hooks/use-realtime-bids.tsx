@@ -52,7 +52,7 @@ export function useRealtimeBids(): RealtimeBidsHook {
           *,
           bids (
             *,
-            profiles (
+            profiles:transporter_user_id (
               first_name, 
               last_name, 
               avatar_url,
@@ -118,7 +118,7 @@ export function useRealtimeBids(): RealtimeBidsHook {
         const newBid = payload.new as Bid;
 
         // Fetch the transporter profile for the new bid
-        supabase.from('profiles').select('id, first_name, last_name, avatar_url, user_ad_subscriptions!user_id(subscription_status, ad_subscription_tiers!tier_id(tier_slug))').eq('id', newBid.transporter_user_id).single()
+        supabase.from('profiles').select('id, first_name, last_name, avatar_url, user_ad_subscriptions:user_id(subscription_status, ad_subscription_tiers:tier_id(tier_slug))').eq('id', newBid.transporter_user_id).single()
           .then(({ data: profileData }) => {
             if (profileData) {
               const bidWithProfile = { ...newBid, profiles: profileData as any };
