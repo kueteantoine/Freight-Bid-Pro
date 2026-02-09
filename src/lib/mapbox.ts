@@ -64,3 +64,65 @@ export async function getMapboxDirections(
         return null;
     }
 }
+
+/**
+ * Fetches place suggestions from Mapbox Search API (v6).
+ */
+export async function getMapboxPlacePredictions(query: string): Promise<any[]> {
+    if (!MAPBOX_ACCESS_TOKEN) return [];
+    if (!query || query.length < 3) return [];
+
+    const url = `https://api.mapbox.com/search/searchbox/v1/suggest?q=${encodeURIComponent(query)}&language=fr,en&country=cm&access_token=${MAPBOX_ACCESS_TOKEN}&session_token=session-123`; // Hardcoded session token for simplicity
+
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        return data.suggestions || [];
+    } catch (error) {
+        console.error("Mapbox Autocomplete error:", error);
+        return [];
+    }
+}
+
+/**
+ * Retrives coordinates for a Mapbox suggestion or query.
+ */
+export async function getMapboxCoordinates(query: string): Promise<{ lat: number; lng: number } | null> {
+    if (!MAPBOX_ACCESS_TOKEN) return null;
+
+    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?country=cm&limit=1&access_token=${MAPBOX_ACCESS_TOKEN}`;
+
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        if (data.features && data.features[0]) {
+            const [lng, lat] = data.features[0].center;
+            return { lat, lng };
+        }
+        return null;
+    } catch (error) {
+        console.error("Mapbox Geocoding error:", error);
+        return null;
+    }
+}
+
+/**
+ * Reverse geocodes coordinates to a human-readable address using Mapbox.
+ */
+export async function getMapboxReverseGeocoding(lat: number, lng: number): Promise<string | null> {
+    if (!MAPBOX_ACCESS_TOKEN) return null;
+
+    const url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?limit=1&access_token=${MAPBOX_ACCESS_TOKEN}`;
+
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        if (data.features && data.features[0]) {
+            return data.features[0].place_name;
+        }
+        return null;
+    } catch (error) {
+        console.error("Mapbox Reverse Geocoding error:", error);
+        return null;
+    }
+}

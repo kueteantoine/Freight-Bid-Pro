@@ -13,6 +13,9 @@ export interface ServiceRegion {
     country: string;
     state_province?: string;
     boundaries?: any; // GeoJSON polygon
+    center_lat?: number;
+    center_lng?: number;
+    radius_km?: number;
     distance_calculation_method?: 'haversine' | 'road_distance';
     is_active?: boolean;
 }
