@@ -1,6 +1,7 @@
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/toaster";
+import { AnalyticsProvider } from "@/contexts/AnalyticsContext";
 
 import type { Metadata, Viewport } from "next";
 
@@ -39,7 +40,9 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <AnalyticsProvider>
+            {children}
+          </AnalyticsProvider>
           <Toaster />
         </ThemeProvider>
       </body>
