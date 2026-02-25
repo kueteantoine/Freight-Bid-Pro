@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { getTemplateById } from '@/lib/services/admin/templates';
-import { TemplatePreviewWrapper } from '../../_components/template-preview-wrapper';
+import { TemplatePreviewWrapper } from '../../../_components/template-preview-wrapper';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft } from 'lucide-react';
 import Link from 'next/link';

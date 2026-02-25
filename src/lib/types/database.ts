@@ -78,6 +78,7 @@ export interface Shipment {
   current_latitude: number | null;
   current_longitude: number | null;
   estimated_arrival: string | null;
+  actual_pickup_at: string | null;
   shipper_user_id: string;
 }
 

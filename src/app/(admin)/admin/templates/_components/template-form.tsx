@@ -66,7 +66,7 @@ export function TemplateForm({ initialData, type: initialType, isEditing }: Temp
     const [availableVariables, setAvailableVariables] = useState<Record<string, any>>({});
     const [newVariable, setNewVariable] = useState('');
 
-    const form = useForm<z.infer<typeof formSchema>>({
+    const form = useForm({
         resolver: zodResolver(formSchema),
         defaultValues: initialData ? {
             ...initialData,
@@ -143,7 +143,7 @@ export function TemplateForm({ initialData, type: initialType, isEditing }: Temp
 
     const removeVariable = (variable: string) => {
         const current = form.getValues('variables_schema');
-        form.setValue('variables_schema', current.filter(v => v !== variable));
+        form.setValue('variables_schema', current.filter((v: string) => v !== variable));
     };
 
     const handleCustomVariable = () => {
@@ -374,7 +374,7 @@ export function TemplateForm({ initialData, type: initialType, isEditing }: Temp
                                 <div className="space-y-2">
                                     <FormLabel>Required Variables</FormLabel>
                                     <div className="flex flex-wrap gap-2">
-                                        {form.watch('variables_schema').map((variable) => (
+                                        {form.watch('variables_schema').map((variable: string) => (
                                             <Badge key={variable} variant="secondary" className="pl-2">
                                                 {variable}
                                                 <button

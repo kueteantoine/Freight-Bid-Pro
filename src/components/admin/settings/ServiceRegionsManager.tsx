@@ -1,5 +1,9 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import { Plus, Edit, Trash2, MapPin, Globe, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';

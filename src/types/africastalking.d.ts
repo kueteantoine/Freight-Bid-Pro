@@ -1,4 +1,4 @@
---Add type declaration for africastalking module
+// Add type declaration for africastalking module
 declare module 'africastalking' {
     interface AfricasTalkingOptions {
         apiKey: string;

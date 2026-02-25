@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { getTemplateById } from '@/lib/services/admin/templates';
-import { TemplateForm } from '../../_components/template-form';
+import { TemplateForm } from '../../../_components/template-form';
 
 interface EditTemplatePageProps {
     params: Promise<{
