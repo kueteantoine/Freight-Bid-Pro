@@ -6,8 +6,10 @@ import { driverService } from "@/lib/services/driver-service";
 import { ShiftLog } from "@/lib/types/database";
 import { format } from "date-fns";
 import { Coins, Clock, Briefcase } from "lucide-react";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 export function ShiftSummary() {
+    const { convert, format } = useCurrency();
     const [shift, setShift] = useState<ShiftLog | null>(null);
     const [loading, setLoading] = useState(true);
 
@@ -55,7 +57,7 @@ export function ShiftSummary() {
                         <span>Started</span>
                     </div>
                     <span className="font-medium">
-                        {format(new Date(shift.shift_start), "MMM d, h:mm a")}
+                        {shift.shift_start ? format(new Date(shift.shift_start).getTime(), "MMM d, h:mm a") : "N/A"}
                     </span>
                 </div>
 
@@ -73,10 +75,7 @@ export function ShiftSummary() {
                         <span>Earnings</span>
                     </div>
                     <span className="font-bold text-green-600">
-                        {new Intl.NumberFormat("fr-CM", {
-                            style: "currency",
-                            currency: "XAF",
-                        }).format(shift.total_earnings)}
+                        {format(convert(shift.total_earnings))}
                     </span>
                 </div>
             </CardContent>

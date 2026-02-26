@@ -7,7 +7,8 @@ import { AvailabilityToggle } from "@/components/driver/availability/Availabilit
 import { ShiftSummary } from "@/components/driver/availability/ShiftSummary";
 import { getTranslations } from "next-intl/server";
 
-export default async function DriverDashboardPage({ params: { locale } }: { params: { locale: string } }) {
+export default async function DriverDashboardPage({ params }: { params: Promise<{ locale: string }> }) {
+    const { locale } = await params;
     const t = await getTranslations({ locale, namespace: 'driverDashboard' });
     const { jobs: activeJobs } = await getDriverJobs("active");
     const { jobs: pendingJobs } = await getDriverJobs("pending");

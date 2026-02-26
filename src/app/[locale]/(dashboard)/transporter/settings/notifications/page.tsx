@@ -3,7 +3,8 @@ import { NotificationPrefsForm } from "@/components/transporter/settings/notific
 import { getNotificationSettings } from "@/app/actions/carrier-settings-actions";
 import { getTranslations } from "next-intl/server";
 
-export default async function NotificationSettingsPage({ params: { locale } }: { params: { locale: string } }) {
+export default async function NotificationSettingsPage({ params }: { params: Promise<{ locale: string }> }) {
+    const { locale } = await params;
     const t = await getTranslations({ locale, namespace: 'transporterSubPages' });
     const settings = await getNotificationSettings();
 

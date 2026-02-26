@@ -3,6 +3,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/utils";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { CarrierKPIs, RevenueTrend } from "@/app/actions/analytics-actions";
 import {
     BarChart,
@@ -29,10 +30,7 @@ interface AnalyticsDashboardProps {
 }
 
 export default function AnalyticsDashboard({ kpis, revenueTrends }: AnalyticsDashboardProps) {
-
-    const formatMoney = (amount: number) => {
-        return new Intl.NumberFormat('fr-CM', { style: 'currency', currency: 'XAF', maximumFractionDigits: 0 }).format(amount);
-    };
+    const { convert, format } = useCurrency();
 
     return (
         <div className="space-y-6">
@@ -44,7 +42,7 @@ export default function AnalyticsDashboard({ kpis, revenueTrends }: AnalyticsDas
                         <TrendingUp className="h-4 w-4 text-emerald-600" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-emerald-600">{formatMoney(kpis.total_revenue)}</div>
+                        <div className="text-2xl font-bold text-emerald-600">{format(convert(kpis.total_revenue))}</div>
                     </CardContent>
                 </Card>
                 <Card>
@@ -110,7 +108,7 @@ export default function AnalyticsDashboard({ kpis, revenueTrends }: AnalyticsDas
                                 />
                                 <Tooltip
                                     cursor={{ fill: 'transparent' }}
-                                    formatter={(value: number) => [formatMoney(value), 'Revenue']}
+                                    formatter={(value: number) => [format(convert(value)), 'Revenue']}
                                     labelFormatter={(label) => new Date(label).toLocaleDateString()}
                                 />
                                 <Area

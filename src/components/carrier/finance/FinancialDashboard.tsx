@@ -2,7 +2,8 @@
 
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatCurrency } from "@/lib/utils"; // Assuming this exists, if not I'll create a local helper
+import { formatCurrency } from "@/lib/utils";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import {
     BarChart,
     Bar,
@@ -40,9 +41,7 @@ interface FinancialDashboardProps {
 }
 
 export default function FinancialDashboard({ stats, revenueData = [] }: FinancialDashboardProps) {
-    const formatMoney = (amount: number) => {
-        return new Intl.NumberFormat('fr-CM', { style: 'currency', currency: 'XAF' }).format(amount);
-    };
+    const { convert, format } = useCurrency();
 
     return (
         <div className="space-y-6">
@@ -54,7 +53,7 @@ export default function FinancialDashboard({ stats, revenueData = [] }: Financia
                         <Wallet className="h-4 w-4 text-emerald-600" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-emerald-600">{formatMoney(stats.net_earnings)}</div>
+                        <div className="text-2xl font-bold text-emerald-600">{format(convert(stats.net_earnings))}</div>
                         <p className="text-xs text-muted-foreground">
                             +20.1% from last month
                         </p>
@@ -66,7 +65,7 @@ export default function FinancialDashboard({ stats, revenueData = [] }: Financia
                         <Clock className="h-4 w-4 text-amber-600" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold text-amber-600">{formatMoney(stats.pending_payments)}</div>
+                        <div className="text-2xl font-bold text-amber-600">{format(convert(stats.pending_payments))}</div>
                         <p className="text-xs text-muted-foreground">
                             Processing typically takes 24h
                         </p>
@@ -78,7 +77,7 @@ export default function FinancialDashboard({ stats, revenueData = [] }: Financia
                         <TrendingUp className="h-4 w-4 text-primary" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{formatMoney(stats.total_commissions)}</div>
+                        <div className="text-2xl font-bold">{format(convert(stats.total_commissions))}</div>
                         <p className="text-xs text-muted-foreground">
                             5% platform fee
                         </p>
@@ -90,7 +89,7 @@ export default function FinancialDashboard({ stats, revenueData = [] }: Financia
                         <CreditCard className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{formatMoney(stats.total_mobile_fees + stats.total_aggregator_fees)}</div>
+                        <div className="text-2xl font-bold">{format(convert(stats.total_mobile_fees + stats.total_aggregator_fees))}</div>
                         <p className="text-xs text-muted-foreground">
                             MoMo & Aggregator fees
                         </p>
@@ -126,7 +125,7 @@ export default function FinancialDashboard({ stats, revenueData = [] }: Financia
                                         />
                                         <Tooltip
                                             cursor={{ fill: 'transparent' }}
-                                            formatter={(value: number) => [formatMoney(value), 'Revenue']}
+                                            formatter={(value: number) => [format(convert(value)), 'Revenue']}
                                             contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
                                         />
                                         <Bar dataKey="total" fill="currentColor" radius={[4, 4, 0, 0]} className="fill-primary" />

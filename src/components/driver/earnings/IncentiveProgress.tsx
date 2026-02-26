@@ -4,6 +4,7 @@ import React from "react";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/utils";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import {
     Award,
     Gift,
@@ -22,6 +23,8 @@ export const IncentiveProgress: React.FC<IncentiveProgressProps> = ({
     incentives,
     onBack
 }) => {
+    const { convert, format } = useCurrency();
+
     return (
         <div className="space-y-6">
             <div className="flex items-center gap-4">
@@ -56,7 +59,7 @@ export const IncentiveProgress: React.FC<IncentiveProgressProps> = ({
                                         </div>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-sm font-black text-orange-600 dark:text-orange-400">{formatCurrency(i.reward_amount)}</p>
+                                        <p className="text-sm font-black text-orange-600 dark:text-orange-400">{format(convert(i.reward_amount))}</p>
                                         <p className="text-[10px] text-muted-foreground">REWARD</p>
                                     </div>
                                 </div>

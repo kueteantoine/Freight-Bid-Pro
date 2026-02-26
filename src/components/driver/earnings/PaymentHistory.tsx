@@ -2,6 +2,7 @@
 
 import React from "react";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import {
     Search,
     Filter,
@@ -24,6 +25,8 @@ export const PaymentHistory: React.FC<PaymentHistoryProps> = ({
     onSelectPayment,
     onBack
 }) => {
+    const { convert, format } = useCurrency();
+
     return (
         <div className="space-y-6 pb-20">
             <div className="flex items-center gap-4">
@@ -77,7 +80,7 @@ export const PaymentHistory: React.FC<PaymentHistoryProps> = ({
                                 </div>
                             </div>
                             <div className="text-right flex items-center gap-2">
-                                <p className="text-sm font-bold">{formatCurrency(p.amount)}</p>
+                                <p className="text-sm font-bold">{format(convert(p.amount))}</p>
                                 <ChevronRight className="w-4 h-4 text-muted-foreground" />
                             </div>
                         </div>

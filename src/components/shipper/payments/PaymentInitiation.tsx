@@ -15,6 +15,8 @@ import {
     ArrowRight
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useCurrency } from "@/contexts/CurrencyContext";
+import { DollarSign } from "lucide-react"; // Import from lucide instead of local SVG if possible, or keep local if styling is specific
 
 interface PaymentInitiationProps {
     bidAmount: number;
@@ -23,6 +25,7 @@ interface PaymentInitiationProps {
 }
 
 export function PaymentInitiation({ bidAmount, onPaymentComplete, onCancel }: PaymentInitiationProps) {
+    const { convert, format } = useCurrency();
     const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
 
@@ -66,26 +69,26 @@ export function PaymentInitiation({ bidAmount, onPaymentComplete, onCancel }: Pa
                 <div className="space-y-4">
                     <div className="flex justify-between items-center text-sm">
                         <span className="text-slate-500 font-bold">Base Bid Amount</span>
-                        <span className="font-extrabold text-slate-900">XAF {bidAmount.toLocaleString()}</span>
+                        <span className="font-extrabold text-slate-900">{format(convert(bidAmount))}</span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
                         <span className="text-slate-500 font-bold">Platform Commission (5%)</span>
-                        <span className="font-extrabold text-slate-900">XAF {platformCommission.toLocaleString()}</span>
+                        <span className="font-extrabold text-slate-900">{format(convert(platformCommission))}</span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
                         <span className="text-slate-500 font-bold">Aggregator Fee (1%)</span>
-                        <span className="font-extrabold text-slate-900">XAF {aggregatorFee.toLocaleString()}</span>
+                        <span className="font-extrabold text-slate-900">{format(convert(aggregatorFee))}</span>
                     </div>
                     <div className="flex justify-between items-center text-sm">
                         <span className="text-slate-500 font-bold">Mobile Money Fee (1%)</span>
-                        <span className="font-extrabold text-slate-900">XAF {mobileMoneyFee.toLocaleString()}</span>
+                        <span className="font-extrabold text-slate-900">{format(convert(mobileMoneyFee))}</span>
                     </div>
 
                     <Separator className="bg-slate-100 my-2" />
 
                     <div className="flex justify-between items-center bg-primary/5 p-4 rounded-2xl border border-primary/10">
                         <span className="text-sm font-black text-primary uppercase tracking-wider">Total Payable Amount</span>
-                        <span className="text-2xl font-black text-primary">XAF {totalPayable.toLocaleString()}</span>
+                        <span className="text-2xl font-black text-primary">{format(convert(totalPayable))}</span>
                     </div>
                 </div>
 
@@ -188,25 +191,6 @@ function PaymentMethodCard({ id, title, icon: Icon, color, selected, onClick }: 
     );
 }
 
-function DollarSign(props: any) {
-    return (
-        <svg
-            {...props}
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-        >
-            <line x1="12" x2="12" y1="2" y2="22" />
-            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-        </svg>
-    );
-}
 
 function Shield(props: any) {
     return (

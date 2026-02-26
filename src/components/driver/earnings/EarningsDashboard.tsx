@@ -11,6 +11,7 @@ import {
     Award
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { Button } from "@/components/ui/button";
 
 interface EarningsDashboardProps {
@@ -36,17 +37,19 @@ export const EarningsDashboard: React.FC<EarningsDashboardProps> = ({
     onViewHistory,
     onViewIncentives
 }) => {
+    const { convert, format, currentCurrency } = useCurrency();
+
     return (
         <div className="space-y-6 pb-20">
             {/* Main Balance / Today's Earnings */}
             <div className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground rounded-3xl p-6 shadow-xl relative overflow-hidden">
                 <div className="relative z-10">
                     <p className="text-sm font-medium opacity-90">Today's Earnings</p>
-                    <h2 className="text-4xl font-bold mt-1">{formatCurrency(summary.today)}</h2>
+                    <h2 className="text-4xl font-bold mt-1">{format(convert(summary.today))}</h2>
                     <div className="flex justify-between items-center mt-6">
                         <div>
                             <p className="text-xs opacity-75">Pending Payout</p>
-                            <p className="text-lg font-semibold">{formatCurrency(summary.pending)}</p>
+                            <p className="text-lg font-semibold">{format(convert(summary.pending))}</p>
                         </div>
                         <Button
                             variant="secondary"
@@ -71,7 +74,7 @@ export const EarningsDashboard: React.FC<EarningsDashboardProps> = ({
                             <Calendar className="w-4 h-4 text-primary" />
                             <span className="text-xs font-medium text-muted-foreground">This Week</span>
                         </div>
-                        <p className="text-xl font-bold">{formatCurrency(summary.week_to_date)}</p>
+                        <p className="text-xl font-bold">{format(convert(summary.week_to_date))}</p>
                     </CardContent>
                 </Card>
                 <Card className="rounded-2xl border-none shadow-sm bg-accent/50">
@@ -80,7 +83,7 @@ export const EarningsDashboard: React.FC<EarningsDashboardProps> = ({
                             <Clock className="w-4 h-4 text-primary" />
                             <span className="text-xs font-medium text-muted-foreground">This Month</span>
                         </div>
-                        <p className="text-xl font-bold">{formatCurrency(summary.month_to_date)}</p>
+                        <p className="text-xl font-bold">{format(convert(summary.month_to_date))}</p>
                     </CardContent>
                 </Card>
             </div>
@@ -97,13 +100,13 @@ export const EarningsDashboard: React.FC<EarningsDashboardProps> = ({
                     <div className="flex justify-between items-center bg-emerald-50 dark:bg-emerald-950/20 p-3 rounded-xl">
                         <span className="text-xs text-muted-foreground">Est. Monthly</span>
                         <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
-                            {formatCurrency(projections.estimated_monthly)}
+                            {format(convert(projections.estimated_monthly))}
                         </span>
                     </div>
                     <div className="flex justify-between items-center bg-blue-50 dark:bg-blue-950/20 p-3 rounded-xl">
                         <span className="text-xs text-muted-foreground">Est. Weekly</span>
                         <span className="text-sm font-bold text-blue-600 dark:text-blue-400">
-                            {formatCurrency(projections.estimated_weekly)}
+                            {format(convert(projections.estimated_weekly))}
                         </span>
                     </div>
                 </CardContent>
@@ -129,7 +132,7 @@ export const EarningsDashboard: React.FC<EarningsDashboardProps> = ({
             {/* Lifetime Summary */}
             <div className="text-center pt-4">
                 <p className="text-xs text-muted-foreground">Lifetime Earnings</p>
-                <p className="text-2xl font-black text-primary/40">{formatCurrency(summary.total_lifetime)}</p>
+                <p className="text-2xl font-black text-primary/40">{format(convert(summary.total_lifetime))}</p>
             </div>
         </div>
     );

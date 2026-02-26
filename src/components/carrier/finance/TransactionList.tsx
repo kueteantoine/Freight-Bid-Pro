@@ -26,6 +26,7 @@ import {
     MoreHorizontal
 } from 'lucide-react';
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { Badge } from "@/components/ui/badge";
 import { getTransactions, TransactionFilters } from "@/app/actions/finance-actions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,6 +39,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export default function TransactionList() {
+    const { convert, format } = useCurrency();
     const [transactions, setTransactions] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [statusFilter, setStatusFilter] = useState("all");
@@ -174,9 +176,9 @@ export default function TransactionList() {
                                             </div>
                                         </TableCell>
                                         <TableCell className="capitalize">{tx.payment_method?.replace('_', ' ')}</TableCell>
-                                        <TableCell>{formatCurrency(tx.gross_amount)}</TableCell>
-                                        <TableCell className="text-red-600">-{formatCurrency(Number(tx.total_deductions))}</TableCell>
-                                        <TableCell className="font-bold text-emerald-600">{formatCurrency(tx.net_amount)}</TableCell>
+                                        <TableCell>{format(convert(tx.gross_amount))}</TableCell>
+                                        <TableCell className="text-red-600">-{format(convert(Number(tx.total_deductions)))}</TableCell>
+                                        <TableCell className="font-bold text-emerald-600">{format(convert(tx.net_amount))}</TableCell>
                                         <TableCell>{getStatusBadge(tx.payment_status)}</TableCell>
                                         <TableCell className="text-right">
                                             <DropdownMenu>

@@ -3,7 +3,8 @@ import { PricingRulesTable } from "@/components/transporter/settings/pricing-rul
 import { getPricingRules } from "@/app/actions/carrier-settings-actions";
 import { getTranslations } from "next-intl/server";
 
-export default async function PricingRulesPage({ params: { locale } }: { params: { locale: string } }) {
+export default async function PricingRulesPage({ params }: { params: Promise<{ locale: string }> }) {
+    const { locale } = await params;
     const t = await getTranslations({ locale, namespace: 'transporterSubPages' });
     const rules = await getPricingRules();
 

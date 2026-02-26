@@ -482,6 +482,7 @@ function MapMarker({ x, y, label, dot, xOffset }: any) {
 }
 
 function LoadCard({ load, type, refId, origin, dest, freight, weight, equip, price, pickup, distance, urgent, onAction, t }: any) {
+  const { convert, format } = useCurrency();
   const tier = (load as any).tier;
   const isSponsored = tier && (tier.tier_slug === 'silver' || tier.tier_slug === 'gold');
 
@@ -558,7 +559,7 @@ function LoadCard({ load, type, refId, origin, dest, freight, weight, equip, pri
           <div className="flex-1 p-4 bg-slate-50/50 rounded-2xl border border-slate-100 group-hover:bg-white group-hover:border-primary/20 transition-all">
             <div className="flex justify-between items-center">
               <span className="text-[9px] font-bold text-slate-400 uppercase">{t("currentBid")}</span>
-              <span className="text-[12px] font-black text-primary">XAF {price.toLocaleString()}</span>
+              <span className="text-[12px] font-black text-primary">{format(convert(price))}</span>
             </div>
           </div>
         </div>

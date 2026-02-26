@@ -14,12 +14,14 @@ import {
 } from "@/components/ui/select";
 import { logExpense, getExpenses, ExpenseData } from "@/app/actions/finance-actions";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { toast } from "sonner";
 import { Plus, Trash2, Tag } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 
 export default function ExpenseTracker() {
+    const { convert, format } = useCurrency();
     const [expenses, setExpenses] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [formData, setFormData] = useState<ExpenseData>({
@@ -166,7 +168,7 @@ export default function ExpenseTracker() {
                                             <Badge variant="secondary">{exp.category}</Badge>
                                         </TableCell>
                                         <TableCell className="max-w-[200px] truncate">{exp.description || "-"}</TableCell>
-                                        <TableCell className="text-right font-medium">{formatCurrency(exp.amount)}</TableCell>
+                                        <TableCell className="text-right font-medium">{format(convert(exp.amount))}</TableCell>
                                     </TableRow>
                                 ))
                             )}

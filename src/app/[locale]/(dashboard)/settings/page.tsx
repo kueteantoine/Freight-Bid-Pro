@@ -21,6 +21,7 @@ import { GlobalProfileForm } from "@/components/profile/global-profile-form";
 import { RoleProfileForm } from "@/components/profile/role-profile-form";
 import { User } from "@supabase/supabase-js";
 import { FeaturedBadge } from "@/components/ads/featured-badge";
+import { CurrencySelector } from "@/components/profile/CurrencySelector";
 
 
 const roleIconMap: Record<UserRole, any> = {
@@ -323,14 +324,7 @@ export default function SettingsPage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label className="font-bold">{t("platformCurrency")}</Label>
-                <div className="p-4 rounded-xl border bg-muted/10 flex items-center justify-between">
-                  <div>
-                    <p className="font-bold">{t("xafCurrency")}</p>
-                    <p className="text-xs text-muted-foreground">{t("xafDescription")}</p>
-                  </div>
-                  <Badge variant="secondary" className="text-sm px-3 py-1">{tc("systemDefault")}</Badge>
-                </div>
+                <CurrencySelector />
               </div>
             </CardContent>
           </Card>

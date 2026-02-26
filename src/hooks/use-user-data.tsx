@@ -21,14 +21,21 @@ interface RoleData {
   role_specific_profile: any;
 }
 
+interface UserPreferences {
+  language: string;
+  currency: string;
+  timezone: string | null;
+}
+
 interface UserData {
   profile: ProfileData | null;
   roles: RoleData[];
+  preferences: UserPreferences | null;
   isLoading: boolean;
 }
 
 export function useUserData(): UserData {
-  const [data, setData] = useState<UserData>({ profile: null, roles: [], isLoading: true });
+  const [data, setData] = useState<UserData>({ profile: null, roles: [], preferences: null, isLoading: true });
 
   useEffect(() => {
     let isMounted = true;
@@ -38,7 +45,7 @@ export function useUserData(): UserData {
 
       if (!user) {
         if (isMounted) {
-          setData({ profile: null, roles: [], isLoading: false });
+          setData({ profile: null, roles: [], preferences: null, isLoading: false });
         }
         return;
       }
@@ -60,10 +67,20 @@ export function useUserData(): UserData {
 
         if (rolesError) throw rolesError;
 
+        // 3. Fetch User Preferences
+        const { data: preferencesData, error: preferencesError } = await supabase
+          .from('user_preferences')
+          .select('language, currency, timezone')
+          .eq('user_id', user.id)
+          .single();
+
+        if (preferencesError && preferencesError.code !== 'PGRST116') throw preferencesError;
+
         if (isMounted) {
           setData({
             profile: profileData || null,
-            roles: rolesData as RoleData[],
+            roles: (rolesData as RoleData[]) || [],
+            preferences: preferencesData || null,
             isLoading: false,
           });
         }
@@ -82,7 +99,7 @@ export function useUserData(): UserData {
       if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
         fetchUserData();
       } else if (event === 'SIGNED_OUT') {
-        setData({ profile: null, roles: [], isLoading: false });
+        setData({ profile: null, roles: [], preferences: null, isLoading: false });
       }
     });
 

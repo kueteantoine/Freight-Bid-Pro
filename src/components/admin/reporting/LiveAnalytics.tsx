@@ -12,8 +12,10 @@ import {
     getLiveRevenueTracking
 } from '@/actions/admin-reporting-actions';
 import { Activity, Users, Package, Gavel, DollarSign, RefreshCw } from 'lucide-react';
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 export default function LiveAnalytics() {
+    const { convert, format } = useCurrency();
     const [biddingData, setBiddingData] = useState<any>(null);
     const [utilizationData, setUtilizationData] = useState<any>(null);
     const [revenueData, setRevenueData] = useState<any>(null);
@@ -44,14 +46,6 @@ export default function LiveAnalytics() {
         if (revenue.success) setRevenueData(revenue.data);
 
         setLastUpdate(new Date());
-    };
-
-    const formatCurrency = (amount: number) => {
-        return new Intl.NumberFormat('fr-CM', {
-            style: 'currency',
-            currency: 'XAF',
-            maximumSignificantDigits: 3
-        }).format(amount);
     };
 
     return (
@@ -159,15 +153,15 @@ export default function LiveAnalytics() {
                         <div className="grid gap-4 md:grid-cols-3">
                             <div className="space-y-2">
                                 <p className="text-sm font-medium text-muted-foreground">Today</p>
-                                <p className="text-2xl font-bold">{formatCurrency(revenueData.revenue_today || 0)}</p>
+                                <p className="text-2xl font-bold">{format(convert(revenueData.revenue_today || 0))}</p>
                             </div>
                             <div className="space-y-2">
                                 <p className="text-sm font-medium text-muted-foreground">This Week</p>
-                                <p className="text-2xl font-bold">{formatCurrency(revenueData.revenue_this_week || 0)}</p>
+                                <p className="text-2xl font-bold">{format(convert(revenueData.revenue_this_week || 0))}</p>
                             </div>
                             <div className="space-y-2">
                                 <p className="text-sm font-medium text-muted-foreground">This Month</p>
-                                <p className="text-2xl font-bold">{formatCurrency(revenueData.revenue_this_month || 0)}</p>
+                                <p className="text-2xl font-bold">{format(convert(revenueData.revenue_this_month || 0))}</p>
                             </div>
                         </div>
                     </CardContent>
@@ -211,7 +205,7 @@ export default function LiveAnalytics() {
                                     {biddingData.recent_awards.slice(0, 5).map((award: any, index: number) => (
                                         <div key={index} className="flex items-center justify-between text-sm">
                                             <span className="text-muted-foreground">{award.shipment_number}</span>
-                                            <span className="font-medium">{formatCurrency(award.bid_amount)}</span>
+                                            <span className="font-medium">{format(convert(award.bid_amount))}</span>
                                         </div>
                                     ))}
                                 </div>

@@ -2,6 +2,7 @@
 
 import React from "react";
 import { formatCurrency } from "@/lib/utils";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import {
     ArrowLeft,
     MapPin,
@@ -38,6 +39,8 @@ export const TripEarningsBreakdown: React.FC<TripEarningsBreakdownProps> = ({
     payment,
     onBack
 }) => {
+    const { convert, format } = useCurrency();
+
     return (
         <div className="space-y-6">
             <div className="flex items-center gap-4">
@@ -74,7 +77,7 @@ export const TripEarningsBreakdown: React.FC<TripEarningsBreakdownProps> = ({
             {/* Main Fare */}
             <div className="text-center py-6 border-b">
                 <p className="text-sm text-muted-foreground mb-1">Total Earnings</p>
-                <p className="text-4xl font-black text-primary">{formatCurrency(payment.amount)}</p>
+                <p className="text-4xl font-black text-primary">{format(convert(payment.amount))}</p>
             </div>
 
             {/* Itemized Breakdown */}
@@ -87,7 +90,7 @@ export const TripEarningsBreakdown: React.FC<TripEarningsBreakdownProps> = ({
                 <div className="space-y-3">
                     <div className="flex justify-between items-center">
                         <span className="text-sm text-muted-foreground">Base Fare</span>
-                        <span className="text-sm font-medium">{formatCurrency(payment.base_amount)}</span>
+                        <span className="text-sm font-medium">{format(convert(payment.base_amount))}</span>
                     </div>
 
                     {Number(payment.distance_bonus) > 0 && (
@@ -96,7 +99,7 @@ export const TripEarningsBreakdown: React.FC<TripEarningsBreakdownProps> = ({
                                 <Plus className="w-3 h-3" />
                                 Distance Bonus
                             </span>
-                            <span className="text-sm font-medium">+{formatCurrency(payment.distance_bonus)}</span>
+                            <span className="text-sm font-medium">+{format(convert(payment.distance_bonus))}</span>
                         </div>
                     )}
 
@@ -106,7 +109,7 @@ export const TripEarningsBreakdown: React.FC<TripEarningsBreakdownProps> = ({
                                 <Plus className="w-3 h-3" />
                                 On-Time Bonus
                             </span>
-                            <span className="text-sm font-medium">+{formatCurrency(payment.time_bonus)}</span>
+                            <span className="text-sm font-medium">+{format(convert(payment.time_bonus))}</span>
                         </div>
                     )}
 
@@ -116,7 +119,7 @@ export const TripEarningsBreakdown: React.FC<TripEarningsBreakdownProps> = ({
                                 <Plus className="w-3 h-3" />
                                 Service Quality
                             </span>
-                            <span className="text-sm font-medium">+{formatCurrency(payment.quality_bonus)}</span>
+                            <span className="text-sm font-medium">+{format(convert(payment.quality_bonus))}</span>
                         </div>
                     )}
 
@@ -126,13 +129,13 @@ export const TripEarningsBreakdown: React.FC<TripEarningsBreakdownProps> = ({
                                 <Minus className="w-3 h-3" />
                                 Deductions
                             </span>
-                            <span className="text-sm font-medium">-{formatCurrency(payment.deductions)}</span>
+                            <span className="text-sm font-medium">-{format(convert(payment.deductions))}</span>
                         </div>
                     )}
 
                     <div className="pt-3 border-t flex justify-between items-center">
                         <span className="text-base font-bold">Net Earnings</span>
-                        <span className="text-base font-black text-primary">{formatCurrency(payment.amount)}</span>
+                        <span className="text-base font-black text-primary">{format(convert(payment.amount))}</span>
                     </div>
                 </div>
             </div>

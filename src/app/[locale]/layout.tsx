@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { AnalyticsProvider } from "@/contexts/AnalyticsContext";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations } from "next-intl/server";
+import { CurrencyProvider } from "@/contexts/CurrencyContext";
 
 import type { Metadata, Viewport } from "next";
 
@@ -62,7 +63,9 @@ export default async function LocaleLayout({
                         disableTransitionOnChange
                     >
                         <AnalyticsProvider>
-                            {children}
+                            <CurrencyProvider>
+                                {children}
+                            </CurrencyProvider>
                         </AnalyticsProvider>
                         <Toaster />
                     </ThemeProvider>

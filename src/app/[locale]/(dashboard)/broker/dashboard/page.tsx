@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { RenewalRemindersWidget } from "@/components/broker/RenewalRemindersWidget";
 import { getTranslations } from "next-intl/server";
 
-export default async function BrokerDashboardPage({ params: { locale } }: { params: { locale: string } }) {
+export default async function BrokerDashboardPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
   const t = await getTranslations({ locale, namespace: 'brokerDashboard' });
   const tCommon = await getTranslations({ locale, namespace: 'common' });
   const { data: metrics, error } = await getBrokerDashboardMetrics();

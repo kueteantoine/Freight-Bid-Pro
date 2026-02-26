@@ -6,9 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { calculateFees } from "@/app/actions/finance-actions";
 import { formatCurrency } from "@/lib/utils";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { Calculator } from 'lucide-react';
 
 export default function FeeCalculator() {
+    const { convert, format } = useCurrency();
     const [bidAmount, setBidAmount] = useState<number | string>("");
     const [result, setResult] = useState<any>(null);
 
@@ -55,20 +57,20 @@ export default function FeeCalculator() {
                         <div className="mt-4 space-y-3 p-4 bg-muted/50 rounded-lg border">
                             <div className="flex justify-between text-sm">
                                 <span>Platform Commission ({result.breakdown.commissionPct}%)</span>
-                                <span className="text-red-500">-{formatCurrency(result.commission)}</span>
+                                <span className="text-red-500">-{format(convert(result.commission))}</span>
                             </div>
                             <div className="flex justify-between text-sm">
                                 <span>Aggregator Fee ({result.breakdown.aggFeePct}%)</span>
-                                <span className="text-red-500">-{formatCurrency(result.aggFee)}</span>
+                                <span className="text-red-500">-{format(convert(result.aggFee))}</span>
                             </div>
                             <div className="flex justify-between text-sm">
                                 <span>MoMo Fee ({result.breakdown.momoFeePct}%)</span>
-                                <span className="text-red-500">-{formatCurrency(result.momoFee)}</span>
+                                <span className="text-red-500">-{format(convert(result.momoFee))}</span>
                             </div>
 
                             <div className="pt-3 border-t flex justify-between items-center font-bold">
                                 <span>Net Earnings</span>
-                                <span className="text-emerald-600 text-lg">{formatCurrency(result.netEarnings)}</span>
+                                <span className="text-emerald-600 text-lg">{format(convert(result.netEarnings))}</span>
                             </div>
                         </div>
                     )}

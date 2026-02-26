@@ -3,7 +3,8 @@ import { BidAutomationForm } from "@/components/transporter/settings/bid-automat
 import { getBidAutomationSettings } from "@/app/actions/carrier-settings-actions";
 import { getTranslations } from "next-intl/server";
 
-export default async function BidAutomationPage({ params: { locale } }: { params: { locale: string } }) {
+export default async function BidAutomationPage({ params }: { params: Promise<{ locale: string }> }) {
+    const { locale } = await params;
     const t = await getTranslations({ locale, namespace: 'transporterSubPages' });
     const settings = await getBidAutomationSettings();
 

@@ -13,6 +13,7 @@ interface PaymentDetails {
     totalPayable: number;
     customerPhone: string; // Added for Mobile Money
     customerEmail: string; // Added for receipt/notification
+    currency?: string; // Optional, defaults to XAF
 }
 
 import { FlutterwaveProvider } from "@/lib/services/payments/flutterwave-provider";
@@ -79,7 +80,7 @@ export async function processPayment(details: PaymentDetails) {
     const initiationResult = await paymentProvider.initiatePayment({
         reference: transactionId,
         amount: details.totalPayable,
-        currency: "XAF",
+        currency: details.currency || "XAF",
         description: `Shipment Payment: ${bid.shipments.shipment_number}`,
         customerEmail: details.customerEmail,
         customerPhone: details.customerPhone,
@@ -120,7 +121,7 @@ export async function processPayment(details: PaymentDetails) {
             mobile_money_fee_percentage: 0.0,
             total_deductions: details.platformCommission + details.aggregatorFee + details.mobileMoneyFee,
             net_amount: netToTransporter,
-            currency: "XAF",
+            currency: details.currency || "XAF",
             payment_method: details.paymentMethod as any, // Cast to enum
             payment_status: "pending", // Pending until webhook
             aggregator_transaction_id: initiationResult.aggregatorTransactionId || transactionId, // Use remote ID if available, else our reference (as fallback placeholder)

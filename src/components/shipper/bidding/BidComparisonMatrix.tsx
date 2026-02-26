@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { awardBid } from "@/app/actions/bid-actions";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import {
   Dialog,
   DialogContent,
@@ -27,6 +28,7 @@ interface BidComparisonMatrixProps {
 }
 
 export function BidComparisonMatrix({ selectedBid, shipment }: BidComparisonMatrixProps) {
+  const { convert, format, currentCurrency } = useCurrency();
   const transporter = selectedBid.profiles;
   const isLowestBid = shipment.bids[0]?.id === selectedBid.id;
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
@@ -51,7 +53,8 @@ export function BidComparisonMatrix({ selectedBid, shipment }: BidComparisonMatr
         mobileMoneyFee,
         totalPayable,
         customerPhone: "N/A", // Flutterwave requires this, though typically we'd get from session
-        customerEmail: "shiper@example.com" // Placeholder, should be from session or props
+        customerEmail: "shiper@example.com", // Placeholder, should be from session or props
+        currency: currentCurrency
       });
 
       toast.success("Payment Successful & Bid Awarded!", {
@@ -133,14 +136,14 @@ export function BidComparisonMatrix({ selectedBid, shipment }: BidComparisonMatr
           <div className="grid grid-cols-2 gap-6">
             <div className="space-y-1">
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Bid Amount</p>
-              <p className="text-3xl font-black text-primary">XAF {selectedBid.bid_amount.toLocaleString()}</p>
+              <p className="text-3xl font-black text-primary">{format(convert(selectedBid.bid_amount))}</p>
             </div>
             <div className="space-y-1">
               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Est. Delivery</p>
               <div className="flex items-center gap-2">
                 <Calendar className="h-4 w-4 text-slate-500" />
                 <p className="text-lg font-bold text-slate-900">
-                  {selectedBid.estimated_delivery_date ? format(new Date(selectedBid.estimated_delivery_date), 'MMM dd, yyyy') : 'N/A'}
+                  {selectedBid.estimated_delivery_date ? format(new Date(selectedBid.estimated_delivery_date).getTime(), 'MMM dd, yyyy') : 'N/A'}
                 </p>
               </div>
             </div>
@@ -153,7 +156,7 @@ export function BidComparisonMatrix({ selectedBid, shipment }: BidComparisonMatr
             <div className="grid grid-cols-2 gap-4 text-sm">
               <InfoRow icon={Truck} label="Vehicle Type" value="Flatbed (Verified)" />
               <InfoRow icon={MapPin} label="Distance from Pickup" value="45 km" />
-              <InfoRow icon={Clock} label="Bid Submitted" value={format(new Date(selectedBid.bid_submitted_at), 'MMM dd, HH:mm')} />
+              <InfoRow icon={Clock} label="Bid Submitted" value={format(new Date(selectedBid.bid_submitted_at).getTime(), 'MMM dd, HH:mm')} />
               <InfoRow icon={DollarSign} label="Win Rate" value="75%" />
             </div>
           </div>

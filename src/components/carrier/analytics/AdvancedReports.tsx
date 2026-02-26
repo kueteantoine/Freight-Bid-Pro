@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/utils";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import {
     getCompetitorBenchmarks,
     getPredictiveAnalytics,
@@ -29,6 +30,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CustomReportBuilder from './CustomReportBuilder';
 
 export default function AdvancedReports() {
+    const { convert, format } = useCurrency();
     const [benchmarks, setBenchmarks] = useState<Benchmarks | null>(null);
     const [predictions, setPredictions] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -88,7 +90,7 @@ export default function AdvancedReports() {
                                         <XAxis type="number" hide />
                                         <YAxis dataKey="name" type="category" width={80} />
                                         <Tooltip
-                                            formatter={(val: number) => formatCurrency(val)}
+                                            formatter={(val: number) => format(convert(val))}
                                             cursor={{ fill: 'transparent' }}
                                         />
                                         <Legend />
@@ -137,7 +139,7 @@ export default function AdvancedReports() {
                             </CardHeader>
                             <CardContent>
                                 <div className="text-3xl font-bold text-blue-700">
-                                    {predictions ? formatCurrency(predictions.predicted_monthly_revenue) : '-'}
+                                    {predictions ? format(convert(predictions.predicted_monthly_revenue)) : '-'}
                                 </div>
                                 <div className="mt-2 flex items-center gap-2">
                                     <Badge variant="outline" className="bg-white text-blue-700 border-blue-200">

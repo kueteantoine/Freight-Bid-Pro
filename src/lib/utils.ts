@@ -43,11 +43,12 @@ export function formatTimeRemaining(ms: number): string {
   return parts.join(' ');
 }
 
-export function formatCurrency(amount: number) {
-  return new Intl.NumberFormat('fr-CM', {
+export function formatCurrency(amount: number, currency: string = 'XAF', locale: string = 'fr-CM') {
+  return new Intl.NumberFormat(locale, {
     style: 'currency',
-    currency: 'XAF',
-    maximumFractionDigits: 0
+    currency: currency,
+    minimumFractionDigits: currency === 'XAF' ? 0 : 2,
+    maximumFractionDigits: currency === 'XAF' ? 0 : 2
   }).format(amount);
 }
 
