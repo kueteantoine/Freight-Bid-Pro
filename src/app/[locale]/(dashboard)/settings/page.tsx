@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useTransition } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,8 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useUserData, UserRole } from "@/hooks/use-user-data";
 import { AuthLoading } from "@/components/auth/auth-loading";
+import { useLocale } from "next-intl";
+import { usePathname, useRouter } from "next/navigation";
 import { AvatarUpload } from "@/components/profile/avatar-upload";
 import { GlobalProfileForm } from "@/components/profile/global-profile-form";
 import { RoleProfileForm } from "@/components/profile/role-profile-form";
@@ -40,6 +42,25 @@ export default function SettingsPage() {
   const { profile, roles: allRoles, isLoading: isDataLoading } = useUserData();
   const [isActivating, setIsActivating] = useState<UserRole | null>(null);
   const [tier, setTier] = useState<any>(null);
+
+  const locale = useLocale();
+  const router = useRouter();
+  const pathname = usePathname();
+  const [isPendingLang, startTransitionLang] = useTransition();
+
+  const switchLanguage = (newLocale: string) => {
+    if (newLocale === locale) return;
+    const urlSegments = pathname.split('/');
+    if (urlSegments[1] === 'en' || urlSegments[1] === 'fr') {
+      urlSegments.splice(1, 1);
+    }
+    const newPath = `/${newLocale}${urlSegments.join('/')}`.replace('//', '/');
+
+    startTransitionLang(() => {
+      document.cookie = `NEXT_LOCALE=${newLocale};path=/;max-age=31536000;SameSite=Lax`;
+      router.replace(newPath);
+    });
+  };
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -274,8 +295,22 @@ export default function SettingsPage() {
               <div className="space-y-4">
                 <Label className="font-bold">Preferred Language</Label>
                 <div className="grid grid-cols-2 gap-4">
-                  <Button variant="outline" className="h-12 border-primary/20 bg-primary/5 text-primary font-bold">English (UK)</Button>
-                  <Button variant="outline" className="h-12 text-muted-foreground hover:bg-muted">Français (CM)</Button>
+                  <Button
+                    variant="outline"
+                    className={cn("h-12 font-bold", locale === 'en' ? "border-primary/20 bg-primary/5 text-primary" : "text-muted-foreground hover:bg-muted")}
+                    onClick={() => switchLanguage('en')}
+                    disabled={isPendingLang}
+                  >
+                    English (UK)
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className={cn("h-12 font-bold", locale === 'fr' ? "border-primary/20 bg-primary/5 text-primary" : "text-muted-foreground hover:bg-muted")}
+                    onClick={() => switchLanguage('fr')}
+                    disabled={isPendingLang}
+                  >
+                    Français (CM)
+                  </Button>
                 </div>
               </div>
               <div className="space-y-2">

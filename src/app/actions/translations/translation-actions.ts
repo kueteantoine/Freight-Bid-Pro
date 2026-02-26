@@ -25,7 +25,7 @@ export async function getAdminTranslations() {
             .from('user_roles')
             .select('id')
             .eq('user_id', user.id)
-            .in('role_type', ['admin', 'super_admin'])
+            .in('role_type', ['admin'])
             .eq('is_active', true)
             .single();
 
@@ -64,7 +64,7 @@ export async function upsertTranslation(input: TranslationInput) {
             .from('user_roles')
             .select('id')
             .eq('user_id', user.id)
-            .in('role_type', ['admin', 'super_admin'])
+            .in('role_type', ['admin'])
             .eq('is_active', true)
             .single();
 
@@ -110,7 +110,7 @@ export async function deleteTranslation(id: string) {
             .from('user_roles')
             .select('id')
             .eq('user_id', user.id)
-            .in('role_type', ['admin', 'super_admin'])
+            .in('role_type', ['admin'])
             .eq('is_active', true)
             .single();
 
