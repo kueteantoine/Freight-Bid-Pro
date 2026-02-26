@@ -17,27 +17,29 @@ import {
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useTranslations } from "next-intl";
 
 export default function ShipperSupportPage() {
+    const t = useTranslations("shipperSubPages");
     return (
         <div className="space-y-8 pb-20">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h1 className="text-3xl font-bold text-slate-900 flex items-center gap-3">
                         <LifeBuoy className="w-8 h-8 text-primary" />
-                        Support Center
+                        {t("supportCenter")}
                     </h1>
-                    <p className="text-slate-500 mt-1">Get help, learn the platform, and manage your tickets.</p>
+                    <p className="text-slate-500 mt-1">{t("supportCenterDesc")}</p>
                 </div>
 
                 <div className="flex items-center gap-3">
                     <Button variant="outline" className="gap-2 border-slate-200">
                         <ShieldAlert className="w-4 h-4 text-red-500" />
-                        Report a Security Issue
+                        {t("reportSecurityIssue")}
                     </Button>
                     <Button variant="outline" className="gap-2 border-slate-200">
                         <ExternalLink className="w-4 h-4" />
-                        Documentation
+                        {t("documentation")}
                     </Button>
                 </div>
             </div>
@@ -49,8 +51,8 @@ export default function ShipperSupportPage() {
                             <HelpCircle className="w-6 h-6 text-primary" />
                         </div>
                         <div>
-                            <h3 className="font-bold text-slate-900">Knowledge Base</h3>
-                            <p className="text-xs text-slate-500">Self-service help articles</p>
+                            <h3 className="font-bold text-slate-900">{t("knowledgeBase")}</h3>
+                            <p className="text-xs text-slate-500">{t("knowledgeBaseDesc")}</p>
                         </div>
                     </CardContent>
                 </Card>
@@ -60,8 +62,8 @@ export default function ShipperSupportPage() {
                             <MessageSquare className="w-6 h-6 text-indigo-500" />
                         </div>
                         <div>
-                            <h3 className="font-bold text-slate-900">Support Tickets</h3>
-                            <p className="text-xs text-slate-500">Track your open requests</p>
+                            <h3 className="font-bold text-slate-900">{t("supportTickets")}</h3>
+                            <p className="text-xs text-slate-500">{t("supportTicketsDesc")}</p>
                         </div>
                     </CardContent>
                 </Card>
@@ -71,8 +73,8 @@ export default function ShipperSupportPage() {
                             <Video className="w-6 h-6 text-amber-500" />
                         </div>
                         <div>
-                            <h3 className="font-bold text-slate-900">Tutorials</h3>
-                            <p className="text-xs text-slate-500">Step-by-step video guides</p>
+                            <h3 className="font-bold text-slate-900">{t("tutorials")}</h3>
+                            <p className="text-xs text-slate-500">{t("tutorialsDesc")}</p>
                         </div>
                     </CardContent>
                 </Card>
@@ -82,15 +84,15 @@ export default function ShipperSupportPage() {
                 <TabsList className="bg-slate-100 p-1 rounded-xl w-full md:w-auto h-auto">
                     <TabsTrigger value="faq" className="rounded-lg py-2.5 px-6 data-[state=active]:bg-white data-[state=active]:shadow-sm gap-2">
                         <HelpCircle className="w-4 h-4" />
-                        FAQs
+                        {t("faqs")}
                     </TabsTrigger>
                     <TabsTrigger value="tickets" className="rounded-lg py-2.5 px-6 data-[state=active]:bg-white data-[state=active]:shadow-sm gap-2">
                         <MessageSquare className="w-4 h-4" />
-                        Support Tickets
+                        {t("supportTickets")}
                     </TabsTrigger>
                     <TabsTrigger value="tutorials" className="rounded-lg py-2.5 px-6 data-[state=active]:bg-white data-[state=active]:shadow-sm gap-2">
                         <Video className="w-4 h-4" />
-                        Video Tutorials
+                        {t("videoTutorials")}
                     </TabsTrigger>
                 </TabsList>
 

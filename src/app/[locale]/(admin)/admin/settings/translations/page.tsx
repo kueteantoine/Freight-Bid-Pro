@@ -8,9 +8,9 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
     const { locale } = await params;
-    const t = await getTranslations({ locale, namespace: 'admin' });
+    const t = await getTranslations({ locale, namespace: 'settings' });
     return {
-        title: t('translations', { fallback: 'Translation Management' }),
+        title: t('translations'),
     };
 }
 

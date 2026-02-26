@@ -36,6 +36,7 @@ import { Vehicle } from "@/lib/types/database";
 import { AddVehicleDialog } from "@/components/transporter/fleet/AddVehicleDialog";
 import { BulkVehicleImport } from "@/components/transporter/fleet/BulkVehicleImport";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 export default function FleetManagementPage() {
     const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -76,35 +77,39 @@ export default function FleetManagementPage() {
     };
 
     if (isLoading && vehicles.length === 0) {
+        const tCommon = useTranslations("common");
         return (
             <div className="h-[60vh] flex flex-col items-center justify-center gap-4">
                 <Loader2 className="h-10 w-10 text-primary animate-spin" />
-                <p className="text-slate-500 font-medium">Loading your fleet...</p>
+                <p className="text-slate-500 font-medium">{tCommon("loadingFleet")}</p>
             </div>
         );
     }
+
+    const t = useTranslations("transporterSubPages");
+    const tCommon = useTranslations("common");
 
     return (
         <div className="space-y-10 pb-10">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
-                    <h2 className="text-3xl font-bold tracking-tight text-slate-900">Fleet Overview</h2>
+                    <h2 className="text-3xl font-bold tracking-tight text-slate-900">{t("fleetOverview")}</h2>
                     <p className="text-slate-500 mt-1">
-                        Manage your {stats.total} registered vehicles and their current deployment.
+                        {t("fleetOverviewDesc", { count: stats.total })}
                     </p>
                 </div>
                 <div className="flex gap-3">
                     <Button variant="outline" className="rounded-xl h-11 px-6 border-slate-200 hover:bg-slate-50 transition-all">
                         <Download className="h-4 w-4 mr-2 text-slate-500" />
-                        Export Data
+                        {t("exportData")}
                     </Button>
                     <Button
                         onClick={() => setIsAddDialogOpen(true)}
                         className="rounded-xl h-11 px-6 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all text-white"
                     >
                         <Plus className="h-4 w-4 mr-2" />
-                        Add Vehicle
+                        {t("addVehicle")}
                     </Button>
                 </div>
             </div>
@@ -112,7 +117,7 @@ export default function FleetManagementPage() {
             {/* Fleet Stats */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                 <FleetStatsCard
-                    title="Total Trucks"
+                    title={t("totalTrucks")}
                     value={stats.total.toString()}
                     trend="Fleet size"
                     trendUp={true}
@@ -121,7 +126,7 @@ export default function FleetManagementPage() {
                     iconColor="text-blue-600"
                 />
                 <FleetStatsCard
-                    title="Active"
+                    title={t("active")}
                     value={stats.active.toString()}
                     trend="Ready for loads"
                     trendUp={true}
@@ -130,7 +135,7 @@ export default function FleetManagementPage() {
                     iconColor="text-emerald-600"
                 />
                 <FleetStatsCard
-                    title="Available"
+                    title={t("available")}
                     value={stats.active.toString()} // Simplified for now
                     trend="Not on trip"
                     trendUp={true}
@@ -139,7 +144,7 @@ export default function FleetManagementPage() {
                     iconColor="text-amber-600"
                 />
                 <FleetStatsCard
-                    title="Maintenance"
+                    title={t("maintenance")}
                     value={stats.maintenance.toString()}
                     trend="In service"
                     trendUp={false}
@@ -154,17 +159,17 @@ export default function FleetManagementPage() {
                 <CardHeader className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-50 pb-6">
                     <Tabs defaultValue="all" onValueChange={setFilterStatus} className="w-full md:w-auto">
                         <TabsList className="bg-slate-100/50 p-1 rounded-xl h-12">
-                            <TabsTrigger value="all" className="rounded-lg px-6 font-bold text-xs data-[state=active]:bg-primary data-[state=active]:text-white transition-all">All Status</TabsTrigger>
-                            <TabsTrigger value="active" className="rounded-lg px-6 font-bold text-xs transition-all">Active</TabsTrigger>
-                            <TabsTrigger value="maintenance" className="rounded-lg px-6 font-bold text-xs transition-all">Maintenance</TabsTrigger>
-                            <TabsTrigger value="inactive" className="rounded-lg px-6 font-bold text-xs transition-all">Inactive</TabsTrigger>
+                            <TabsTrigger value="all" className="rounded-lg px-6 font-bold text-xs data-[state=active]:bg-primary data-[state=active]:text-white transition-all">{t("allStatus")}</TabsTrigger>
+                            <TabsTrigger value="active" className="rounded-lg px-6 font-bold text-xs transition-all">{t("active")}</TabsTrigger>
+                            <TabsTrigger value="maintenance" className="rounded-lg px-6 font-bold text-xs transition-all">{t("maintenance")}</TabsTrigger>
+                            <TabsTrigger value="inactive" className="rounded-lg px-6 font-bold text-xs transition-all">{tCommon("inactive")}</TabsTrigger>
                         </TabsList>
                     </Tabs>
                     <div className="flex gap-3 mt-4 md:mt-0">
                         <div className="relative group">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
                             <Input
-                                placeholder="Search plate, model..."
+                                placeholder={tCommon("searchPlaceholder")}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="pl-9 h-11 w-64 bg-slate-50 border-slate-100 rounded-xl focus:bg-white"
@@ -172,7 +177,7 @@ export default function FleetManagementPage() {
                         </div>
                         <Button variant="outline" className="h-11 rounded-xl border-slate-100 font-bold text-xs">
                             <Filter className="h-4 w-4 mr-2 text-slate-400" />
-                            Filter
+                            {tCommon("filter")}
                         </Button>
                     </div>
                 </CardHeader>
@@ -180,11 +185,11 @@ export default function FleetManagementPage() {
                     <Table>
                         <TableHeader className="bg-slate-50/50">
                             <TableRow className="hover:bg-transparent border-slate-100">
-                                <TableHead className="px-8 font-bold text-slate-400 text-[10px] uppercase tracking-wider py-4">Vehicle Details</TableHead>
-                                <TableHead className="font-bold text-slate-400 text-[10px] uppercase tracking-wider">Assigned Driver</TableHead>
-                                <TableHead className="font-bold text-slate-400 text-[10px] uppercase tracking-wider">Type</TableHead>
-                                <TableHead className="font-bold text-slate-400 text-[10px] uppercase tracking-wider">Status</TableHead>
-                                <TableHead className="font-bold text-slate-400 text-[10px] uppercase tracking-wider">Capacity</TableHead>
+                                <TableHead className="px-8 font-bold text-slate-400 text-[10px] uppercase tracking-wider py-4">{t("vehicleDetails")}</TableHead>
+                                <TableHead className="font-bold text-slate-400 text-[10px] uppercase tracking-wider">{t("assignedDriver")}</TableHead>
+                                <TableHead className="font-bold text-slate-400 text-[10px] uppercase tracking-wider">{t("type")}</TableHead>
+                                <TableHead className="font-bold text-slate-400 text-[10px] uppercase tracking-wider">{t("status")}</TableHead>
+                                <TableHead className="font-bold text-slate-400 text-[10px] uppercase tracking-wider">{t("capacity")}</TableHead>
                                 <TableHead className="px-8 text-right"></TableHead>
                             </TableRow>
                         </TableHeader>
@@ -192,7 +197,7 @@ export default function FleetManagementPage() {
                             {filteredVehicles.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={6} className="h-32 text-center text-slate-400">
-                                        No vehicles found matching your filters.
+                                        {tCommon("noVehiclesFound")}
                                     </TableCell>
                                 </TableRow>
                             ) : (
@@ -206,7 +211,7 @@ export default function FleetManagementPage() {
                         </TableBody>
                     </Table>
                     <div className="p-6 border-t border-slate-50 flex items-center justify-between text-sm text-slate-400">
-                        <p>Showing {filteredVehicles.length} of {stats.total} vehicles</p>
+                        <p>{tCommon("showingVehicles", { count: filteredVehicles.length, total: stats.total })}</p>
                     </div>
                 </CardContent>
             </Card>
@@ -270,7 +275,7 @@ function VehicleRow({ vehicle }: { vehicle: Vehicle }) {
                 </div>
             </TableCell>
             <TableCell>
-                <span className="text-sm italic text-slate-400">Unassigned</span>
+                <span className="text-sm italic text-slate-400">{useTranslations("transporterSubPages")("unassigned")}</span>
             </TableCell>
             <TableCell>
                 <div className="flex items-center gap-2 text-[12px] font-bold text-slate-700">

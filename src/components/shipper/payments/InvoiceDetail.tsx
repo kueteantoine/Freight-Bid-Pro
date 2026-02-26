@@ -33,6 +33,7 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { format } from "date-fns";
 import { RefundRequestDialog } from "./RefundRequestDialog";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
 interface InvoiceDetailProps {
@@ -41,6 +42,7 @@ interface InvoiceDetailProps {
 }
 
 export function InvoiceDetail({ invoice, backUrl }: InvoiceDetailProps) {
+    const t = useTranslations("common");
     const [showRefundDialog, setShowRefundDialog] = React.useState(false);
     const { transactions: tx } = invoice;
     const shipment = tx.shipments;
@@ -76,11 +78,11 @@ export function InvoiceDetail({ invoice, backUrl }: InvoiceDetailProps) {
                 <div className="flex gap-3">
                     <Button variant="outline" className="rounded-xl h-11 border-slate-200 font-bold">
                         <Printer className="h-4 w-4 mr-2 text-slate-400" />
-                        Print
+                        {t("print")}
                     </Button>
                     <Button className="rounded-xl h-11 px-6 bg-primary font-bold shadow-lg shadow-primary/20 transition-all hover:scale-[1.02]">
                         <DownloadCloud className="h-4 w-4 mr-2" />
-                        Download PDF
+                        {t("downloadPdf")}
                     </Button>
                     {backUrl.includes('shipper') && tx.payment_status === 'completed' && (
                         <Button
@@ -88,7 +90,7 @@ export function InvoiceDetail({ invoice, backUrl }: InvoiceDetailProps) {
                             className="rounded-xl h-11 border-rose-100 bg-rose-50 text-rose-600 hover:bg-rose-100 hover:text-rose-700 font-bold transition-all"
                             onClick={() => setShowRefundDialog(true)}
                         >
-                            Request Refund
+                            {t("requestRefund")}
                         </Button>
                     )}
                 </div>
@@ -99,14 +101,14 @@ export function InvoiceDetail({ invoice, backUrl }: InvoiceDetailProps) {
                 <div className="lg:col-span-2 space-y-8">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <PartyCard
-                            title="Billed To"
+                            title={t("billedTo")}
                             name={`${payer?.first_name} ${payer?.last_name}`}
                             address={payer?.profiles?.company_name || 'Individual Shipper'}
                             email={payer?.email}
                             icon={Building2}
                         />
                         <PartyCard
-                            title="Payable To"
+                            title={t("payableTo")}
                             name={`${payee?.first_name} ${payee?.last_name}`}
                             address={payee?.profiles?.company_name || 'Individual Transporter'}
                             email={payee?.email}
@@ -118,21 +120,21 @@ export function InvoiceDetail({ invoice, backUrl }: InvoiceDetailProps) {
                     <Card className="rounded-3xl border-slate-100 shadow-xl overflow-hidden bg-white">
                         <CardHeader className="p-8 border-b border-slate-50 flex flex-row items-center justify-between">
                             <div>
-                                <CardTitle className="text-lg font-black text-slate-900">Shipment Details</CardTitle>
+                                <CardTitle className="text-lg font-black text-slate-900">{t("shipmentDetails")}</CardTitle>
                                 <p className="text-xs text-slate-400 font-black mt-1 uppercase tracking-widest">
-                                    Load reference: #{shipment?.shipment_number}
+                                    {t("loadReference")}: #{shipment?.shipment_number}
                                 </p>
                             </div>
                             <Button variant="ghost" className="text-primary font-bold text-xs flex items-center gap-1 group">
-                                View Shipment <ExternalLink className="h-3 w-3 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                                {t("viewShipment")} <ExternalLink className="h-3 w-3 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
                             </Button>
                         </CardHeader>
                         <CardContent className="p-0">
                             <Table>
                                 <TableHeader className="bg-slate-50/50">
                                     <TableRow className="hover:bg-transparent border-slate-100">
-                                        <TableHead className="px-8 font-black text-slate-400 text-[10px] uppercase tracking-wider py-4">Description</TableHead>
-                                        <TableHead className="font-black text-slate-400 text-[10px] uppercase tracking-wider text-right">Amount</TableHead>
+                                        <TableHead className="px-8 font-black text-slate-400 text-[10px] uppercase tracking-wider py-4">{t("description")}</TableHead>
+                                        <TableHead className="font-black text-slate-400 text-[10px] uppercase tracking-wider text-right">{t("amount")}</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -167,16 +169,16 @@ export function InvoiceDetail({ invoice, backUrl }: InvoiceDetailProps) {
                             <div className="p-8 bg-slate-50 flex justify-end">
                                 <div className="w-80 space-y-4">
                                     <div className="flex justify-between text-sm">
-                                        <span className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">Subtotal</span>
+                                        <span className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">{t("subtotal")}</span>
                                         <span className="font-black text-slate-900 text-right">XAF {tx.gross_amount.toLocaleString()}</span>
                                     </div>
                                     <div className="flex justify-between text-sm">
-                                        <span className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">Total Fees</span>
+                                        <span className="text-slate-500 font-bold uppercase tracking-widest text-[10px]">{t("totalFees")}</span>
                                         <span className="font-black text-slate-900 text-right">XAF {tx.total_deductions.toLocaleString()}</span>
                                     </div>
                                     <Separator className="bg-slate-200" />
                                     <div className="flex justify-between items-center">
-                                        <span className="text-sm font-black text-slate-900 uppercase tracking-widest">Total Amount</span>
+                                        <span className="text-sm font-black text-slate-900 uppercase tracking-widest">{t("totalAmount")}</span>
                                         <span className="text-2xl font-black text-primary">XAF {(tx.gross_amount + tx.total_deductions).toLocaleString()}</span>
                                     </div>
                                 </div>
@@ -188,11 +190,11 @@ export function InvoiceDetail({ invoice, backUrl }: InvoiceDetailProps) {
                 {/* Right Column: Information */}
                 <div className="space-y-8">
                     <Card className="rounded-3xl border-slate-100 shadow-xl overflow-hidden p-8 space-y-6 bg-white">
-                        <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">Payment Summary</h3>
+                        <h3 className="text-xs font-black uppercase tracking-widest text-slate-400">{t("paymentSummary")}</h3>
                         <div className="space-y-6">
-                            <InfoRow icon={Calendar} label="Date Issued" value={format(new Date(invoice.issued_at), 'MMM dd, yyyy')} />
-                            <InfoRow icon={Receipt} label="Method" value={tx.payment_method?.replace('_', ' ').toUpperCase() || 'N/A'} />
-                            <InfoRow icon={Shield} label="Transaction ID" value={tx.aggregator_transaction_id?.slice(0, 15) + '...'} />
+                            <InfoRow icon={Calendar} label={t("dateIssued")} value={format(new Date(invoice.issued_at), 'MMM dd, yyyy')} />
+                            <InfoRow icon={Receipt} label={t("method")} value={tx.payment_method?.replace('_', ' ').toUpperCase() || 'N/A'} />
+                            <InfoRow icon={Shield} label={t("transactionId")} value={tx.aggregator_transaction_id?.slice(0, 15) + '...'} />
                             <Separator className="bg-slate-100" />
                             {tx.payment_status === 'completed' && (
                                 <div className="bg-emerald-50/50 border border-emerald-100 rounded-2xl p-4 flex items-center gap-4">
@@ -200,7 +202,7 @@ export function InvoiceDetail({ invoice, backUrl }: InvoiceDetailProps) {
                                         <CheckCircle2 className="h-5 w-5 text-white" />
                                     </div>
                                     <div>
-                                        <h4 className="text-[10px] font-black text-emerald-800 uppercase tracking-tight">Payment Confirmed</h4>
+                                        <h4 className="text-[10px] font-black text-emerald-800 uppercase tracking-tight">{t("paymentConfirmed")}</h4>
                                         <p className="text-[10px] text-emerald-600 font-bold mt-0.5">{format(new Date(tx.payment_completed_at), 'MMM dd, HH:mm')}</p>
                                     </div>
                                 </div>
@@ -213,13 +215,13 @@ export function InvoiceDetail({ invoice, backUrl }: InvoiceDetailProps) {
                             <div className="h-10 w-10 bg-primary/20 rounded-xl flex items-center justify-center">
                                 <Package className="h-5 w-5 text-primary" />
                             </div>
-                            <h3 className="text-lg font-black tracking-tight">Need Help?</h3>
+                            <h3 className="text-lg font-black tracking-tight">{t("needHelp")}</h3>
                         </div>
                         <p className="text-sm text-slate-400 leading-relaxed font-bold">
-                            If you have any questions regarding this invoice or notice any discrepancies, please reach out to our billing department.
+                            {t("needHelpDesc")}
                         </p>
                         <Button className="w-full h-12 rounded-xl bg-white text-slate-900 font-black hover:bg-slate-100 transition-all">
-                            Contact Support
+                            {t("contactSupport")}
                         </Button>
                     </Card>
                 </div>
@@ -230,7 +232,7 @@ export function InvoiceDetail({ invoice, backUrl }: InvoiceDetailProps) {
                 isOpen={showRefundDialog}
                 onClose={() => setShowRefundDialog(false)}
                 onSuccess={() => {
-                    toast.success("Refund request submitted successfully");
+                    toast.success(t("refundRequestSubmitted"));
                 }}
             />
         </div>

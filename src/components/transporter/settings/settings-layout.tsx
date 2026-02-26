@@ -10,47 +10,50 @@ import {
     Bell,
     Cpu
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface SettingsLayoutProps {
     children: React.ReactNode;
 }
 
-const tabs = [
-    {
-        name: "Service Configuration",
-        href: "/transporter/settings/services",
-        icon: Truck,
-        description: "Manage your freight types and service regions"
-    },
-    {
-        name: "Pricing Rules",
-        href: "/transporter/settings/pricing",
-        icon: DollarSign,
-        description: "Set your rates and pricing strategies"
-    },
-    {
-        name: "Bid Automation",
-        href: "/transporter/settings/automation",
-        icon: Cpu,
-        description: "Configure auto-bidding rules"
-    },
-    {
-        name: "Notifications",
-        href: "/transporter/settings/notifications",
-        icon: Bell,
-        description: "Manage your notification preferences"
-    },
-];
-
 export function CarrierSettingsLayout({ children }: SettingsLayoutProps) {
     const pathname = usePathname();
+    const t = useTranslations("transporterSubPages");
+    const tCommon = useTranslations("common");
+
+    const tabs = [
+        {
+            name: t("services"),
+            href: "/transporter/settings/services",
+            icon: Truck,
+            description: "Manage your freight types and service regions"
+        },
+        {
+            name: t("pricing"),
+            href: "/transporter/settings/pricing",
+            icon: DollarSign,
+            description: "Set your rates and pricing strategies"
+        },
+        {
+            name: t("automation"),
+            href: "/transporter/settings/automation",
+            icon: Cpu,
+            description: "Configure auto-bidding rules"
+        },
+        {
+            name: tCommon("notifications"),
+            href: "/transporter/settings/notifications",
+            icon: Bell,
+            description: "Manage your notification preferences"
+        },
+    ];
 
     return (
         <div className="space-y-6">
             <div>
-                <h1 className="text-3xl font-bold tracking-tight">Settings & Preferences</h1>
+                <h1 className="text-3xl font-bold tracking-tight">{tCommon("settings")}</h1>
                 <p className="text-muted-foreground mt-2">
-                    Manage your carrier profile, service offerings, and automation rules.
+                    {t("carrierProfileDesc")}
                 </p>
             </div>
 

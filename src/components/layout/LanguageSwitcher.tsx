@@ -33,19 +33,31 @@ export function LanguageSwitcher() {
     }
 
     const switchLanguage = (newLocale: string) => {
-        // Determine the root-relative path (removing the current locale prefix if present)
+        // Strip any existing locale prefix from the current pathname
         const urlSegments = pathname.split('/');
         if (urlSegments[1] === 'en' || urlSegments[1] === 'fr') {
             urlSegments.splice(1, 1);
         }
-        const newPath = `/${newLocale}${urlSegments.join('/')}`.replace('//', '/');
+        const pathWithoutLocale = urlSegments.join('/') || '/';
+
+        // With localePrefix: 'as-needed', the default locale (fr) has NO prefix.
+        // Non-default locales (en) get a prefix.
+        const defaultLocale = 'fr';
+        let newPath: string;
+        if (newLocale === defaultLocale) {
+            // Default locale: no prefix needed
+            newPath = pathWithoutLocale;
+        } else {
+            // Non-default locale: add prefix
+            newPath = `/${newLocale}${pathWithoutLocale}`.replace('//', '/');
+        }
 
         startTransition(() => {
             // Set the NEXT_LOCALE cookie to persist preference
             document.cookie = `NEXT_LOCALE=${newLocale};path=/;max-age=31536000;SameSite=Lax`;
 
-            // Navigate to the new localized route
-            router.replace(newPath);
+            // Navigate with hard refresh to ensure server components re-evaluate
+            window.location.href = newPath;
         });
     };
 

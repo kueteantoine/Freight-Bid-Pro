@@ -30,6 +30,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { User } from "@supabase/supabase-js";
+import { useTranslations } from "next-intl";
 
 const roleNavLinks: Record<string, any[]> = {
     shipper: [
@@ -168,6 +169,9 @@ roleNavLinks.admin = [
 
 export function Sidebar({ user, activeRole, userRoles }: { user: User, activeRole: string | null, userRoles: string[] }) {
     const pathname = usePathname();
+    const tNav = useTranslations("navigation");
+    const tAuth = useTranslations("auth");
+
     const navGroups = activeRole ? roleNavLinks[activeRole] || [] : [];
 
     return (
@@ -186,12 +190,13 @@ export function Sidebar({ user, activeRole, userRoles }: { user: User, activeRol
                     <div key={idx} className="space-y-2">
                         {group.group !== "MAIN" && (
                             <h3 className="px-4 text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">
-                                {group.group}
+                                {tNav(group.group.toLowerCase())}
                             </h3>
                         )}
                         <div className="space-y-1">
                             {group.items.map((item: any) => {
                                 const isActive = pathname === item.href;
+                                const itemKey = item.label.toLowerCase().replace(/[^a-z0-9]/g, '_');
                                 return (
                                     <Link
                                         key={item.href}
@@ -204,7 +209,7 @@ export function Sidebar({ user, activeRole, userRoles }: { user: User, activeRol
                                         )}
                                     >
                                         <item.icon className={cn("h-5 w-5", isActive ? "" : "text-slate-400 group-hover:text-white group-hover:scale-110 transition-transform")} />
-                                        <span className="font-medium text-sm">{item.label}</span>
+                                        <span className="font-medium text-sm">{tNav(itemKey)}</span>
                                     </Link>
                                 );
                             })}

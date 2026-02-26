@@ -1,8 +1,3 @@
-import "./globals.css";
-import { ThemeProvider } from "@/components/theme-provider";
-import { Toaster } from "@/components/ui/toaster";
-import { AnalyticsProvider } from "@/contexts/AnalyticsContext";
-
 import type { Metadata, Viewport } from "next";
 
 export const metadata: Metadata = {
@@ -31,21 +26,5 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <html lang="en" suppressHydrationWarning>
-      <body className="antialiased">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <AnalyticsProvider>
-            {children}
-          </AnalyticsProvider>
-          <Toaster />
-        </ThemeProvider>
-      </body>
-    </html>
-  );
+  return children;
 }

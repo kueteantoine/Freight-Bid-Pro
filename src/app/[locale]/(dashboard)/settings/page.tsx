@@ -14,7 +14,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useUserData, UserRole } from "@/hooks/use-user-data";
 import { AuthLoading } from "@/components/auth/auth-loading";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { usePathname, useRouter } from "next/navigation";
 import { AvatarUpload } from "@/components/profile/avatar-upload";
 import { GlobalProfileForm } from "@/components/profile/global-profile-form";
@@ -43,6 +43,8 @@ export default function SettingsPage() {
   const [isActivating, setIsActivating] = useState<UserRole | null>(null);
   const [tier, setTier] = useState<any>(null);
 
+  const t = useTranslations("settings");
+  const tc = useTranslations("common");
   const locale = useLocale();
   const router = useRouter();
   const pathname = usePathname();
@@ -54,11 +56,18 @@ export default function SettingsPage() {
     if (urlSegments[1] === 'en' || urlSegments[1] === 'fr') {
       urlSegments.splice(1, 1);
     }
-    const newPath = `/${newLocale}${urlSegments.join('/')}`.replace('//', '/');
+    const pathWithoutLocale = urlSegments.join('/') || '/';
+    const defaultLocale = 'fr';
+    let newPath: string;
+    if (newLocale === defaultLocale) {
+      newPath = pathWithoutLocale;
+    } else {
+      newPath = `/${newLocale}${pathWithoutLocale}`.replace('//', '/');
+    }
 
     startTransitionLang(() => {
       document.cookie = `NEXT_LOCALE=${newLocale};path=/;max-age=31536000;SameSite=Lax`;
-      router.replace(newPath);
+      window.location.href = newPath;
     });
   };
 
@@ -117,28 +126,28 @@ export default function SettingsPage() {
   return (
     <div className="space-y-8">
       <div className="flex flex-col gap-1">
-        <h2 className="text-3xl font-bold tracking-tight">Account & Security</h2>
-        <p className="text-muted-foreground">Manage your credentials, role authorizations, and personal data.</p>
+        <h2 className="text-3xl font-bold tracking-tight">{t("title")}</h2>
+        <p className="text-muted-foreground">{t("manageCredentials")}</p>
       </div>
 
       <Tabs defaultValue="profile" className="w-full">
         <TabsList className="grid w-full grid-cols-4 mb-8 bg-muted/30 p-1 h-12 rounded-xl">
-          <TabsTrigger value="profile" className="rounded-lg data-[state=active]:shadow-md">Personal Info</TabsTrigger>
-          <TabsTrigger value="roles" className="rounded-lg data-[state=active]:shadow-md">Workspaces & Roles</TabsTrigger>
+          <TabsTrigger value="profile" className="rounded-lg data-[state=active]:shadow-md">{t("personalInfo")}</TabsTrigger>
+          <TabsTrigger value="roles" className="rounded-lg data-[state=active]:shadow-md">{t("workspacesRoles")}</TabsTrigger>
           {activeRoleTypes.map(role => (
             <TabsTrigger key={role} value={role} className="rounded-lg data-[state=active]:shadow-md capitalize">
-              {role} Profile
+              {t("roleProfile", { role })}
             </TabsTrigger>
           ))}
-          <TabsTrigger value="preferences" className="rounded-lg data-[state=active]:shadow-md">Global Prefs</TabsTrigger>
+          <TabsTrigger value="preferences" className="rounded-lg data-[state=active]:shadow-md">{t("globalPrefs")}</TabsTrigger>
         </TabsList>
 
         {/* Personal Info Tab */}
         <TabsContent value="profile" className="space-y-8">
           <Card className="border-border shadow-md">
             <CardHeader className="bg-muted/10 border-b">
-              <CardTitle>Global Identity</CardTitle>
-              <CardDescription>Primary information used to verify your identity across the platform.</CardDescription>
+              <CardTitle>{t("globalIdentity")}</CardTitle>
+              <CardDescription>{t("globalIdentityDesc")}</CardDescription>
             </CardHeader>
             <CardContent className="pt-6 space-y-6">
               <div className="flex flex-col items-center space-y-4">
@@ -167,7 +176,7 @@ export default function SettingsPage() {
               />
 
               <div className="space-y-2 pt-4 border-t">
-                <Label htmlFor="email" className="font-bold">Registered Email</Label>
+                <Label htmlFor="email" className="font-bold">{tc("registeredEmail")}</Label>
                 <Input id="email" value={user?.email || ""} disabled className="bg-muted border-muted-foreground/10 font-medium" />
               </div>
             </CardContent>
@@ -181,7 +190,7 @@ export default function SettingsPage() {
             <div className="space-y-4">
               <h3 className="text-xl font-bold flex items-center gap-2 px-2">
                 <CheckCircle2 className="h-6 w-6 text-green-500" />
-                Active Roles
+                {t("activeRoles")}
               </h3>
               <div className="grid gap-4">
                 {allRoles.map((roleData) => {
@@ -203,7 +212,7 @@ export default function SettingsPage() {
                             <p className="font-bold text-lg capitalize flex items-center gap-2">
                               {role}
                               {roleData.is_active && (
-                                <Badge variant="outline" className="text-[10px] bg-primary/5 text-primary border-primary/20">Active</Badge>
+                                <Badge variant="outline" className="text-[10px] bg-primary/5 text-primary border-primary/20">{tc("active")}</Badge>
                               )}
                             </p>
                             <div className="flex items-center gap-1.5 mt-1">
@@ -216,7 +225,7 @@ export default function SettingsPage() {
                         </div>
                         <Button asChild variant="ghost" className="rounded-full text-muted-foreground hover:text-primary">
                           <Link href={`/settings/verification/${role}`}>
-                            {roleData.verification_status === 'pending' ? 'View Status' : 'Manage Docs'} <ArrowRight className="ml-2 h-4 w-4" />
+                            {roleData.verification_status === 'pending' ? tc('viewStatus') : tc('manageDocs')} <ArrowRight className="ml-2 h-4 w-4" />
                           </Link>
                         </Button>
                       </CardContent>
@@ -230,14 +239,14 @@ export default function SettingsPage() {
             <div className="space-y-4">
               <h3 className="text-xl font-bold flex items-center gap-2 px-2">
                 <Plus className="h-6 w-6 text-primary" />
-                Unlock Capabilities
+                {t("unlockCapabilities")}
               </h3>
               <div className="grid gap-4">
                 {inactiveRoles.length === 0 ? (
                   <Card className="bg-muted/10 border-dashed">
                     <CardContent className="flex flex-col items-center justify-center p-8 text-center">
                       <Shield className="h-10 w-10 text-muted-foreground/30 mb-2" />
-                      <p className="text-sm text-muted-foreground font-medium">You have activated all available platform roles.</p>
+                      <p className="text-sm text-muted-foreground font-medium">{tc("allRolesActivated")}</p>
                     </CardContent>
                   </Card>
                 ) : (
@@ -252,7 +261,7 @@ export default function SettingsPage() {
                             </div>
                             <div>
                               <p className="font-bold text-lg capitalize">{role}</p>
-                              <p className="text-xs text-muted-foreground">Requires document submission</p>
+                              <p className="text-xs text-muted-foreground">{tc("requiresDocSubmission")}</p>
                             </div>
                           </div>
                           <Button
@@ -261,7 +270,7 @@ export default function SettingsPage() {
                             onClick={() => handleActivateRole(role)}
                             disabled={isActivating === role}
                           >
-                            {isActivating === role ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Activate"}
+                            {isActivating === role ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : tc("activate")}
                           </Button>
                         </CardContent>
                       </Card>
@@ -288,12 +297,12 @@ export default function SettingsPage() {
         <TabsContent value="preferences">
           <Card className="border-border shadow-md">
             <CardHeader className="bg-muted/10 border-b">
-              <CardTitle>Regional & UX Preferences</CardTitle>
-              <CardDescription>Customize your units, language, and interface settings.</CardDescription>
+              <CardTitle>{t("regionalPrefs")}</CardTitle>
+              <CardDescription>{t("regionalPrefsDesc")}</CardDescription>
             </CardHeader>
             <CardContent className="pt-6 space-y-8">
               <div className="space-y-4">
-                <Label className="font-bold">Preferred Language</Label>
+                <Label className="font-bold">{t("language")}</Label>
                 <div className="grid grid-cols-2 gap-4">
                   <Button
                     variant="outline"
@@ -314,13 +323,13 @@ export default function SettingsPage() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label className="font-bold">Platform Currency</Label>
+                <Label className="font-bold">{t("platformCurrency")}</Label>
                 <div className="p-4 rounded-xl border bg-muted/10 flex items-center justify-between">
                   <div>
-                    <p className="font-bold">XAF - Central African CFA Franc</p>
-                    <p className="text-xs text-muted-foreground">Standard for all regional transactions</p>
+                    <p className="font-bold">{t("xafCurrency")}</p>
+                    <p className="text-xs text-muted-foreground">{t("xafDescription")}</p>
                   </div>
-                  <Badge variant="secondary" className="text-sm px-3 py-1">System Default</Badge>
+                  <Badge variant="secondary" className="text-sm px-3 py-1">{tc("systemDefault")}</Badge>
                 </div>
               </div>
             </CardContent>

@@ -10,6 +10,7 @@ import { Loader2, PackageSearch } from "lucide-react";
 import { DriverDispatchDialog } from "@/components/transporter/operations/DriverDispatchDialog";
 import { ReportIssueDialog } from "@/components/transporter/operations/ReportIssueDialog";
 import { CompletionChecklistDialog } from "@/components/transporter/operations/CompletionChecklistDialog";
+import { useTranslations } from "next-intl";
 
 import { FleetTrackingMap } from "@/components/transporter/operations/FleetTrackingMap";
 
@@ -27,6 +28,9 @@ export default function TransporterOperationsPage() {
     const [completeShipment, setCompleteShipment] = React.useState<Shipment | null>(null);
     const [isCompleteOpen, setIsCompleteOpen] = React.useState(false);
 
+    const t = useTranslations("transporterSubPages");
+    const tCommon = useTranslations("common");
+
     const fetchOperations = async () => {
         setLoading(true);
         try {
@@ -35,7 +39,7 @@ export default function TransporterOperationsPage() {
             const data = await getTransporterOperations(statusParam);
             setShipments(data || []);
         } catch (error: any) {
-            toast.error("Failed to fetch operations: " + error.message);
+            toast.error(t("failedToFetchOperations") + ": " + error.message);
         } finally {
             setLoading(false);
         }
@@ -48,33 +52,33 @@ export default function TransporterOperationsPage() {
     const handleUpdateStatus = async (shipment: Shipment, status: any, event: any) => {
         try {
             await updateShipmentStatus(shipment.id, status, event);
-            toast.success(`Shipment status updated to ${status}`);
+            toast.success(t("shipmentStatusUpdated", { status }));
             fetchOperations();
         } catch (error: any) {
-            toast.error("Failed to update status: " + error.message);
+            toast.error(t("failedToUpdateStatus") + ": " + error.message);
         }
     };
 
     return (
         <div className="space-y-8">
             <div>
-                <h1 className="text-3xl font-black text-slate-900 tracking-tight">Shipment Operations</h1>
-                <p className="text-slate-500 font-medium">Manage your awarded, active, and completed shipments.</p>
+                <h1 className="text-3xl font-black text-slate-900 tracking-tight">{t("shipmentOperations")}</h1>
+                <p className="text-slate-500 font-medium">{t("shipmentOperationsDesc")}</p>
             </div>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
                 <TabsList className="bg-slate-100/50 p-1 rounded-2xl h-14 w-fit">
                     <TabsTrigger value="awarded" className="rounded-xl font-bold px-8 h-12 data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                        Awarded
+                        {t("awarded")}
                     </TabsTrigger>
                     <TabsTrigger value="active" className="rounded-xl font-bold px-8 h-12 data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                        Active
+                        {t("active")}
                     </TabsTrigger>
                     <TabsTrigger value="completed" className="rounded-xl font-bold px-8 h-12 data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                        History
+                        {t("history")}
                     </TabsTrigger>
                     <TabsTrigger value="map" className="rounded-xl font-bold px-8 h-12 data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                        Fleet Map
+                        {t("fleetMap")}
                     </TabsTrigger>
                 </TabsList>
 
@@ -82,7 +86,7 @@ export default function TransporterOperationsPage() {
                     {loading ? (
                         <div className="flex flex-col items-center justify-center py-20 space-y-4">
                             <Loader2 className="h-10 w-10 text-primary animate-spin" />
-                            <p className="text-sm font-bold text-slate-400">Loading map visuals...</p>
+                            <p className="text-sm font-bold text-slate-400">{t("loadingMap")}</p>
                         </div>
                     ) : (
                         <FleetTrackingMap shipments={shipments} />
@@ -94,14 +98,14 @@ export default function TransporterOperationsPage() {
                         {loading ? (
                             <div className="flex flex-col items-center justify-center py-20 space-y-4">
                                 <Loader2 className="h-10 w-10 text-primary animate-spin" />
-                                <p className="text-sm font-bold text-slate-400">Fetching operational data...</p>
+                                <p className="text-sm font-bold text-slate-400">{t("fetchingData")}</p>
                             </div>
                         ) : shipments.length === 0 ? (
                             <div className="flex flex-col items-center justify-center py-20 space-y-4 bg-slate-50/50 rounded-3xl border-2 border-dashed border-slate-200">
                                 <PackageSearch className="h-16 w-16 text-slate-200" />
                                 <div className="text-center">
-                                    <p className="text-lg font-black text-slate-400">No shipments found</p>
-                                    <p className="text-sm text-slate-400 font-medium">Any {tab} shipments will appear here.</p>
+                                    <p className="text-lg font-black text-slate-400">{t("noShipmentsFound")}</p>
+                                    <p className="text-sm text-slate-400 font-medium">{t("noShipmentsDesc", { tab: t(tab) })}</p>
                                 </div>
                             </div>
                         ) : (

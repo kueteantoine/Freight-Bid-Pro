@@ -53,6 +53,19 @@ export default getRequestConfig(async ({ requestLocale }: { requestLocale: Promi
 
     return {
         locale,
-        messages
+        messages,
+        onError(error) {
+            // Silently ignore missing translation errors in production
+            if (process.env.NODE_ENV === 'development') {
+                console.warn('[i18n]', error.message);
+            }
+        },
+        getMessageFallback({ namespace, key }) {
+            // Instead of showing "navigation.key_name", show "Key Name"
+            const fallback = key
+                .replace(/_+/g, ' ')
+                .replace(/\b\w/g, (c) => c.toUpperCase());
+            return fallback;
+        }
     };
 });

@@ -34,39 +34,43 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 export default function ShipperDashboardPage() {
+  const t = useTranslations("shipperDashboard");
+  const tc = useTranslations("common");
+
   return (
     <div className="space-y-10 pb-10">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-slate-900">Dashboard Overview</h2>
+          <h2 className="text-3xl font-bold tracking-tight text-slate-900">{t("title")}</h2>
           <p className="text-slate-500 mt-1">
-            Welcome back, Dangote Cement. You have 4 shipments arriving today.
+            {t("welcomeMessage", { name: "Dangote Cement", count: "4" })}
           </p>
         </div>
         <Button className="rounded-xl h-12 px-6 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 font-bold transition-all">
           <Plus className="h-5 w-5 mr-2" />
-          Create New Shipment
+          {t("createShipment")}
         </Button>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatsCard
-          title="Active Shipments"
+          title={t("activeShipments")}
           value="18"
-          trend="4 arriving today"
+          trend={t("arrivingToday", { count: "4" })}
           icon={Package}
           iconBg="bg-blue-50"
           iconColor="text-blue-600"
           trendColor="text-blue-500"
         />
         <StatsCard
-          title="Pending Bookings"
+          title={t("pendingBookings")}
           value="5"
-          trend="2 requiring attention"
+          trend={t("requiringAttention", { count: "2" })}
           icon={Clock}
           iconBg="bg-amber-50"
           iconColor="text-amber-600"
@@ -74,9 +78,9 @@ export default function ShipperDashboardPage() {
           statusDot="bg-amber-500"
         />
         <StatsCard
-          title="Total Spent (Mo)"
+          title={t("totalSpentMonth")}
           value="XAF 4.2M"
-          trend="+12% vs last mo"
+          trend={t("vsLastMonth", { percent: "12" })}
           icon={DollarSign}
           iconBg="bg-emerald-50"
           iconColor="text-emerald-600"
@@ -84,9 +88,9 @@ export default function ShipperDashboardPage() {
           trendUp
         />
         <StatsCard
-          title="Avg. Transit Time"
-          value="2.1 days"
-          trend="-0.4 days improvement"
+          title={t("avgTransitTime")}
+          value={`2.1 ${t("days")}`}
+          trend={t("daysImprovement", { days: "0.4" })}
           icon={TrendingUp}
           iconBg="bg-indigo-50"
           iconColor="text-indigo-600"
@@ -99,18 +103,18 @@ export default function ShipperDashboardPage() {
         {/* Quick Actions & Distribution Map */}
         <div className="space-y-8">
           <Card className="rounded-3xl border-slate-100 shadow-sm overflow-hidden p-6">
-            <h3 className="text-lg font-bold mb-6">Quick Actions</h3>
+            <h3 className="text-lg font-bold mb-6">{t("quickActions")}</h3>
             <div className="grid grid-cols-2 gap-4">
-              <ActionButton icon={Zap} label="Book Load" color="bg-blue-50 text-blue-600" />
-              <ActionButton icon={MapPin} label="Track" color="bg-emerald-50 text-emerald-600" />
-              <ActionButton icon={Quote} label="Request Quote" color="bg-amber-50 text-amber-600" />
-              <ActionButton icon={FileText} label="Invoices" color="bg-slate-50 text-slate-600" />
+              <ActionButton icon={Zap} label={t("bookLoad")} color="bg-blue-50 text-blue-600" />
+              <ActionButton icon={MapPin} label={t("track")} color="bg-emerald-50 text-emerald-600" />
+              <ActionButton icon={Quote} label={t("requestQuote")} color="bg-amber-50 text-amber-600" />
+              <ActionButton icon={FileText} label={t("invoices")} color="bg-slate-50 text-slate-600" />
             </div>
           </Card>
 
           <Card className="rounded-3xl border-slate-100 shadow-sm overflow-hidden p-6">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-bold">Distribution</h3>
+              <h3 className="text-lg font-bold">{t("distribution")}</h3>
               <Maximize2 className="h-4 w-4 text-slate-400" />
             </div>
             <div className="h-48 bg-slate-100 rounded-2xl bg-[url('https://maps.googleapis.com/maps/api/staticmap?center=5,12&zoom=5&size=400x300&key=...')] bg-cover relative">
@@ -123,17 +127,17 @@ export default function ShipperDashboardPage() {
         <div className="lg:col-span-2">
           <Card className="rounded-3xl border-slate-100 shadow-sm overflow-hidden">
             <CardHeader className="flex flex-row items-center justify-between pb-4">
-              <CardTitle className="text-lg font-bold">Recent Shipments</CardTitle>
-              <Button variant="link" className="text-primary font-bold h-auto p-0">View All</Button>
+              <CardTitle className="text-lg font-bold">{t("recentShipments")}</CardTitle>
+              <Button variant="link" className="text-primary font-bold h-auto p-0">{tc("viewAll")}</Button>
             </CardHeader>
             <CardContent className="p-0">
               <Table>
                 <TableHeader className="bg-slate-50/50">
                   <TableRow className="hover:bg-transparent border-slate-100">
-                    <TableHead className="px-6 font-bold text-slate-400 text-[10px] uppercase py-4">Ref / Route</TableHead>
-                    <TableHead className="font-bold text-slate-400 text-[10px] uppercase">Transporter</TableHead>
-                    <TableHead className="font-bold text-slate-400 text-[10px] uppercase text-center">Status</TableHead>
-                    <TableHead className="px-6 text-right font-bold text-slate-400 text-[10px] uppercase">Est. Arrival</TableHead>
+                    <TableHead className="px-6 font-bold text-slate-400 text-[10px] uppercase py-4">{t("refRoute")}</TableHead>
+                    <TableHead className="font-bold text-slate-400 text-[10px] uppercase">{t("transporter")}</TableHead>
+                    <TableHead className="font-bold text-slate-400 text-[10px] uppercase text-center">{t("status")}</TableHead>
+                    <TableHead className="px-6 text-right font-bold text-slate-400 text-[10px] uppercase">{t("estArrival")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -141,7 +145,7 @@ export default function ShipperDashboardPage() {
                     id="#CM-8812"
                     route="Douala → Garoua"
                     transporter="TransCam Logistics"
-                    status="In-Transit"
+                    status={t("inTransit")}
                     statusColor="bg-blue-100 text-blue-700"
                     progress={65}
                     eta="Today, 18:30"
@@ -150,16 +154,16 @@ export default function ShipperDashboardPage() {
                     id="#CM-7721"
                     route="Kribi → Yaoundé"
                     transporter="DHL Afrique"
-                    status="Delivered"
+                    status={t("delivered")}
                     statusColor="bg-emerald-100 text-emerald-700"
                     progress={100}
-                    eta="Completed"
+                    eta={t("completed")}
                   />
                   <ShipmentRow
                     id="#CM-9011"
                     route="Douala → Bamenda"
                     transporter="Moussa Log."
-                    status="Delayed"
+                    status={t("delayed")}
                     statusColor="bg-rose-100 text-rose-700"
                     progress={40}
                     eta="Tomorrow, 09:00"
@@ -216,6 +220,7 @@ function ActionButton({ icon: Icon, label, color }: any) {
 }
 
 function ShipmentRow({ id, route, transporter, status, statusColor, progress, eta }: any) {
+  const t = useTranslations("shipperDashboard");
   return (
     <TableRow className="border-slate-50 hover:bg-slate-50/50 transition-colors group">
       <TableCell className="px-6 py-5">
@@ -245,7 +250,7 @@ function ShipmentRow({ id, route, transporter, status, statusColor, progress, et
       <TableCell className="px-6 text-right">
         <div className="flex flex-col items-end">
           <span className="text-sm font-black text-slate-900">{eta}</span>
-          <span className="text-[10px] font-bold text-slate-400 uppercase">Est. Arrival</span>
+          <span className="text-[10px] font-bold text-slate-400 uppercase">{t("estArrival")}</span>
         </div>
       </TableCell>
     </TableRow>

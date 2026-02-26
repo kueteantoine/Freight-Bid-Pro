@@ -8,9 +8,13 @@ import { AdminSidebar } from "./admin-sidebar";
 import { supabase } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
+import { useTranslations } from "next-intl";
 
 export function AdminHeader() {
     const router = useRouter();
+    const tAuth = useTranslations("auth");
+    const tCommon = useTranslations("common");
 
     const handleSignOut = async () => {
         try {
@@ -42,17 +46,20 @@ export function AdminHeader() {
                 </SheetTrigger>
                 <SheetContent side="left" className="flex flex-col w-[280px] bg-gray-50 dark:bg-gray-900 p-0">
                     <div className="p-4 border-b">
-                        <h1 className="text-xl font-bold text-red-600">Admin Panel</h1>
+                        <h1 className="text-xl font-bold text-red-600">{tCommon("adminPanel")}</h1>
                     </div>
                     <AdminSidebar />
                 </SheetContent>
             </Sheet>
-            <h1 className="text-2xl font-bold text-red-600 dark:text-red-400 hidden md:block">Admin Panel</h1>
+            <h1 className="text-2xl font-bold text-red-600 dark:text-red-400 hidden md:block">{tCommon("adminPanel")}</h1>
 
-            <Button variant="ghost" size="icon" onClick={handleSignOut} className="rounded-full text-red-600 hover:bg-red-100">
-                <LogOut className="h-5 w-5" />
-                <span className="sr-only">Sign Out</span>
-            </Button>
+            <div className="flex items-center gap-4">
+                <LanguageSwitcher />
+                <Button variant="ghost" size="icon" onClick={handleSignOut} className="rounded-full text-red-600 hover:bg-red-100">
+                    <LogOut className="h-5 w-5" />
+                    <span className="sr-only">{tAuth("logout")}</span>
+                </Button>
+            </div>
         </header>
     );
 }

@@ -1,17 +1,19 @@
 import { CarrierSettingsLayout } from "@/components/transporter/settings/settings-layout";
 import { BidAutomationForm } from "@/components/transporter/settings/bid-automation-form";
 import { getBidAutomationSettings } from "@/app/actions/carrier-settings-actions";
+import { getTranslations } from "next-intl/server";
 
-export default async function BidAutomationPage() {
+export default async function BidAutomationPage({ params: { locale } }: { params: { locale: string } }) {
+    const t = await getTranslations({ locale, namespace: 'transporterSubPages' });
     const settings = await getBidAutomationSettings();
 
     return (
         <CarrierSettingsLayout>
             <div className="space-y-6">
                 <div>
-                    <h2 className="text-lg font-medium">Automated Bidding</h2>
+                    <h2 className="text-lg font-medium">{t("automationSettings")}</h2>
                     <p className="text-sm text-muted-foreground">
-                        Configure how your AI agent should bid on matching loads when you are offline.
+                        {t("automatedBiddingDesc")}
                     </p>
                 </div>
                 <BidAutomationForm initialSettings={settings} />

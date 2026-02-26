@@ -1,12 +1,14 @@
-'use client';
+"use client";
 
 import React, { useState, useEffect } from 'react';
 import { ConversationList } from '@/components/shipper/communication/ConversationList';
 import { ChatWindow } from '@/components/shipper/communication/ChatWindow';
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import { MessageSquare, Inbox } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 export default function ShipperMessagesPage() {
+    const t = useTranslations("shipperSubPages");
     const [selectedShipmentId, setSelectedShipmentId] = useState<string | null>(null);
     const [currentUserId, setCurrentUserId] = useState<string | null>(null);
     const supabase = createSupabaseBrowserClient();
@@ -53,9 +55,9 @@ export default function ShipperMessagesPage() {
                         <div className="h-20 w-20 rounded-3xl bg-primary/5 flex items-center justify-center mb-6 shadow-sm border border-primary/10">
                             <Inbox className="h-10 w-10 text-primary opacity-40" />
                         </div>
-                        <h3 className="text-xl font-bold text-slate-900 mb-2">Your Inbox</h3>
+                        <h3 className="text-xl font-bold text-slate-900 mb-2">{t("yourInbox")}</h3>
                         <p className="max-w-xs text-sm font-medium leading-relaxed opacity-60">
-                            Select a shipment from the list to start communicating with your assigned carriers and drivers.
+                            {t("yourInboxDesc")}
                         </p>
                     </div>
                 )}

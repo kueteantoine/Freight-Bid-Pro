@@ -4,8 +4,10 @@ import React from "react";
 import { CarrierProfileForm } from "@/components/transporter/profile/CarrierProfileForm";
 import { supabase } from "@/lib/supabase/client";
 import { FeaturedBadge } from "@/components/ads/featured-badge";
+import { useTranslations } from "next-intl";
 
 export default function TransporterProfilePage() {
+    const t = useTranslations("transporterSubPages");
     const [tier, setTier] = React.useState<any>(null);
 
     React.useEffect(() => {
@@ -26,11 +28,11 @@ export default function TransporterProfilePage() {
             <div className="flex justify-between items-start">
                 <div>
                     <div className="flex items-center gap-3">
-                        <h2 className="text-3xl font-bold tracking-tight text-slate-900">Carrier Profile</h2>
+                        <h2 className="text-3xl font-bold tracking-tight text-slate-900">{t("carrierProfile")}</h2>
                         {tier && <FeaturedBadge tierSlug={tier.tier_slug} size="lg" />}
                     </div>
                     <p className="text-slate-500 mt-1">
-                        Manage your business information, operating regions, and insurance details.
+                        {t("carrierProfileDesc")}
                     </p>
                 </div>
             </div>

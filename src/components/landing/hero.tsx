@@ -12,8 +12,10 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 export const LandingHero = () => {
+  const t = useTranslations("landing.hero");
   return (
     <section className="relative min-h-[90vh] flex items-center pt-20 pb-32 overflow-hidden bg-blue-50/50">
       {/* Background Decorative Elements */}
@@ -28,34 +30,36 @@ export const LandingHero = () => {
           <div className="flex justify-center">
             <Badge className="bg-blue-100 border-blue-200 text-blue-700 font-black text-[10px] uppercase tracking-[0.3em] px-4 py-2 rounded-full backdrop-blur-sm shadow-sm">
               <Zap className="h-3 w-3 mr-2 text-primary fill-primary" />
-              Revolutionizing Digital Logistics
+              {t("badge")}
             </Badge>
           </div>
 
           <h1 className="text-5xl md:text-7xl lg:text-8xl font-black text-slate-900 leading-[1.05] tracking-tighter">
-            The Future of <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-600">Freight Bidding</span> is Here.
+            {t.rich("title", {
+              highlight: (chunks) => <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-600">{chunks}</span>
+            })}
           </h1>
 
           <p className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto leading-relaxed font-medium">
-            Transforming Cameroon&apos;s logistics landscape with a transparent, AI-driven bidding marketplace. Connect with verified transporters, optimize routes, and scale your business with ease.
+            {t("description")}
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-6">
             <Button size="lg" className="h-16 px-10 rounded-2xl bg-primary text-white font-black text-lg shadow-[0_0_30px_-5px_rgba(0,122,255,0.4)] hover:shadow-[0_0_40px_-5px_rgba(0,122,255,0.6)] hover:bg-primary/90 transition-all active:scale-95 group">
-              Get Started Now
+              {t("getStarted")}
               <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </Button>
             <Button variant="ghost" size="lg" className="h-16 px-10 rounded-2xl border border-blue-200 bg-white text-slate-700 font-bold hover:bg-blue-50 group">
               <PlayCircle className="mr-2 h-5 w-5 text-primary" />
-              Watch Demo
+              {t("watchDemo")}
             </Button>
           </div>
 
           <div className="pt-20 grid grid-cols-2 md:grid-cols-4 gap-8">
-            <TrustStat label="Verified Transporters" value="2.4k+" icon={ShieldCheck} />
-            <TrustStat label="Digital Corridors" value="150+" icon={Globe} />
-            <TrustStat label="Annual Volume" value="450 Tons" icon={TrendingUp} />
-            <TrustStat label="Avg. Savings" value="18%" icon={Zap} />
+            <TrustStat label={t("stats.transporters")} value="2.4k+" icon={ShieldCheck} />
+            <TrustStat label={t("stats.corridors")} value="150+" icon={Globe} />
+            <TrustStat label={t("stats.volume")} value="450 Tons" icon={TrendingUp} />
+            <TrustStat label={t("stats.savings")} value="18%" icon={Zap} />
           </div>
         </div>
       </div>
@@ -64,17 +68,17 @@ export const LandingHero = () => {
         <FloatingCard
           top="20%"
           left="5%"
-          title="New Bid Received"
+          title={t("floating.newBid")}
           value="XAF 1.2M"
-          status="Pending Approval"
+          status={t("floating.pending")}
           delay="0s"
         />
         <FloatingCard
           top="60%"
           right="5%"
-          title="Shipment Arrived"
+          title={t("floating.shipmentArrived")}
           value="Ref #CM-8812"
-          status="Delivery Confirmed"
+          status={t("floating.deliveryConfirmed")}
           delay="1.5s"
           success
         />

@@ -20,9 +20,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { LogOut, Settings as SettingsIcon } from "lucide-react";
 import { NotificationCenter } from "@/components/dashboard/NotificationCenter";
+import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
+import { useTranslations } from "next-intl";
 
 export function Header({ user, activeRole, userRoles }: { user: User, activeRole: string | null, userRoles: string[] }) {
     const pathname = usePathname();
+    const tAuth = useTranslations("auth");
+    const tNav = useTranslations("navigation");
+    const tCommon = useTranslations("common");
     const pageTitle = pathname.split("/").pop()?.replace(/-/g, " ") || "Dashboard";
 
     return (
@@ -47,13 +52,16 @@ export function Header({ user, activeRole, userRoles }: { user: User, activeRole
                 <div className="relative w-full group">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400 group-focus-within:text-primary transition-colors" />
                     <Input
-                        placeholder="Global search (e.g. Douala, #CM-8821)..."
+                        placeholder={tCommon("search")}
                         className="pl-10 bg-slate-50 border-slate-200 focus:bg-white focus:ring-2 focus:ring-primary/10 rounded-xl transition-all h-11"
                     />
                 </div>
             </div>
 
             <div className="flex items-center gap-4">
+                <div className="hidden sm:block">
+                    <LanguageSwitcher />
+                </div>
                 <div className="hidden sm:block">
                     <RoleSwitcher currentRole={activeRole as any} availableRoles={userRoles as any} />
                 </div>
@@ -74,7 +82,7 @@ export function Header({ user, activeRole, userRoles }: { user: User, activeRole
                         <DropdownMenuItem asChild className="rounded-xl h-11 cursor-pointer focus:bg-slate-50">
                             <a href="/settings" className="flex items-center gap-3">
                                 <SettingsIcon className="h-4 w-4 text-slate-400" />
-                                <span className="font-bold text-slate-700">Settings</span>
+                                <span className="font-bold text-slate-700">{tNav("settings")}</span>
                             </a>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator className="bg-slate-50" />
@@ -93,7 +101,7 @@ export function Header({ user, activeRole, userRoles }: { user: User, activeRole
                         >
                             <div className="flex items-center gap-3">
                                 <LogOut className="h-4 w-4 text-rose-500 group-hover:scale-110 transition-transform" />
-                                <span className="font-bold text-rose-600">Sign Out</span>
+                                <span className="font-bold text-rose-600">{tAuth("logout")}</span>
                             </div>
                         </DropdownMenuItem>
                     </DropdownMenuContent>

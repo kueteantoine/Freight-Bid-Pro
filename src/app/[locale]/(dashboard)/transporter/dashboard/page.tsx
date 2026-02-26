@@ -32,39 +32,43 @@ import {
   TableRow
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 export default function CarrierDashboardPage() {
+  const t = useTranslations("transporterDashboard");
+  const tCommon = useTranslations("common");
+
   return (
     <div className="space-y-10 pb-10">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-slate-900">
-            Welcome back, TransCam Logistics
+            {t("welcomeMessage", { name: "TransCam Logistics" })}
           </h2>
           <p className="text-slate-500 mt-1">
-            Here is what&apos;s happening with your fleet and bids today.
+            {t("fleetAndBidsSubtitle")}
           </p>
         </div>
         <Button variant="outline" className="rounded-xl h-11 px-6 border-slate-200 hover:bg-slate-50 group transition-all">
           <Download className="h-4 w-4 mr-2 text-slate-500 group-hover:text-primary transition-colors" />
-          Export Report
+          {tCommon("exportReport")}
         </Button>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatsCard
-          title="Total Fleet"
+          title={t("totalFleet")}
           value="45"
-          trend="+2 new this month"
+          trend={t("newThisMonth", { count: "2" })}
           icon={Truck}
           trendColor="text-emerald-500"
           iconBg="bg-slate-100"
           iconColor="text-slate-600"
         />
         <StatsCard
-          title="In-Transit"
+          title={t("inTransit")}
           value="28"
-          trend="62% of fleet utilization"
+          trend={t("fleetUtilization", { percent: "62" })}
           icon={Share2}
           trendColor="text-slate-400"
           iconBg="bg-emerald-50"
@@ -72,9 +76,9 @@ export default function CarrierDashboardPage() {
           statusDot="bg-emerald-500"
         />
         <StatsCard
-          title="Idle"
+          title={t("idle")}
           value="12"
-          trend="Available for assignment"
+          trend={t("availableForAssignment")}
           icon={Hourglass}
           trendColor="text-slate-400"
           iconBg="bg-amber-50"
@@ -82,9 +86,9 @@ export default function CarrierDashboardPage() {
           statusDot="bg-amber-500"
         />
         <StatsCard
-          title="Maintenance"
+          title={t("maintenance")}
           value="5"
-          trend="2 returning tomorrow"
+          trend={t("returningTomorrow", { count: "2" })}
           icon={Wrench}
           trendColor="text-slate-400"
           iconBg="bg-rose-50"
@@ -97,44 +101,44 @@ export default function CarrierDashboardPage() {
         <div className="lg:col-span-2 space-y-8">
           <Card className="rounded-3xl border-slate-100 shadow-sm overflow-hidden">
             <CardHeader className="pb-4">
-              <CardTitle className="text-lg font-bold">Quick Load Search</CardTitle>
+              <CardTitle className="text-lg font-bold">{t("quickLoadSearch")}</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col md:flex-row gap-4">
               <div className="relative flex-1 group">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-400 group-focus-within:text-primary transition-colors" />
                 <Input
-                  placeholder="Search by city (e.g. Douala)"
+                  placeholder={t("searchByCity")}
                   className="pl-12 h-14 bg-slate-50 border-slate-200 rounded-2xl focus:bg-white"
                 />
               </div>
               <Select>
                 <SelectTrigger className="h-14 md:w-[200px] rounded-2xl bg-slate-50 border-slate-200">
-                  <SelectValue placeholder="All Truck Types" />
+                  <SelectValue placeholder={t("allTruckTypes")} />
                 </SelectTrigger>
                 <SelectContent className="rounded-2xl">
-                  <SelectItem value="flatbed">Flatbed</SelectItem>
-                  <SelectItem value="reefer">Reefer</SelectItem>
-                  <SelectItem value="box-truck">Box Truck</SelectItem>
+                  <SelectItem value="flatbed">{t("flatbed")}</SelectItem>
+                  <SelectItem value="reefer">{t("reefer")}</SelectItem>
+                  <SelectItem value="box-truck">{t("boxTruck")}</SelectItem>
                 </SelectContent>
               </Select>
               <Button className="h-14 px-8 rounded-2xl font-bold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all">
-                Find Loads
+                {t("findLoads")}
               </Button>
             </CardContent>
           </Card>
 
           <Card className="rounded-3xl border-slate-100 shadow-sm overflow-hidden">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-lg font-bold">Active Bid Standings</CardTitle>
+              <CardTitle className="text-lg font-bold">{t("activeBidStandings")}</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               <Table>
                 <TableHeader className="bg-slate-50/50">
                   <TableRow className="hover:bg-transparent border-slate-100">
-                    <TableHead className="px-6 font-bold text-slate-400 text-[10px] uppercase tracking-wider">Load ID / Route</TableHead>
-                    <TableHead className="font-bold text-slate-400 text-[10px] uppercase tracking-wider text-center">Status</TableHead>
-                    <TableHead className="font-bold text-slate-400 text-[10px] uppercase tracking-wider text-right">My Bid (XAF)</TableHead>
-                    <TableHead className="font-bold text-slate-400 text-[10px] uppercase tracking-wider text-right">Top Bid (XAF)</TableHead>
+                    <TableHead className="px-6 font-bold text-slate-400 text-[10px] uppercase tracking-wider">{t("loadIdRoute")}</TableHead>
+                    <TableHead className="font-bold text-slate-400 text-[10px] uppercase tracking-wider text-center">{t("status")}</TableHead>
+                    <TableHead className="font-bold text-slate-400 text-[10px] uppercase tracking-wider text-right">{t("myBid")}</TableHead>
+                    <TableHead className="font-bold text-slate-400 text-[10px] uppercase tracking-wider text-right">{t("topBid")}</TableHead>
                     <TableHead className="px-6 text-right"></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -143,9 +147,11 @@ export default function CarrierDashboardPage() {
                     id="#CM-8821"
                     route="Douala → Yaoundé"
                     rank="2nd"
+                    rankLabel={t("rank", { rank: "2nd" })}
                     rankColor="bg-amber-50 text-amber-600"
                     myBid="450,000"
                     topBid="435,000"
+                    updateLabel={t("updateBid")}
                   />
                 </TableBody>
               </Table>
@@ -156,7 +162,7 @@ export default function CarrierDashboardPage() {
         <div className="space-y-8">
           <Card className="rounded-3xl border-slate-100 shadow-sm overflow-hidden">
             <CardHeader className="flex flex-row items-center justify-between pb-4">
-              <CardTitle className="text-lg font-bold">Live Fleet Map</CardTitle>
+              <CardTitle className="text-lg font-bold">{t("liveFleetMap")}</CardTitle>
               <Maximize2 className="h-4 w-4 text-slate-400 cursor-pointer" />
             </CardHeader>
             <CardContent className="p-0 relative">
@@ -167,14 +173,14 @@ export default function CarrierDashboardPage() {
 
           <Card className="rounded-3xl border-slate-100 shadow-sm overflow-hidden pb-4">
             <CardHeader className="pb-4">
-              <CardTitle className="text-lg font-bold">Recent Activity</CardTitle>
+              <CardTitle className="text-lg font-bold">{t("recentActivity")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <ActivityItem
                 icon={CreditCard}
                 iconBg="bg-emerald-50"
                 iconColor="text-emerald-600"
-                title="Payment Received"
+                title={t("paymentReceived")}
                 sub="1,200,000 XAF for Load #CM-1029"
                 time="2 hours ago"
               />
@@ -182,7 +188,7 @@ export default function CarrierDashboardPage() {
                 icon={AlertCircle}
                 iconBg="bg-rose-50"
                 iconColor="text-rose-600"
-                title="Outbid Alert"
+                title={t("outbidAlert")}
                 sub="You are no longer leading on #CM-8821"
                 time="4 hours ago"
               />
@@ -214,7 +220,7 @@ function StatsCard({ title, value, trend, icon: Icon, trendColor, iconBg, iconCo
   );
 }
 
-function BidRow({ id, route, rank, rankColor, myBid, topBid }: any) {
+function BidRow({ id, route, rank, rankLabel, rankColor, myBid, topBid, updateLabel }: any) {
   return (
     <TableRow className="border-slate-100 hover:bg-slate-50/50 transition-colors group">
       <TableCell className="px-6 py-5">
@@ -225,13 +231,13 @@ function BidRow({ id, route, rank, rankColor, myBid, topBid }: any) {
       </TableCell>
       <TableCell className="text-center">
         <Badge variant="outline" className={cn("rounded-lg border-none font-bold text-[10px] px-2.5 py-1 uppercase tracking-tight", rankColor)}>
-          Rank: {rank}
+          {rankLabel}
         </Badge>
       </TableCell>
       <TableCell className="text-right font-bold text-slate-700">{myBid}</TableCell>
       <TableCell className="text-right font-black text-slate-900">{topBid}</TableCell>
       <TableCell className="px-6 text-right">
-        <Button variant="link" className="text-primary font-bold h-auto p-0 hover:underline">Update Bid</Button>
+        <Button variant="link" className="text-primary font-bold h-auto p-0 hover:underline">{updateLabel}</Button>
       </TableCell>
     </TableRow>
   );

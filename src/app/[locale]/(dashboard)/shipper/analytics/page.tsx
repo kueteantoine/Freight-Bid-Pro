@@ -64,6 +64,7 @@ import {
 } from "@/app/actions/analytics-actions";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 export default function ShipperAnalyticsPage() {
     const [loading, setLoading] = useState(true);
@@ -109,24 +110,27 @@ export default function ShipperAnalyticsPage() {
         return <AnalyticsSkeleton />;
     }
 
+    const t = useTranslations("shipperSubPages");
+    const tCommon = useTranslations("common");
+
     return (
         <div className="space-y-10 pb-10">
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div>
-                    <h2 className="text-3xl font-black tracking-tight text-slate-900">Shipper Analytics</h2>
+                    <h2 className="text-3xl font-black tracking-tight text-slate-900">{t("analyticsTitle")}</h2>
                     <p className="text-slate-500 mt-1">
-                        Comprehensive insights into your freight operations, costs, and performance.
+                        {t("analyticsDesc")}
                     </p>
                 </div>
                 <div className="flex gap-3">
                     <Button variant="outline" className="rounded-xl h-11 border-slate-200" onClick={handleExport}>
                         <Download className="h-4 w-4 mr-2 text-slate-400" />
-                        Download CSV
+                        {t("downloadCSV")}
                     </Button>
                     <Button className="rounded-xl h-11 px-6 bg-primary font-bold shadow-lg shadow-primary/20 transition-all">
                         <Filter className="h-4 w-4 mr-2" />
-                        More Filters
+                        {t("moreFilters")}
                     </Button>
                 </div>
             </div>
@@ -137,35 +141,35 @@ export default function ShipperAnalyticsPage() {
                     <Calendar className="h-5 w-5 text-slate-400" />
                     <Select value={timeRange} onValueChange={setTimeRange}>
                         <SelectTrigger className="w-48 border-none bg-transparent font-bold text-slate-700 focus:ring-0">
-                            <SelectValue placeholder="Select Range" />
+                            <SelectValue placeholder={t("selectRange")} />
                         </SelectTrigger>
                         <SelectContent className="rounded-xl">
-                            <SelectItem value="1m">Last 30 Days</SelectItem>
-                            <SelectItem value="3m">Last 3 Months</SelectItem>
-                            <SelectItem value="6m">Last 6 Months</SelectItem>
-                            <SelectItem value="1y">Last Year</SelectItem>
+                            <SelectItem value="1m">{t("last30Days")}</SelectItem>
+                            <SelectItem value="3m">{t("last3Months")}</SelectItem>
+                            <SelectItem value="6m">{t("last6Months")}</SelectItem>
+                            <SelectItem value="1y">{t("lastYear")}</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
                 <div className="flex gap-8 px-6 md:border-l border-slate-100 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
                     <MiniStat
-                        label="Total Spending"
+                        label={t("totalSpending")}
                         value={`XAF ${(metrics?.totalSpending || 0).toLocaleString()}`}
                         trend={metrics?.spendingTrend}
                         trendUp
                     />
                     <MiniStat
-                        label="Total Shipments"
+                        label={t("totalShipments")}
                         value={metrics?.totalShipments.toString() || "0"}
                         trend={metrics?.shipmentTrend}
                         trendUp
                     />
                     <MiniStat
-                        label="Avg Cost / Ship"
+                        label={t("avgCostPerShipment")}
                         value={`XAF ${(metrics?.avgCostPerShipment || 0).toLocaleString()}`}
                     />
                     <MiniStat
-                        label="Routes Active"
+                        label={t("activeRoutes")}
                         value={metrics?.activeRoutes.toString() || "0"}
                         trend={metrics?.routesTrend ? `+${metrics.routesTrend}` : undefined}
                     />
@@ -177,12 +181,12 @@ export default function ShipperAnalyticsPage() {
                 <Card className="lg:col-span-2 rounded-3xl border-slate-100 shadow-sm overflow-hidden p-8 space-y-8">
                     <div className="flex items-center justify-between">
                         <div>
-                            <h3 className="text-lg font-bold text-slate-900">Spending Over Time</h3>
-                            <p className="text-xs text-slate-400 font-medium">Monthly expenditure analysis across all active shipments</p>
+                            <h3 className="text-lg font-bold text-slate-900">{t("spendingOverTime")}</h3>
+                            <p className="text-xs text-slate-400 font-medium">{t("spendingOverTimeDesc")}</p>
                         </div>
                         <div className="flex bg-slate-50 p-1 rounded-lg">
-                            <Button size="sm" variant="ghost" className="h-8 rounded-md bg-white shadow-sm text-xs font-bold text-primary px-3">Bar</Button>
-                            <Button size="sm" variant="ghost" className="h-8 rounded-md text-xs font-bold text-slate-400 px-3">Line</Button>
+                            <Button size="sm" variant="ghost" className="h-8 rounded-md bg-white shadow-sm text-xs font-bold text-primary px-3">{tCommon("bar")}</Button>
+                            <Button size="sm" variant="ghost" className="h-8 rounded-md text-xs font-bold text-slate-400 px-3">{tCommon("line")}</Button>
                         </div>
                     </div>
 
@@ -242,7 +246,7 @@ export default function ShipperAnalyticsPage() {
 
                 {/* Cost Breakdown */}
                 <Card className="rounded-3xl border-slate-100 shadow-sm overflow-hidden p-8 space-y-8">
-                    <h3 className="text-lg font-bold text-slate-900">Cost Breakdown</h3>
+                    <h3 className="text-lg font-bold text-slate-900">{t("costBreakdown")}</h3>
 
                     <div className="h-48 w-full">
                         <ResponsiveContainer width="100%" height="100%">
@@ -294,8 +298,8 @@ export default function ShipperAnalyticsPage() {
                     <Card className="rounded-3xl border-slate-100 shadow-sm overflow-hidden">
                         <CardHeader className="p-8 border-b border-slate-100 flex flex-row items-center justify-between">
                             <div>
-                                <CardTitle className="text-lg font-bold">Route Efficiency & Pricing</CardTitle>
-                                <p className="text-xs text-slate-400 mt-1 uppercase tracking-tight font-black">Performance audit across main digital corridors</p>
+                                <CardTitle className="text-lg font-bold">{t("routeEfficiencyTitle")}</CardTitle>
+                                <p className="text-xs text-slate-400 mt-1 uppercase tracking-tight font-black">{t("routeEfficiencyDesc")}</p>
                             </div>
                             <Button variant="ghost" className="text-xs font-bold text-primary">View All Routes</Button>
                         </CardHeader>
@@ -303,11 +307,11 @@ export default function ShipperAnalyticsPage() {
                             <table className="w-full text-left">
                                 <thead className="bg-slate-50 text-[10px] font-black uppercase text-slate-400 tracking-widest">
                                     <tr>
-                                        <th className="px-8 py-4">Fulfillment Route</th>
-                                        <th className="px-8 py-4">Volume (Tons)</th>
-                                        <th className="px-8 py-4">Total Cost</th>
-                                        <th className="px-8 py-4">Cost vs Benchmark</th>
-                                        <th className="px-8 py-4 text-right">Trend</th>
+                                        <th className="px-8 py-4">{t("fulfillmentRoute")}</th>
+                                        <th className="px-8 py-4">{t("volumeTons")}</th>
+                                        <th className="px-8 py-4">{t("totalCost")}</th>
+                                        <th className="px-8 py-4">{t("costVsBenchmark")}</th>
+                                        <th className="px-8 py-4 text-right">{t("trend")}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-50">
@@ -340,39 +344,39 @@ export default function ShipperAnalyticsPage() {
                     <Card className="rounded-3xl border-slate-100 shadow-sm overflow-hidden p-8 space-y-6">
                         <div className="flex items-center justify-between">
                             <div>
-                                <h3 className="text-lg font-bold text-slate-900">Transporter Performance</h3>
-                                <p className="text-xs text-slate-400 font-medium">Comparing efficiency and reliability of your partner network</p>
+                                <h3 className="text-lg font-bold text-slate-900">{t("transporterPerformance")}</h3>
+                                <p className="text-xs text-slate-400 font-medium">{t("transporterPerformanceDesc")}</p>
                             </div>
                             <BarChart3 className="h-5 w-5 text-slate-300" />
                         </div>
 
                         <div className="space-y-4">
-                            {transporters.map((t, idx) => (
+                            {transporters.map((tp, idx) => (
                                 <div key={idx} className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100 hover:border-primary/20 transition-all group">
                                     <div className="flex items-center gap-4">
                                         <div className="h-10 w-10 bg-white rounded-xl flex items-center justify-center font-black text-slate-400 text-sm border border-slate-100">
-                                            {t.name.split(' ').map(n => n[0]).join('')}
+                                            {tp.name.split(' ').map(n => n[0]).join('')}
                                         </div>
                                         <div>
-                                            <p className="text-sm font-black text-slate-900 underline decoration-slate-200 group-hover:decoration-primary/30 transition-all">{t.name}</p>
+                                            <p className="text-sm font-black text-slate-900 underline decoration-slate-200 group-hover:decoration-primary/30 transition-all">{tp.name}</p>
                                             <div className="flex items-center gap-3 mt-1">
                                                 <span className="flex items-center text-[10px] font-bold text-slate-500">
-                                                    <Star className="h-3 w-3 text-amber-400 mr-1 fill-amber-400" /> {t.rating}
+                                                    <Star className="h-3 w-3 text-amber-400 mr-1 fill-amber-400" /> {tp.rating}
                                                 </span>
                                                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
-                                                    {t.shipments} Shipments
+                                                    {tp.shipments} Shipments
                                                 </span>
                                             </div>
                                         </div>
                                     </div>
                                     <div className="flex items-center gap-8">
                                         <div className="text-right hidden sm:block">
-                                            <p className="text-[10px] uppercase font-black text-slate-400 tracking-widest">On-Time</p>
-                                            <p className="text-xs font-black text-emerald-600">{t.onTimeRate}%</p>
+                                            <p className="text-[10px] uppercase font-black text-slate-400 tracking-widest">{t("onTime")}</p>
+                                            <p className="text-xs font-black text-emerald-600">{tp.onTimeRate}%</p>
                                         </div>
                                         <div className="text-right">
-                                            <p className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Avg Bid</p>
-                                            <p className="text-xs font-black text-slate-900">XAF {(t.avgBid / 1000).toFixed(0)}k</p>
+                                            <p className="text-[10px] uppercase font-black text-slate-400 tracking-widest">{t("avgBid")}</p>
+                                            <p className="text-xs font-black text-slate-900">XAF {(tp.avgBid / 1000).toFixed(0)}k</p>
                                         </div>
                                         <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-primary transition-colors" />
                                     </div>
@@ -388,9 +392,9 @@ export default function ShipperAnalyticsPage() {
                         <Zap className="h-6 w-6 text-white" />
                     </div>
                     <div>
-                        <h3 className="text-lg font-black text-slate-900">Cost Optimization Report</h3>
+                        <h3 className="text-lg font-black text-slate-900">{t("optimizationReport")}</h3>
                         <p className="text-sm text-slate-600 mt-2 leading-relaxed">
-                            Our AI analyzed your historical data and identified potential savings for the next quarter.
+                            {t("optimizationReportDesc")}
                         </p>
                     </div>
 
@@ -425,8 +429,8 @@ export default function ShipperAnalyticsPage() {
                     <Card className="rounded-3xl border-slate-100 shadow-sm overflow-hidden">
                         <CardHeader className="p-8 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
                             <div>
-                                <CardTitle className="text-lg font-bold">Shipment History Report</CardTitle>
-                                <p className="text-xs text-slate-400 mt-1 font-medium uppercase tracking-tight">Search and filter your complete shipment archive</p>
+                                <CardTitle className="text-lg font-bold">{t("shipmentHistoryReport")}</CardTitle>
+                                <p className="text-xs text-slate-400 mt-1 font-medium uppercase tracking-tight">{t("searchPlaceholder")}</p>
                             </div>
                             <div className="flex items-center gap-3">
                                 <div className="relative">
@@ -448,12 +452,12 @@ export default function ShipperAnalyticsPage() {
                             <table className="w-full text-left">
                                 <thead className="bg-slate-50 text-[10px] font-black uppercase text-slate-400 tracking-widest">
                                     <tr>
-                                        <th className="px-8 py-4">ID / Date</th>
-                                        <th className="px-8 py-4">Carrier</th>
-                                        <th className="px-8 py-4">Route</th>
-                                        <th className="px-8 py-4">Freight Type</th>
-                                        <th className="px-8 py-4">Status</th>
-                                        <th className="px-8 py-4 text-right">Amount</th>
+                                        <th className="px-8 py-4">{t("idDate")}</th>
+                                        <th className="px-8 py-4">{t("carrier")}</th>
+                                        <th className="px-8 py-4">{t("route")}</th>
+                                        <th className="px-8 py-4">{t("freightType")}</th>
+                                        <th className="px-8 py-4">{t("status")}</th>
+                                        <th className="px-8 py-4 text-right">{t("amount")}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-50">
@@ -497,9 +501,9 @@ export default function ShipperAnalyticsPage() {
                             <Mail className="h-10 w-10 text-white" />
                         </div>
                         <div className="flex-1 text-center md:text-left">
-                            <h3 className="text-2xl font-black text-white">Weekly Insights Delivered.</h3>
+                            <h3 className="text-2xl font-black text-white">{t("weeklyInsightsTitle")}</h3>
                             <p className="text-slate-400 mt-2 max-w-xl">
-                                Stay on top of your logistics costs with automated summaries sent directly to your inbox every Monday morning.
+                                {t("weeklyInsightsDesc")}
                             </p>
                         </div>
                         <div className="flex flex-col sm:flex-row items-center gap-4">
@@ -509,7 +513,7 @@ export default function ShipperAnalyticsPage() {
                             </div>
                             <Button className="h-12 px-8 rounded-2xl bg-primary text-white font-black uppercase tracking-widest text-[11px] shadow-xl shadow-primary/20">
                                 <Settings className="h-4 w-4 mr-2" />
-                                Configure Reports
+                                {t("configureReports")}
                             </Button>
                         </div>
                     </div>

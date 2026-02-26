@@ -1,20 +1,21 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { Truck, DollarSign, ListChecks, Clock, Receipt, BarChart3 } from "lucide-react";
+import { Truck, ListChecks, Clock, Receipt, BarChart3 } from "lucide-react";
 import { getDriverJobs } from "@/app/actions/driver-jobs";
 import { AvailabilityToggle } from "@/components/driver/availability/AvailabilityToggle";
 import { ShiftSummary } from "@/components/driver/availability/ShiftSummary";
+import { getTranslations } from "next-intl/server";
 
-export default async function DriverDashboardPage() {
-    // Fetch some basic stats
+export default async function DriverDashboardPage({ params: { locale } }: { params: { locale: string } }) {
+    const t = await getTranslations({ locale, namespace: 'driverDashboard' });
     const { jobs: activeJobs } = await getDriverJobs("active");
     const { jobs: pendingJobs } = await getDriverJobs("pending");
 
     return (
         <div className="space-y-6">
             <header className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold">Driver Dashboard</h1>
+                <h1 className="text-2xl font-bold">{t("title")}</h1>
             </header>
 
             <AvailabilityToggle />
@@ -26,7 +27,7 @@ export default async function DriverDashboardPage() {
                         <Truck className="h-8 w-8 text-blue-600" />
                         <div>
                             <div className="text-2xl font-bold">{activeJobs?.length || 0}</div>
-                            <div className="text-xs text-muted-foreground">Active Jobs</div>
+                            <div className="text-xs text-muted-foreground">{t("activeJobs")}</div>
                         </div>
                     </CardContent>
                 </Card>
@@ -35,15 +36,15 @@ export default async function DriverDashboardPage() {
 
             {/* Quick Actions */}
             <div className="space-y-2">
-                <h2 className="font-semibold text-lg">Quick Actions</h2>
+                <h2 className="font-semibold text-lg">{t("quickActions")}</h2>
                 <div className="grid grid-cols-1 gap-3">
                     <Link href="/driver/jobs">
                         <Button variant="outline" className="w-full justify-start h-14 text-left">
                             <ListChecks className="mr-3 h-5 w-5" />
                             <div className="flex flex-col items-start">
-                                <span>My Jobs</span>
+                                <span>{t("myJobs")}</span>
                                 <span className="text-xs text-muted-foreground font-normal">
-                                    {pendingJobs && pendingJobs.length > 0 ? `${pendingJobs.length} new offers` : "View job history"}
+                                    {pendingJobs && pendingJobs.length > 0 ? t("newOffers", { count: pendingJobs.length }) : t("viewHistory")}
                                 </span>
                             </div>
                         </Button>
@@ -52,9 +53,9 @@ export default async function DriverDashboardPage() {
                         <Button variant="outline" className="w-full justify-start h-14 text-left">
                             <Clock className="mr-3 h-5 w-5 text-purple-600" />
                             <div className="flex flex-col items-start">
-                                <span>Manage Schedule</span>
+                                <span>{t("manageSchedule")}</span>
                                 <span className="text-xs text-muted-foreground font-normal">
-                                    Set availability & request time off
+                                    {t("scheduleDesc")}
                                 </span>
                             </div>
                         </Button>
@@ -63,9 +64,9 @@ export default async function DriverDashboardPage() {
                         <Button variant="outline" className="w-full justify-start h-14 text-left">
                             <BarChart3 className="mr-3 h-5 w-5 text-blue-600" />
                             <div className="flex flex-col items-start">
-                                <span>Performance & Ratings</span>
+                                <span>{t("performance")}</span>
                                 <span className="text-xs text-muted-foreground font-normal">
-                                    Track your stats, ratings & badges
+                                    {t("performanceDesc")}
                                 </span>
                             </div>
                         </Button>
@@ -74,9 +75,9 @@ export default async function DriverDashboardPage() {
                         <Button variant="outline" className="w-full justify-start h-14 text-left">
                             <Receipt className="mr-3 h-5 w-5 text-emerald-600" />
                             <div className="flex flex-col items-start">
-                                <span>Log Expenses</span>
+                                <span>{t("logExpenses")}</span>
                                 <span className="text-xs text-muted-foreground font-normal">
-                                    Track fuel, tolls & other costs
+                                    {t("expensesDesc")}
                                 </span>
                             </div>
                         </Button>
@@ -87,18 +88,18 @@ export default async function DriverDashboardPage() {
             {/* Recent/Active Job Preview */}
             {activeJobs && activeJobs.length > 0 && (
                 <div className="space-y-2">
-                    <h2 className="font-semibold text-lg">Current Job</h2>
+                    <h2 className="font-semibold text-lg">{t("currentJob")}</h2>
                     <Card className="border-l-4 border-l-blue-500">
                         <CardHeader className="pb-2">
                             <CardTitle className="text-base">{activeJobs[0].shipment.shipment_number}</CardTitle>
                         </CardHeader>
                         <CardContent className="text-sm pb-4">
                             <div className="flex justify-between items-center mb-2">
-                                <span className="text-muted-foreground">Pickup:</span>
+                                <span className="text-muted-foreground">{t("pickup")}:</span>
                                 <span className="font-medium text-right">{activeJobs[0].shipment.pickup_location}</span>
                             </div>
                             <Link href={`/driver/jobs/${activeJobs[0].id}`}>
-                                <Button size="sm" className="w-full mt-2">Continue Trip</Button>
+                                <Button size="sm" className="w-full mt-2">{t("continueTrip")}</Button>
                             </Link>
                         </CardContent>
                     </Card>

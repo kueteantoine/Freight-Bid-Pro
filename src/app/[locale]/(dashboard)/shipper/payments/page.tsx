@@ -22,8 +22,11 @@ import { getTransactionHistory } from "@/app/actions/payment-actions";
 import { format } from "date-fns";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 export default function ShipperPaymentsPage() {
+    const t = useTranslations("shipperSubPages");
+    const tCommon = useTranslations("common");
     const [transactions, setTransactions] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -45,7 +48,7 @@ export default function ShipperPaymentsPage() {
         return (
             <div className="flex flex-col items-center justify-center py-20 gap-4">
                 <Loader2 className="h-10 w-10 animate-spin text-primary" />
-                <p className="text-muted-foreground font-medium">Fetching transaction history...</p>
+                <p className="text-muted-foreground font-medium">{tCommon("loading")}</p>
             </div>
         );
     }
@@ -57,13 +60,13 @@ export default function ShipperPaymentsPage() {
         <div className="space-y-8">
             <div className="flex justify-between items-end">
                 <div>
-                    <h1 className="text-3xl font-black text-slate-900">Payment History</h1>
-                    <p className="text-slate-500 font-medium mt-1">Track your spend, manage invoices, and request refunds</p>
+                    <h1 className="text-3xl font-black text-slate-900">{t("paymentHistory")}</h1>
+                    <p className="text-slate-500 font-medium mt-1">{t("paymentHistoryDesc")}</p>
                 </div>
                 <div className="flex gap-3">
                     <Button variant="outline" className="rounded-xl font-bold border-slate-200">
                         <Download className="h-4 w-4 mr-2" />
-                        Export CSV
+                        {tCommon("exportReport")}
                     </Button>
                 </div>
             </div>
@@ -71,21 +74,21 @@ export default function ShipperPaymentsPage() {
             {/* Stats Overview */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <StatCard
-                    title="Total Spend"
+                    title={t("totalSpend")}
                     value={`XAF ${totalSpent.toLocaleString()}`}
                     icon={DollarSign}
                     color="text-primary"
                     bg="bg-primary/5"
                 />
                 <StatCard
-                    title="Active Invoices"
+                    title={t("activeInvoices")}
                     value={transactions.length.toString()}
                     icon={Receipt}
                     color="text-emerald-600"
                     bg="bg-emerald-50"
                 />
                 <StatCard
-                    title="Pending Payments"
+                    title={t("pendingPayments")}
                     value={pendingCount.toString()}
                     icon={History}
                     color="text-amber-600"
@@ -97,12 +100,12 @@ export default function ShipperPaymentsPage() {
             <Card className="rounded-3xl border-slate-100 shadow-xl overflow-hidden">
                 <CardHeader className="p-6 border-b bg-white">
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                        <CardTitle className="text-xl font-bold">Recent Transactions</CardTitle>
+                        <CardTitle className="text-xl font-bold">{t("recentTransactions")}</CardTitle>
                         <div className="flex items-center gap-3">
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                                 <Input
-                                    placeholder="Search shipment ID..."
+                                    placeholder={t("searchShipmentId")}
                                     className="pl-9 h-10 w-64 bg-slate-50 border-slate-100 rounded-xl"
                                 />
                             </div>
@@ -117,10 +120,10 @@ export default function ShipperPaymentsPage() {
                         <table className="w-full text-left">
                             <thead className="bg-slate-50 text-[10px] font-black uppercase text-slate-400 tracking-widest">
                                 <tr>
-                                    <th className="px-6 py-4">Transaction Details</th>
-                                    <th className="px-6 py-4">Status</th>
-                                    <th className="px-6 py-4">Method</th>
-                                    <th className="px-6 py-4 text-right">Amount</th>
+                                    <th className="px-6 py-4">{tCommon("transactionDetails")}</th>
+                                    <th className="px-6 py-4">{tCommon("status")}</th>
+                                    <th className="px-6 py-4">{tCommon("method")}</th>
+                                    <th className="px-6 py-4 text-right">{tCommon("amount")}</th>
                                     <th className="px-6 py-4"></th>
                                 </tr>
                             </thead>
@@ -130,7 +133,7 @@ export default function ShipperPaymentsPage() {
                                         <td colSpan={5} className="px-6 py-20 text-center">
                                             <div className="flex flex-col items-center gap-2 opacity-50">
                                                 <Receipt className="h-12 w-12" />
-                                                <p className="font-bold">No transactions found</p>
+                                                <p className="font-bold">{t("noTransactionsFound")}</p>
                                             </div>
                                         </td>
                                     </tr>
@@ -176,7 +179,7 @@ export default function ShipperPaymentsPage() {
                                                 <div className="flex items-center justify-end gap-2">
                                                     <Link href={`/shipper/payments/${tx.id}`}>
                                                         <Button variant="ghost" size="sm" className="rounded-xl h-8 text-primary font-bold">
-                                                            View Invoice
+                                                            {t("viewInvoice")}
                                                         </Button>
                                                     </Link>
                                                     <Button variant="ghost" size="icon" className="rounded-xl h-8 w-8 text-slate-400">
