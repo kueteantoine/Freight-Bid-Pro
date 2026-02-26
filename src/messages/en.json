@@ -1,0 +1,36 @@
+{
+    "common": {
+        "welcome": "Welcome",
+        "dashboard": "Dashboard",
+        "save": "Save",
+        "cancel": "Cancel",
+        "loading": "Loading...",
+        "error": "An error occurred",
+        "success": "Success",
+        "submit": "Submit"
+    },
+    "auth": {
+        "login": "Log In",
+        "register": "Register",
+        "email": "Email Address",
+        "password": "Password",
+        "forgotPassword": "Forgot Password?",
+        "logout": "Log Out"
+    },
+    "navigation": {
+        "home": "Home",
+        "shipments": "Shipments",
+        "vehicles": "Vehicles",
+        "drivers": "Drivers",
+        "settings": "Settings"
+    },
+    "settings": {
+        "title": "Settings",
+        "language": "Language",
+        "english": "English",
+        "french": "French",
+        "theme": "Theme",
+        "light": "Light",
+        "dark": "Dark"
+    }
+}

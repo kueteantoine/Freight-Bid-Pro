@@ -1,5 +1,25 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
+import createMiddleware from 'next-intl/middleware';
+
+const intlMiddleware = createMiddleware({
+    // A list of all locales that are supported
+    locales: ['en', 'fr'],
+
+    // Used when no locale matches
+    defaultLocale: 'fr',
+    localePrefix: 'never' // Depending on the routing strategy. We'll start with 'never' if we want to avoid `/[locale]` folder structure, or 'always'/'as-needed' if we use the folder.
+    // We'll use 'as-needed' which redirects /dashboard to /fr/dashboard since 'fr' is default.
+    // Actually, 'as-needed' hides the default locale. So /fr/dashboard becomes /dashboard. Let's use 'as-needed'.
+});
+
+// Re-create the middleware using the config that fits our plan: We decided to use `[locale]` folder structure.
+const routingMiddleware = createMiddleware({
+    locales: ['en', 'fr'],
+    defaultLocale: 'fr',
+    localePrefix: 'as-needed' // The default locale 'fr' will not have a prefix, 'en' will have '/en'.
+});
+
 
 export async function middleware(req: NextRequest) {
     const supabase = await createSupabaseServerClient()
@@ -8,33 +28,30 @@ export async function middleware(req: NextRequest) {
     const isAuthenticated = !!data?.user
     const { pathname, searchParams } = req.nextUrl
 
-    // Define route patterns
-    const isAuthPage = pathname === '/login' || pathname === '/register' || pathname === '/forgot-password'
-    const isProtectedRoute = pathname.startsWith('/shipper') ||
-        pathname.startsWith('/transporter') ||
-        pathname.startsWith('/driver') ||
-        pathname.startsWith('/broker') ||
-        pathname.startsWith('/admin') ||
-        pathname === '/settings' ||
-        pathname === '/'
+    // Strip the locale prefix for auth checks
+    const pathnameWithoutLocale = pathname.replace(/^\/(en|fr)/, '') || '/';
+
+    // Define route patterns against the non-localized pathname
+    const isAuthPage = pathnameWithoutLocale === '/login' || pathnameWithoutLocale === '/register' || pathnameWithoutLocale === '/forgot-password'
+    const isProtectedRoute = pathnameWithoutLocale.startsWith('/shipper') ||
+        pathnameWithoutLocale.startsWith('/transporter') ||
+        pathnameWithoutLocale.startsWith('/driver') ||
+        pathnameWithoutLocale.startsWith('/broker') ||
+        pathnameWithoutLocale.startsWith('/admin') ||
+        pathnameWithoutLocale === '/settings' ||
+        pathnameWithoutLocale === '/'
 
     // Redirect authenticated users away from auth pages
     if (isAuthenticated && isAuthPage) {
         return NextResponse.redirect(new URL('/', req.url))
     }
 
-    // Redirect unauthenticated users to login from protected routes
-    if (!isAuthenticated && isProtectedRoute && pathname !== '/') {
-        // Allow landing page if we had one, but strict redirect for now
-        // if pathname IS '/', we handle it below (or let it stay if it's public, but here it's protected)
-    }
-
-    if (!isAuthenticated && isProtectedRoute) {
+    if (!isAuthenticated && isProtectedRoute && pathnameWithoutLocale !== '/') {
         return NextResponse.redirect(new URL('/login', req.url))
     }
 
     // Role-based redirection for root path
-    if (isAuthenticated && pathname === '/') {
+    if (isAuthenticated && pathnameWithoutLocale === '/') {
         try {
             // Fetch user preference to know which dashboard to show
             const { data: pref } = await supabase
@@ -83,11 +100,15 @@ export async function middleware(req: NextRequest) {
         }
     }
 
-    return NextResponse.next()
+    // Finally run the intl middleware to handle the locale routing and redirects
+    return routingMiddleware(req);
 }
 
 export const config = {
     matcher: [
-        "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+        // Skip Next.js internals and all static files, unless found in search params
+        '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+        // Always run for API routes
+        '/(api|trpc)(.*)',
     ],
 }

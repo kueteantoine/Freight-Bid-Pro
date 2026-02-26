@@ -1,0 +1,36 @@
+{
+    "common": {
+        "welcome": "Bienvenue",
+        "dashboard": "Tableau de bord",
+        "save": "Enregistrer",
+        "cancel": "Annuler",
+        "loading": "Chargement...",
+        "error": "Une erreur s'est produite",
+        "success": "Succès",
+        "submit": "Soumettre"
+    },
+    "auth": {
+        "login": "Connexion",
+        "register": "S'inscrire",
+        "email": "Adresse de courriel",
+        "password": "Mot de passe",
+        "forgotPassword": "Mot de passe oublié ?",
+        "logout": "Déconnexion"
+    },
+    "navigation": {
+        "home": "Accueil",
+        "shipments": "Expéditions",
+        "vehicles": "Véhicules",
+        "drivers": "Chauffeurs",
+        "settings": "Paramètres"
+    },
+    "settings": {
+        "title": "Paramètres",
+        "language": "Langue",
+        "english": "Anglais",
+        "french": "Français",
+        "theme": "Thème",
+        "light": "Clair",
+        "dark": "Sombre"
+    }
+}

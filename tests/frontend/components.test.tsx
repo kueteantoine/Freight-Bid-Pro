@@ -11,15 +11,6 @@ import { describe, it, expect as jestExpect, jest } from '@jest/globals';
 
 // Wrapper to fix toBeInTheDocument type errors with @jest/globals
 const expect = (actual: any) => (jestExpect(actual) as any);
-
-import { AdBanner } from '@/components/ads/ad-banner';
-import { SponsoredListing } from '@/components/ads/sponsored-listing';
-import { AdApprovalQueue } from '@/app/(admin)/admin/advertisements/_components/ad-approval-queue';
-import { ContentPageList } from '@/app/(admin)/admin/content/_components/content-page-list';
-import { TemplateList } from '@/app/(admin)/admin/templates/_components/template-list';
-import { RichTextEditor } from '@/components/editor/rich-text-editor';
-import { ContentDiffViewer } from '@/components/content/content-diff-viewer';
-
 // Mock server actions
 jest.mock('@/lib/services/admin/advertisements', () => ({
     getAdsForPlacement: jest.fn(),
