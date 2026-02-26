@@ -1,5 +1,5 @@
 import { unstable_cache } from 'next/cache';
-import { createClient } from '@/lib/supabase/server';
+import { createStaticClient } from '@/lib/supabase/server';
 
 export type TranslationMap = Record<string, string>;
 export type NamespaceMap = Record<string, TranslationMap>;
@@ -12,7 +12,7 @@ export type NamespaceMap = Record<string, TranslationMap>;
 export const getTranslationsForLocale = unstable_cache(
     async (locale: string): Promise<NamespaceMap> => {
         try {
-            const supabase = await createClient();
+            const supabase = createStaticClient();
 
             const { data, error } = await supabase
                 .from('translations')

@@ -426,5 +426,84 @@
         "pickup": "Pickup",
         "newOffers": "{count} new offers",
         "viewHistory": "View job history"
+    },
+    "landing": {
+        "hero": {
+            "badge": "Revolutionizing Digital Logistics",
+            "title": "The Future of <highlight>Freight Bidding</highlight> is Here.",
+            "highlight": "Freight Bidding",
+            "description": "Transforming Cameroon's logistics landscape with a transparent, AI-driven bidding marketplace. Connect with verified transporters, optimize routes, and grow your business with ease.",
+            "getStarted": "Get Started Now",
+            "watchDemo": "Watch Demo",
+            "stats": {
+                "transporters": "Verified Transporters",
+                "corridors": "Digital Corridors",
+                "volume": "Annual Volume",
+                "savings": "Average Savings"
+            },
+            "floating": {
+                "newBid": "New Bid Received",
+                "pending": "Pending Approval",
+                "shipmentArrived": "Shipment Arrived",
+                "deliveryConfirmed": "Delivery Confirmed"
+            }
+        },
+        "features": {
+            "realTimeBidding": {
+                "title": "Real-Time Bidding",
+                "description": "Get the best rates through competitive bidding. Transporters compete to move your freight efficiently."
+            },
+            "securePayments": {
+                "title": "Secure Payments",
+                "description": "Integrated with Orange Money and MTN MoMo. Automatic commission handling and detailed receipts."
+            },
+            "realTimeTracking": {
+                "title": "Real-Time Tracking",
+                "description": "Know exactly where your cargo is. GPS tracking and status updates from pickup to delivery."
+            }
+        },
+        "roles": {
+            "title": "Join the Ecosystem",
+            "subtitle": "Tailored Experiences for Every Logistics Partner.",
+            "description": "Whether you're shipping industrial goods or managing a national fleet, FreightBid provides the tools to grow your operations.",
+            "joinAs": "Join as {role}",
+            "shipper": {
+                "title": "Shipper",
+                "description": "Optimize your supply chain with transparent bidding and live tracking.",
+                "features": [
+                    "Live Bidding Marketplace",
+                    "Analytics Dashboard"
+                ]
+            },
+            "transporter": {
+                "title": "Transporter",
+                "description": "Maximize your fleet utilization and get paid faster than ever.",
+                "features": [
+                    "Instant Load Matching",
+                    "Fleet Management Tools"
+                ]
+            },
+            "broker": {
+                "title": "Broker",
+                "description": "Streamline operations and manage margins with full visibility.",
+                "features": [
+                    "Partner Network Control",
+                    "Margin Analytics"
+                ]
+            },
+            "driver": {
+                "title": "Driver",
+                "description": "Simple mobile delivery tasks with digital POD and instant payments.",
+                "features": [
+                    "Mobile-First Dispatch",
+                    "Digital POD"
+                ]
+            }
+        },
+        "footer": {
+            "rights": "© 2024 FreightBid. All rights reserved. Central Africa's leading logistics marketplace.",
+            "terms": "Terms",
+            "privacy": "Privacy"
+        }
     }
 }

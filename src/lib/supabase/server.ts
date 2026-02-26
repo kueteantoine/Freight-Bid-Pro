@@ -1,5 +1,6 @@
 import { cookies } from "next/headers"
 import { createServerClient } from "@supabase/ssr"
+import { createClient as createSupabaseClient } from "@supabase/supabase-js"
 
 /**
  * Creates a Supabase client for server-side usage (Server Components, API Routes, Middleware).
@@ -66,3 +67,14 @@ export const createSupabaseServerClient = async () => {
 }
 
 export const createClient = createSupabaseServerClient;
+
+/**
+ * Creates a Supabase client that does not use cookies.
+ * Suitable for use inside unstable_cache or other scopes where dynamic headers are forbidden.
+ */
+export const createStaticClient = () => {
+    return createSupabaseClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+}

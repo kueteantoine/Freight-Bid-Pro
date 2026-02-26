@@ -400,7 +400,7 @@
     "landing": {
         "hero": {
             "badge": "Révolutionner la Logistique Numérique",
-            "title": "Le Futur de {highlight} est Ici.",
+            "title": "Le Futur de <highlight>l'Enchère de Fret</highlight> est Ici.",
             "highlight": "l'Enchère de Fret",
             "description": "Transformer le paysage logistique du Cameroun avec un marché d'enchères transparent et piloté par l'IA. Connectez-vous avec des transporteurs vérifiés, optimisez les itinéraires et développez votre entreprise en toute simplicité.",
             "getStarted": "Commencer Maintenant",
