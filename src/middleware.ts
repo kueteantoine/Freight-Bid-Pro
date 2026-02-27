@@ -47,6 +47,13 @@ export async function middleware(req: NextRequest) {
     }
 
     if (!isAuthenticated && isProtectedRoute && pathnameWithoutLocale !== '/') {
+        // Return 401 for unauthorized API requests instead of redirecting
+        if (pathname.startsWith('/api/') || pathnameWithoutLocale.startsWith('/api/')) {
+            return new NextResponse(
+                JSON.stringify({ error: 'unauthorized', message: 'Authentication required' }),
+                { status: 401, headers: { 'Content-Type': 'application/json' } }
+            )
+        }
         return NextResponse.redirect(new URL('/login', req.url))
     }
 

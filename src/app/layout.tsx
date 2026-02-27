@@ -41,19 +41,8 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    "name": "Freight Bid Pro",
-    "url": process.env.NEXT_PUBLIC_APP_URL || 'https://freightbidpro.com',
-  };
-
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
       {children}
     </>
   );

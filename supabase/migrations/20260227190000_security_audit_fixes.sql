@@ -72,9 +72,9 @@ END $$;
 
 -- 5. Restrict sensitive system actions
 -- Example: Only super admins can modify platform configuration
-DROP POLICY IF EXISTS "Only super admins can manage platform configurations" ON public.platform_configurations;
+DROP POLICY IF EXISTS "Only super admins can manage platform configurations" ON public.platform_settings;
 CREATE POLICY "Only super admins can manage platform configurations"
-    ON public.platform_configurations FOR ALL
+    ON public.platform_settings FOR ALL
     USING (
         EXISTS (
             SELECT 1 FROM public.admin_user_roles aur
