@@ -505,5 +505,18 @@
             "terms": "Terms",
             "privacy": "Privacy"
         }
+    },
+    "Offline": {
+        "title": "You're Offline",
+        "description": "It seems you've lost your connection. Don't worry, Freight Bid Pro is designed to work offline. Some features may be limited until you're back online.",
+        "goHome": "Go Home",
+        "retry": "Try Again"
+    },
+    "PWA": {
+        "installTitle": "Install Freight Bid Pro",
+        "installDescription": "Install our app for a better experience, offline access, and fast property tracking.",
+        "installButton": "Install App",
+        "backOnline": "Back Online",
+        "workingOffline": "Working Offline"
     }
 }

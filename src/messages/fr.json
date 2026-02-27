@@ -503,5 +503,18 @@
         "throughCarrierNetwork": "Via le réseau de transporteurs",
         "totalCommission": "Commission Totale",
         "netEarnings": "Revenus nets"
+    },
+    "Offline": {
+        "title": "Vous êtes Hors Ligne",
+        "description": "Il semble que vous ayez perdu votre connexion. Ne vous inquiétez pas, Freight Bid Pro est conçu pour fonctionner hors ligne. Certaines fonctionnalités peuvent être limitées jusqu'à ce que vous soyez de nouveau en ligne.",
+        "goHome": "Accueil",
+        "retry": "Réessayer"
+    },
+    "PWA": {
+        "installTitle": "Installer Freight Bid Pro",
+        "installDescription": "Installez notre application pour une meilleure expérience, un accès hors ligne et un suivi rapide des chargements.",
+        "installButton": "Installer l'App",
+        "backOnline": "De nouveau en ligne",
+        "workingOffline": "Mode hors ligne"
     }
 }

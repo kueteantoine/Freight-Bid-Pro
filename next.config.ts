@@ -27,6 +27,11 @@ const nextConfig: NextConfig = {
 const withPWA = require("@ducanh2912/next-pwa").default({
   dest: "public",
   disable: process.env.NODE_ENV === "development",
+  register: true,
+  skipWaiting: true,
+  fallbacks: {
+    document: "/offline", // next-intl will handle the locale prefix if configured correctly, but pwa fallback needs a stable path
+  },
 });
 
 const createNextIntlPlugin = require('next-intl/plugin');
