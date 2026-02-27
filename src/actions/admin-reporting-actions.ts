@@ -2,26 +2,37 @@
 
 import { createClient } from '@/lib/supabase/server';
 import { cookies } from 'next/headers';
+import { z } from 'zod';
+
+// ============================================================================
+// SCHEMAS
+// ============================================================================
+
+const ReportMetricsSchema = z.object({
+    total_revenue: z.boolean().optional(),
+    total_shipments: z.boolean().optional(),
+    total_users: z.boolean().optional(),
+    total_bids: z.boolean().optional(),
+    revenue_trend: z.boolean().optional(),
+    user_growth: z.boolean().optional(),
+}).catchall(z.boolean().optional());
+
+const DateRangeSchema = z.enum(['7_days', '30_days', '90_days', 'ytd']);
+
+const ReportDimensionsSchema = z.object({
+    date_range: DateRangeSchema.optional(),
+    filters: z.record(z.any()).optional(),
+    segments: z.array(z.string()).optional(),
+});
+
+const VisualizationTypeSchema = z.enum(['table', 'line', 'bar', 'pie', 'area']);
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
-export interface ReportMetrics {
-    total_revenue?: boolean;
-    total_shipments?: boolean;
-    total_users?: boolean;
-    total_bids?: boolean;
-    revenue_trend?: boolean;
-    user_growth?: boolean;
-    [key: string]: boolean | undefined;
-}
-
-export interface ReportDimensions {
-    date_range?: '7_days' | '30_days' | '90_days' | 'ytd';
-    filters?: Record<string, any>;
-    segments?: string[];
-}
+export type ReportMetrics = z.infer<typeof ReportMetricsSchema>;
+export type ReportDimensions = z.infer<typeof ReportDimensionsSchema>;
 
 export interface SavedReport {
     id: string;
@@ -29,7 +40,7 @@ export interface SavedReport {
     report_description?: string;
     metrics: ReportMetrics;
     dimensions?: ReportDimensions;
-    visualization_type: 'table' | 'line' | 'bar' | 'pie' | 'area';
+    visualization_type: z.infer<typeof VisualizationTypeSchema>;
     is_public: boolean;
     created_at: string;
     updated_at: string;
@@ -59,11 +70,15 @@ export async function generateCustomReport(
     dimensions?: ReportDimensions
 ) {
     try {
+        // Validate inputs
+        const validatedMetrics = ReportMetricsSchema.parse(metrics);
+        const validatedDimensions = ReportDimensionsSchema.parse(dimensions || {});
+
         const supabase = await createClient();
 
         const { data, error } = await supabase.rpc('generate_custom_report', {
-            p_metrics: metrics,
-            p_dimensions: dimensions || {}
+            p_metrics: validatedMetrics,
+            p_dimensions: validatedDimensions
         });
 
         if (error) throw error;
@@ -95,10 +110,17 @@ export async function saveReportConfiguration(
     reportDescription: string,
     metrics: ReportMetrics,
     dimensions: ReportDimensions,
-    visualizationType: 'table' | 'line' | 'bar' | 'pie' | 'area',
+    visualizationType: z.infer<typeof VisualizationTypeSchema>,
     isPublic: boolean = false
 ) {
     try {
+        // Validate inputs
+        const validatedReportName = z.string().min(1).max(255).parse(reportName);
+        const validatedDescription = z.string().max(1000).parse(reportDescription);
+        const validatedMetrics = ReportMetricsSchema.parse(metrics);
+        const validatedDimensions = ReportDimensionsSchema.parse(dimensions);
+        const validatedVizType = VisualizationTypeSchema.parse(visualizationType);
+
         const supabase = await createClient();
 
         const { data: { user } } = await supabase.auth.getUser();
@@ -106,11 +128,11 @@ export async function saveReportConfiguration(
 
         const { data, error } = await supabase.rpc('save_report_configuration', {
             p_admin_user_id: user.id,
-            p_report_name: reportName,
-            p_report_description: reportDescription,
-            p_metrics: metrics,
-            p_dimensions: dimensions,
-            p_visualization_type: visualizationType,
+            p_report_name: validatedReportName,
+            p_report_description: validatedDescription,
+            p_metrics: validatedMetrics,
+            p_dimensions: validatedDimensions,
+            p_visualization_type: validatedVizType,
             p_is_public: isPublic
         });
 
@@ -165,12 +187,20 @@ export async function deleteReport(reportId: string) {
 // PRE-BUILT REPORT ACTIONS
 // ============================================================================
 
+const FrequencySchema = z.enum(['daily', 'weekly', 'monthly']);
+const ExportFormatSchema = z.enum(['pdf', 'csv', 'excel']).default('pdf');
+
+// ============================================================================
+// PRE-BUILT REPORT ACTIONS
+// ============================================================================
+
 export async function getUserAcquisitionReport(dateRange: string = '30_days') {
     try {
+        const validatedRange = z.string().parse(dateRange);
         const supabase = await createClient();
 
         const { data, error } = await supabase.rpc('get_user_acquisition_report', {
-            p_date_range: dateRange
+            p_date_range: validatedRange
         });
 
         if (error) throw error;
@@ -184,10 +214,11 @@ export async function getUserAcquisitionReport(dateRange: string = '30_days') {
 
 export async function getShipmentPerformanceReport(dateRange: string = '30_days') {
     try {
+        const validatedRange = z.string().parse(dateRange);
         const supabase = await createClient();
 
         const { data, error } = await supabase.rpc('get_shipment_performance_report', {
-            p_date_range: dateRange
+            p_date_range: validatedRange
         });
 
         if (error) throw error;
@@ -201,10 +232,11 @@ export async function getShipmentPerformanceReport(dateRange: string = '30_days'
 
 export async function getFinancialPerformanceReport(dateRange: string = '30_days') {
     try {
+        const validatedRange = z.string().parse(dateRange);
         const supabase = await createClient();
 
         const { data, error } = await supabase.rpc('get_financial_performance_report', {
-            p_date_range: dateRange
+            p_date_range: validatedRange
         });
 
         if (error) throw error;
@@ -218,11 +250,13 @@ export async function getFinancialPerformanceReport(dateRange: string = '30_days
 
 export async function getCarrierLeaderboard(limit: number = 10, dateRange: string = '30_days') {
     try {
+        const validatedLimit = z.number().int().min(1).max(100).parse(limit);
+        const validatedRange = z.string().parse(dateRange);
         const supabase = await createClient();
 
         const { data, error } = await supabase.rpc('get_carrier_performance_leaderboard', {
-            p_limit: limit,
-            p_date_range: dateRange
+            p_limit: validatedLimit,
+            p_date_range: validatedRange
         });
 
         if (error) throw error;
@@ -236,10 +270,11 @@ export async function getCarrierLeaderboard(limit: number = 10, dateRange: strin
 
 export async function getBiddingAnalyticsReport(dateRange: string = '30_days') {
     try {
+        const validatedRange = z.string().parse(dateRange);
         const supabase = await createClient();
 
         const { data, error } = await supabase.rpc('get_bidding_analytics_report', {
-            p_date_range: dateRange
+            p_date_range: validatedRange
         });
 
         if (error) throw error;
@@ -306,6 +341,7 @@ export async function getLiveRevenueTracking() {
 
 export async function exportReportToPDF(reportData: any, reportName: string) {
     try {
+        z.string().min(1).parse(reportName);
         // TODO: Implement PDF generation using jsPDF
         // This will be implemented in the frontend component
         return { success: true, message: 'PDF export initiated' };
@@ -317,6 +353,7 @@ export async function exportReportToPDF(reportData: any, reportName: string) {
 
 export async function exportReportToCSV(reportData: any, reportName: string) {
     try {
+        z.string().min(1).parse(reportName);
         // TODO: Implement CSV generation using papaparse
         // This will be implemented in the frontend component
         return { success: true, message: 'CSV export initiated' };
@@ -328,6 +365,7 @@ export async function exportReportToCSV(reportData: any, reportName: string) {
 
 export async function exportReportToExcel(reportData: any, reportName: string) {
     try {
+        z.string().min(1).parse(reportName);
         // TODO: Implement Excel generation using xlsx
         // This will be implemented in the frontend component
         return { success: true, message: 'Excel export initiated' };
@@ -352,6 +390,16 @@ export async function scheduleReport(
     exportFormat: 'pdf' | 'csv' | 'excel' = 'pdf'
 ) {
     try {
+        // Validate inputs
+        const validatedConfigId = z.string().uuid().nullable().parse(reportConfigId);
+        const validatedName = z.string().min(1).max(255).parse(reportName);
+        const validatedFreq = FrequencySchema.parse(frequency);
+        const validatedTime = z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/).parse(scheduleTime);
+        const validatedEmails = z.array(z.string().email()).min(1).parse(recipientEmails);
+        const validatedDayOfWeek = z.number().int().min(0).max(6).optional().parse(scheduleDayOfWeek);
+        const validatedDayOfMonth = z.number().int().min(1).max(31).optional().parse(scheduleDayOfMonth);
+        const validatedFormat = ExportFormatSchema.parse(exportFormat);
+
         const supabase = await createClient();
 
         const { data: { user } } = await supabase.auth.getUser();
@@ -359,14 +407,14 @@ export async function scheduleReport(
 
         const { data, error } = await supabase.rpc('schedule_automated_report', {
             p_admin_user_id: user.id,
-            p_report_config_id: reportConfigId,
-            p_report_name: reportName,
-            p_frequency: frequency,
-            p_schedule_time: scheduleTime,
-            p_schedule_day_of_week: scheduleDayOfWeek,
-            p_schedule_day_of_month: scheduleDayOfMonth,
-            p_recipient_emails: recipientEmails,
-            p_export_format: exportFormat
+            p_report_config_id: validatedConfigId,
+            p_report_name: validatedName,
+            p_frequency: validatedFreq,
+            p_schedule_time: validatedTime,
+            p_schedule_day_of_week: validatedDayOfWeek,
+            p_schedule_day_of_month: validatedDayOfMonth,
+            p_recipient_emails: validatedEmails,
+            p_export_format: validatedFormat
         });
 
         if (error) throw error;
@@ -400,12 +448,13 @@ export async function getScheduledReports() {
 
 export async function deleteScheduledReport(scheduleId: string) {
     try {
+        const validatedId = z.string().uuid().parse(scheduleId);
         const supabase = await createClient();
 
         const { error } = await supabase
             .from('scheduled_reports')
             .delete()
-            .eq('id', scheduleId);
+            .eq('id', validatedId);
 
         if (error) throw error;
 
@@ -418,12 +467,14 @@ export async function deleteScheduledReport(scheduleId: string) {
 
 export async function toggleScheduledReport(scheduleId: string, isActive: boolean) {
     try {
+        const validatedId = z.string().uuid().parse(scheduleId);
+        const validatedActive = z.boolean().parse(isActive);
         const supabase = await createClient();
 
         const { error } = await supabase
             .from('scheduled_reports')
-            .update({ is_active: isActive })
-            .eq('id', scheduleId);
+            .update({ is_active: validatedActive })
+            .eq('id', validatedId);
 
         if (error) throw error;
 

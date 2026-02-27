@@ -1,6 +1,7 @@
 'use server';
 
 import { createClient } from '@/lib/supabase/server';
+import { z } from 'zod';
 
 export async function fetchDashboardStats() {
     const supabase = await createClient();
@@ -24,10 +25,18 @@ export async function fetchDashboardStats() {
     return data;
 }
 
+const AnalyticsRangeSchema = z.enum(['7_days', '30_days', '90_days']);
+
 export async function fetchPlatformAnalytics(range: '7_days' | '30_days' | '90_days' = '30_days') {
+    // Validate input
+    const validatedRange = AnalyticsRangeSchema.safeParse(range);
+    if (!validatedRange.success) {
+        throw new Error('Invalid analytics range');
+    }
+
     const supabase = await createClient();
 
-    const { data, error } = await supabase.rpc('get_platform_analytics', { range });
+    const { data, error } = await supabase.rpc('get_platform_analytics', { range: validatedRange.data });
 
     if (error) {
         console.error('Error fetching platform analytics:', error);
@@ -54,10 +63,18 @@ export async function fetchGeographicData() {
     return data;
 }
 
+const ActivityLimitSchema = z.number().int().min(1).max(100).default(10);
+
 export async function fetchActivityFeed(limit: number = 10) {
+    // Validate input
+    const validatedLimit = ActivityLimitSchema.safeParse(limit);
+    if (!validatedLimit.success) {
+        throw new Error('Invalid activity feed limit');
+    }
+
     const supabase = await createClient();
 
-    const { data, error } = await supabase.rpc('get_recent_activity', { limit_count: limit });
+    const { data, error } = await supabase.rpc('get_recent_activity', { limit_count: validatedLimit.data });
 
     if (error) {
         console.error('Error fetching activity feed:', error);

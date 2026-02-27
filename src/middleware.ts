@@ -101,7 +101,38 @@ export async function middleware(req: NextRequest) {
     }
 
     // Finally run the intl middleware to handle the locale routing and redirects
-    return routingMiddleware(req);
+    const response = await routingMiddleware(req);
+
+    // Security Headers
+    response.headers.set('X-DNS-Prefetch-Control', 'on');
+    response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    response.headers.set('X-Frame-Options', 'SAMEORIGIN');
+    response.headers.set('X-Content-Type-Options', 'nosniff');
+    response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+    response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), interest-cohort=()');
+
+    // CSP - Content Security Policy
+    // Note: In development, we might need a more relaxed CSP if using specific tools.
+    // This is a strict base CSP that should be refined as needed.
+    const cspHeader = `
+        default-src 'self';
+        script-src 'self' 'unsafe-inline' 'unsafe-eval' *.supabase.co *.google.com *.gstatic.com;
+        style-src 'self' 'unsafe-inline' *.google.com *.gstatic.com fonts.googleapis.com;
+        img-src 'self' blob: data: *.supabase.co *.google.com *.gstatic.com *.googleapis.com i.ytimg.com;
+        font-src 'self' data: fonts.gstatic.com;
+        connect-src 'self' *.supabase.co *.google.com *.gstatic.com *.googleapis.com;
+        frame-src 'self' *.google.com;
+        media-src 'self';
+        object-src 'none';
+        base-uri 'self';
+        form-action 'self';
+        frame-ancestors 'none';
+        upgrade-insecure-requests;
+    `.replace(/\s{2,}/g, ' ').trim();
+
+    response.headers.set('Content-Security-Policy', cspHeader);
+
+    return response;
 }
 
 export const config = {
