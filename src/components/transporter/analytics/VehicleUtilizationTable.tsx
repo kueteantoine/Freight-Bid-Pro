@@ -14,7 +14,7 @@ interface VehicleUtilizationProps {
     data: VehicleData[];
 }
 
-export function VehicleUtilizationTable({ data }: VehicleUtilizationProps) {
+export default function VehicleUtilizationTable({ data }: VehicleUtilizationProps) {
     return (
         <Card className="col-span-3">
             <CardHeader>

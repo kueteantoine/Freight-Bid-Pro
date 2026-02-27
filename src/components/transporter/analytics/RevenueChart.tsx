@@ -12,7 +12,7 @@ interface RevenueChartProps {
     data: RevenueData[];
 }
 
-export function RevenueChart({ data }: RevenueChartProps) {
+export default function RevenueChart({ data }: RevenueChartProps) {
     // Format data for chart
     const formattedData = (data || []).map(item => ({
         name: new Date(item.period).toLocaleDateString('fr-CM', { month: 'short', year: 'numeric' }),

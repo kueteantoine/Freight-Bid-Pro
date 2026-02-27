@@ -37,4 +37,9 @@ const withPWA = require("@ducanh2912/next-pwa").default({
 const createNextIntlPlugin = require('next-intl/plugin');
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts');
 
+const withBundleAnalyzer = require("@next/bundle-analyzer")({
+  enabled: process.env.ANALYZE === "true",
+});
+
+// export default withBundleAnalyzer(withNextIntl(withPWA(nextConfig)));
 export default withNextIntl(withPWA(nextConfig));

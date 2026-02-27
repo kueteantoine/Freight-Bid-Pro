@@ -11,35 +11,32 @@ import { DriverDispatchDialog } from "@/components/transporter/operations/Driver
 import { ReportIssueDialog } from "@/components/transporter/operations/ReportIssueDialog";
 import { CompletionChecklistDialog } from "@/components/transporter/operations/CompletionChecklistDialog";
 import { useTranslations } from "next-intl";
+import dynamic from "next/dynamic";
 
-import { FleetTrackingMap } from "@/components/transporter/operations/FleetTrackingMap";
+const FleetTrackingMap = dynamic(
+    () => import("@/components/transporter/operations/FleetTrackingMap").then((mod) => mod.FleetTrackingMap),
+    {
+        ssr: false,
+        loading: () => <div className="h-[600px] flex items-center justify-center bg-slate-50 rounded-xl">Loading map...</div>
+    }
+);
 
 export default function TransporterOperationsPage() {
     const [shipments, setShipments] = React.useState<Shipment[]>([]);
     const [loading, setLoading] = React.useState(true);
-    const [activeTab, setActiveTab] = React.useState("awarded");
-
+    const [activeTab, setActiveTab] = React.useState("ongoing");
     const [dispatchShipment, setDispatchShipment] = React.useState<Shipment | null>(null);
-    const [isDispatchOpen, setIsDispatchOpen] = React.useState(false);
-
     const [issueShipment, setIssueShipment] = React.useState<Shipment | null>(null);
-    const [isIssueOpen, setIsIssueOpen] = React.useState(false);
-
     const [completeShipment, setCompleteShipment] = React.useState<Shipment | null>(null);
-    const [isCompleteOpen, setIsCompleteOpen] = React.useState(false);
-
-    const t = useTranslations("transporterSubPages");
-    const tCommon = useTranslations("common");
+    const t = useTranslations("transporter.operations");
 
     const fetchOperations = async () => {
-        setLoading(true);
         try {
-            // If map is selected, we want all active shipments, not just filtered by a status string
-            const statusParam = activeTab === "map" ? "active" : activeTab;
-            const data = await getTransporterOperations(statusParam);
-            setShipments(data || []);
-        } catch (error: any) {
-            toast.error(t("failedToFetchOperations") + ": " + error.message);
+            setLoading(true);
+            const data = await getTransporterOperations();
+            setShipments(data);
+        } catch (error) {
+            toast.error("Failed to load operations");
         } finally {
             setLoading(false);
         }
@@ -47,99 +44,94 @@ export default function TransporterOperationsPage() {
 
     React.useEffect(() => {
         fetchOperations();
-    }, [activeTab]);
+    }, []);
 
-    const handleUpdateStatus = async (shipment: Shipment, status: any, event: any) => {
-        try {
-            await updateShipmentStatus(shipment.id, status, event);
-            toast.success(t("shipmentStatusUpdated", { status }));
-            fetchOperations();
-        } catch (error: any) {
-            toast.error(t("failedToUpdateStatus") + ": " + error.message);
-        }
-    };
+    const ongoingShipments = shipments.filter(s =>
+        ["bid_awarded", "in_transit"].includes(s.status)
+    );
+    const completedShipments = shipments.filter(s => s.status === "delivered");
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center min-h-[400px]">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        );
+    }
 
     return (
-        <div className="space-y-8">
-            <div>
-                <h1 className="text-3xl font-black text-slate-900 tracking-tight">{t("shipmentOperations")}</h1>
-                <p className="text-slate-500 font-medium">{t("shipmentOperationsDesc")}</p>
+        <div className="container mx-auto py-8 px-4 space-y-8" id="operations-page">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight">{t("title")}</h1>
+                    <p className="text-muted-foreground">{t("subtitle")}</p>
+                </div>
             </div>
 
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-                <TabsList className="bg-slate-100/50 p-1 rounded-2xl h-14 w-fit">
-                    <TabsTrigger value="awarded" className="rounded-xl font-bold px-8 h-12 data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                        {t("awarded")}
-                    </TabsTrigger>
-                    <TabsTrigger value="active" className="rounded-xl font-bold px-8 h-12 data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                        {t("active")}
-                    </TabsTrigger>
-                    <TabsTrigger value="completed" className="rounded-xl font-bold px-8 h-12 data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                        {t("history")}
-                    </TabsTrigger>
-                    <TabsTrigger value="map" className="rounded-xl font-bold px-8 h-12 data-[state=active]:bg-white data-[state=active]:shadow-sm">
-                        {t("fleetMap")}
-                    </TabsTrigger>
-                </TabsList>
+            <Tabs defaultValue="ongoing" className="w-full" onValueChange={setActiveTab}>
+                <div className="flex items-center justify-between border-b pb-4 mb-6">
+                    <TabsList>
+                        <TabsTrigger value="ongoing">{t("tabs.ongoing")} ({ongoingShipments.length})</TabsTrigger>
+                        <TabsTrigger value="completed">{t("tabs.completed")} ({completedShipments.length})</TabsTrigger>
+                        <TabsTrigger value="map">{t("tabs.mapView")}</TabsTrigger>
+                    </TabsList>
+                </div>
 
-                <TabsContent value="map" className="m-0 border-none outline-none focus-visible:ring-0">
-                    {loading ? (
-                        <div className="flex flex-col items-center justify-center py-20 space-y-4">
-                            <Loader2 className="h-10 w-10 text-primary animate-spin" />
-                            <p className="text-sm font-bold text-slate-400">{t("loadingMap")}</p>
-                        </div>
-                    ) : (
-                        <FleetTrackingMap shipments={shipments} />
-                    )}
-                </TabsContent>
-
-                {["awarded", "active", "completed"].map((tab) => (
-                    <TabsContent key={tab} value={tab} className="m-0 border-none outline-none focus-visible:ring-0">
-                        {loading ? (
-                            <div className="flex flex-col items-center justify-center py-20 space-y-4">
-                                <Loader2 className="h-10 w-10 text-primary animate-spin" />
-                                <p className="text-sm font-bold text-slate-400">{t("fetchingData")}</p>
-                            </div>
-                        ) : shipments.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center py-20 space-y-4 bg-slate-50/50 rounded-3xl border-2 border-dashed border-slate-200">
-                                <PackageSearch className="h-16 w-16 text-slate-200" />
-                                <div className="text-center">
-                                    <p className="text-lg font-black text-slate-400">{t("noShipmentsFound")}</p>
-                                    <p className="text-sm text-slate-400 font-medium">{t("noShipmentsDesc", { tab: t(tab) })}</p>
-                                </div>
-                            </div>
+                <TabsContent value="ongoing" className="mt-0">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {ongoingShipments.length > 0 ? (
+                            ongoingShipments.map((shipment) => (
+                                <ShipmentOperationsCard
+                                    key={shipment.id}
+                                    shipment={shipment}
+                                    onDispatch={() => setDispatchShipment(shipment)}
+                                    onReportIssue={() => setIssueShipment(shipment)}
+                                    onComplete={() => setCompleteShipment(shipment)}
+                                    onSuccess={fetchOperations}
+                                />
+                            ))
                         ) : (
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                {shipments.map(shipment => (
-                                    <ShipmentOperationsCard
-                                        key={shipment.id}
-                                        shipment={shipment}
-                                        onDispatch={(s) => {
-                                            setDispatchShipment(s);
-                                            setIsDispatchOpen(true);
-                                        }}
-                                        onUpdateStatus={handleUpdateStatus}
-                                        onReportIssue={(s) => {
-                                            setIssueShipment(s);
-                                            setIsIssueOpen(true);
-                                        }}
-                                        onComplete={(s) => {
-                                            setCompleteShipment(s);
-                                            setIsCompleteOpen(true);
-                                        }}
-                                    />
-                                ))}
+                            <div className="col-span-full py-20 text-center border-2 border-dashed rounded-xl">
+                                <PackageSearch className="h-12 w-12 mx-auto text-slate-300 mb-4" />
+                                <h3 className="text-lg font-semibold">{t("noShipments")}</h3>
+                                <p className="text-muted-foreground">{t("noOngoingDescription")}</p>
                             </div>
                         )}
-                    </TabsContent>
-                ))}
+                    </div>
+                </TabsContent>
+
+                <TabsContent value="completed" className="mt-0">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {completedShipments.length > 0 ? (
+                            completedShipments.map((shipment) => (
+                                <ShipmentOperationsCard
+                                    key={shipment.id}
+                                    shipment={shipment}
+                                    onSuccess={fetchOperations}
+                                />
+                            ))
+                        ) : (
+                            <div className="col-span-full py-20 text-center border-2 border-dashed rounded-xl">
+                                <PackageSearch className="h-12 w-12 mx-auto text-slate-300 mb-4" />
+                                <h3 className="text-lg font-semibold">{t("noShipments")}</h3>
+                                <p className="text-muted-foreground">{t("noCompletedDescription")}</p>
+                            </div>
+                        )}
+                    </div>
+                </TabsContent>
+
+                <TabsContent value="map" className="mt-0">
+                    <div className="bg-white border rounded-xl overflow-hidden h-[600px]">
+                        <FleetTrackingMap shipments={ongoingShipments} />
+                    </div>
+                </TabsContent>
             </Tabs>
 
             {dispatchShipment && (
                 <DriverDispatchDialog
                     shipment={dispatchShipment}
-                    open={isDispatchOpen}
-                    onOpenChange={setIsDispatchOpen}
+                    open={!!dispatchShipment}
+                    onOpenChange={(open) => !open && setDispatchShipment(null)}
                     onSuccess={fetchOperations}
                 />
             )}
@@ -147,8 +139,8 @@ export default function TransporterOperationsPage() {
             {issueShipment && (
                 <ReportIssueDialog
                     shipment={issueShipment}
-                    open={isIssueOpen}
-                    onOpenChange={setIsIssueOpen}
+                    open={!!issueShipment}
+                    onOpenChange={(open) => !open && setIssueShipment(null)}
                     onSuccess={fetchOperations}
                 />
             )}
@@ -156,8 +148,8 @@ export default function TransporterOperationsPage() {
             {completeShipment && (
                 <CompletionChecklistDialog
                     shipment={completeShipment}
-                    open={isCompleteOpen}
-                    onOpenChange={setIsCompleteOpen}
+                    open={!!completeShipment}
+                    onOpenChange={(open) => !open && setCompleteShipment(null)}
                     onSuccess={fetchOperations}
                 />
             )}

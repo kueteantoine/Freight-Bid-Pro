@@ -1,6 +1,7 @@
 "use server";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { unstable_cache } from "next/cache";
 
 // --- Carrier Types ---
 export type CarrierKPIs = {
@@ -91,16 +92,43 @@ export type TransporterPerformance = {
 
 // --- Carrier Actions ---
 
+// --- Cached Analytics Fetches ---
+
+const getCachedCarrierKPIs = unstable_cache(
+    async (transporter_uuid: string) => {
+        const supabase = await createSupabaseServerClient();
+        const { data, error } = await supabase
+            .rpc('get_transporter_kpis', { transporter_uuid });
+        if (error) throw error;
+        return data as CarrierKPIs;
+    },
+    ['carrier-kpis'],
+    { revalidate: 3600 }
+);
+
+const getCachedRevenueTrends = unstable_cache(
+    async (transporter_uuid: string, period_type: string) => {
+        const supabase = await createSupabaseServerClient();
+        const { data, error } = await supabase
+            .rpc('get_revenue_trends', {
+                transporter_uuid,
+                period_type
+            });
+        if (error) throw error;
+        return data || [];
+    },
+    ['revenue-trends'],
+    { revalidate: 3600 }
+);
+
+// --- Carrier Actions ---
+
 export async function getCarrierKPIs(): Promise<CarrierKPIs> {
     const supabase = await createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Unauthorized");
 
-    const { data, error } = await supabase
-        .rpc('get_transporter_kpis', { transporter_uuid: user.id });
-
-    if (error) throw error;
-    return data as CarrierKPIs;
+    return getCachedCarrierKPIs(user.id);
 }
 
 export async function getRevenueTrends(period: 'daily' | 'weekly' | 'monthly' = 'monthly'): Promise<RevenueTrend[]> {
@@ -108,14 +136,7 @@ export async function getRevenueTrends(period: 'daily' | 'weekly' | 'monthly' = 
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error("Unauthorized");
 
-    const { data, error } = await supabase
-        .rpc('get_revenue_trends', {
-            transporter_uuid: user.id,
-            period_type: period
-        });
-
-    if (error) throw error;
-    return data || [];
+    return getCachedRevenueTrends(user.id, period);
 }
 
 export async function getVehicleUtilization(): Promise<VehicleUtil[]> {

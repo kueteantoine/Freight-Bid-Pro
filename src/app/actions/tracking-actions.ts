@@ -1,8 +1,84 @@
 "use server";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, unstable_cache } from "next/cache";
 import { TrackingEvent, ShipmentStatus, Shipment, ShipmentWithDetails } from "@/lib/types/database";
+import { getDistanceMatrix } from "@/lib/google-maps";
+
+// --- Cached Helpers ---
+
+const getCachedShipmentCounts = unstable_cache(
+    async (userId: string) => {
+        const supabase = await createSupabaseServerClient();
+        const { data, error } = await supabase
+            .from("shipments")
+            .select("status")
+            .eq("shipper_user_id", userId);
+
+        if (error) throw error;
+
+        const counts = {
+            all: data.length,
+            draft: 0,
+            open_for_bidding: 0,
+            bid_awarded: 0,
+            in_transit: 0,
+            delivered: 0,
+            cancelled: 0,
+        };
+
+        data.forEach((s) => {
+            if (s.status in counts) {
+                counts[s.status as keyof typeof counts]++;
+            }
+        });
+
+        return counts;
+    },
+    ['shipment-counts'],
+    { revalidate: 600 }
+);
+
+const getCachedShipmentDetails = unstable_cache(
+    async (shipmentId: string) => {
+        const supabase = await createSupabaseServerClient();
+        const { data, error } = await supabase
+            .from("shipments")
+            .select(`
+                *,
+                tracking_events:shipment_tracking (
+                    *,
+                    profiles:recorded_by_user_id (
+                        id,
+                        first_name,
+                        last_name,
+                        avatar_url
+                    )
+                ),
+                transporter_profile:assigned_transporter_user_id (
+                    id,
+                    first_name,
+                    last_name,
+                    avatar_url
+                ),
+                driver_profile:assigned_driver_user_id (
+                    id,
+                    first_name,
+                    last_name,
+                    avatar_url
+                )
+            `)
+            .eq("id", shipmentId)
+            .single();
+
+        if (error) throw error;
+        return data as unknown as ShipmentWithDetails;
+    },
+    ['shipment-details'],
+    { revalidate: 3600 }
+);
+
+// --- Public Actions ---
 
 /**
  * Fetch shipments for the current shipper, optionally filtered by status.
@@ -44,30 +120,7 @@ export async function getShipmentCounts() {
 
     if (!user) throw new Error("Unauthorized");
 
-    const { data, error } = await supabase
-        .from("shipments")
-        .select("status")
-        .eq("shipper_user_id", user.id);
-
-    if (error) throw error;
-
-    const counts = {
-        all: data.length,
-        draft: 0,
-        open_for_bidding: 0,
-        bid_awarded: 0,
-        in_transit: 0,
-        delivered: 0,
-        cancelled: 0,
-    };
-
-    data.forEach((s) => {
-        if (s.status in counts) {
-            counts[s.status as keyof typeof counts]++;
-        }
-    });
-
-    return counts;
+    return getCachedShipmentCounts(user.id);
 }
 
 /**
@@ -79,40 +132,8 @@ export async function getShipmentDetails(id: string) {
 
     if (!user) throw new Error("Unauthorized");
 
-    const { data, error } = await supabase
-        .from("shipments")
-        .select(`
-            *,
-            tracking_events:shipment_tracking (
-                *,
-                profiles:recorded_by_user_id (
-                    id,
-                    first_name,
-                    last_name,
-                    avatar_url
-                )
-            ),
-            transporter_profile:assigned_transporter_user_id (
-                id,
-                first_name,
-                last_name,
-                avatar_url
-            ),
-            driver_profile:assigned_driver_user_id (
-                id,
-                first_name,
-                last_name,
-                avatar_url
-            )
-        `)
-        .eq("id", id)
-        .single();
-
-    if (error) throw error;
-    return data as unknown as ShipmentWithDetails;
+    return getCachedShipmentDetails(id);
 }
-
-import { getDistanceMatrix } from "@/lib/google-maps";
 
 /**
  * Enhanced function to update driver location with speed-based logic and ETA updates.
@@ -305,8 +326,6 @@ export async function updateShipmentStatusFromGeofence(
 
     if (!validation?.is_valid) {
         console.warn(`Geofence validation failed: distance ${validation?.distance_meters}m`);
-        // We might still allow it but flag it in the log (which the RPC already does)
-        // For now, let's proceed but potentially notify admin if distance is way off
     }
 
     // 2. Update Shipment Status

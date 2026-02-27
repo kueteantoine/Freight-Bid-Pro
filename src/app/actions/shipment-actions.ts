@@ -1,7 +1,7 @@
 "use server";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, unstable_cache } from "next/cache";
 
 export async function createShipment(formData: any) {
     const supabase = await createSupabaseServerClient();
@@ -70,20 +70,32 @@ export async function saveShipmentTemplate(templateData: any) {
     return data;
 }
 
+// --- Cached Helpers ---
+
+const getCachedTemplates = unstable_cache(
+    async (userId: string) => {
+        const supabase = await createSupabaseServerClient();
+        const { data, error } = await supabase
+            .from("shipment_templates")
+            .select("*")
+            .eq("user_id", userId)
+            .order("created_at", { ascending: false });
+        if (error) throw error;
+        return data;
+    },
+    ['shipment-templates'],
+    { revalidate: 3600 }
+);
+
+// --- Public Actions ---
+
 export async function getShipmentTemplates() {
     const supabase = await createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) return [];
 
-    const { data, error } = await supabase
-        .from("shipment_templates")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
-
-    if (error) throw error;
-    return data;
+    return getCachedTemplates(user.id);
 }
 
 export async function bulkCreateShipments(shipments: any[]) {
