@@ -3,7 +3,7 @@
 import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { getTransporterOperations, updateShipmentStatus } from "@/app/actions/transporter-actions";
-import { Shipment } from "@/lib/types/database";
+import { Shipment, ShipmentStatus, TrackingEvent } from "@/lib/types/database";
 import { ShipmentOperationsCard } from "@/components/transporter/operations/ShipmentOperationsCard";
 import { toast } from "sonner";
 import { Loader2, PackageSearch } from "lucide-react";
@@ -39,6 +39,18 @@ export default function TransporterOperationsPage() {
             toast.error("Failed to load operations");
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleUpdateStatus = async (shipment: Shipment, status: ShipmentStatus, event?: TrackingEvent) => {
+        try {
+            const result = await updateShipmentStatus(shipment.id, status, event);
+            if (result.success) {
+                toast.success("Status updated successfully");
+                await fetchOperations();
+            }
+        } catch (error: any) {
+            toast.error(error?.message || "Failed to update status");
         }
     };
 
@@ -85,9 +97,9 @@ export default function TransporterOperationsPage() {
                                     key={shipment.id}
                                     shipment={shipment}
                                     onDispatch={() => setDispatchShipment(shipment)}
+                                    onUpdateStatus={handleUpdateStatus}
                                     onReportIssue={() => setIssueShipment(shipment)}
                                     onComplete={() => setCompleteShipment(shipment)}
-                                    onSuccess={fetchOperations}
                                 />
                             ))
                         ) : (
@@ -107,7 +119,7 @@ export default function TransporterOperationsPage() {
                                 <ShipmentOperationsCard
                                     key={shipment.id}
                                     shipment={shipment}
-                                    onSuccess={fetchOperations}
+                                    onUpdateStatus={handleUpdateStatus}
                                 />
                             ))
                         ) : (
