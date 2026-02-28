@@ -33,7 +33,7 @@ export const CurrencyService = {
             .single();
 
         if (error) {
-            console.error("Error fetching currency config:", error.message || error);
+            console.error("Error fetching currency config:", error);
             return null;
         }
 
@@ -49,7 +49,7 @@ export const CurrencyService = {
             .select('*');
 
         if (error) {
-            console.error("Error fetching exchange rates:", error.message || error);
+            console.error("Error fetching exchange rates:", error);
             return [];
         }
 

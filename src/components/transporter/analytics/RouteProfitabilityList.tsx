@@ -12,7 +12,7 @@ interface RouteProfitabilityProps {
     data: RouteData[];
 }
 
-export default function RouteProfitabilityList({ data }: RouteProfitabilityProps) {
+export function RouteProfitabilityList({ data }: RouteProfitabilityProps) {
     return (
         <Card className="col-span-4">
             <CardHeader>

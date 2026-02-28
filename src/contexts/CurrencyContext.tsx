@@ -28,15 +28,6 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
     // Initial load
     useEffect(() => {
         async function init() {
-            // Wait for preferences to know if we are logged in
-            if (userLoading) return;
-
-            // Only fetch if we have preferences (means we are logged in)
-            if (!preferences) {
-                setIsLoading(false);
-                return;
-            }
-
             try {
                 const [dbRates, dbConfig] = await Promise.all([
                     CurrencyService.getRates(),
@@ -51,7 +42,7 @@ export function CurrencyProvider({ children }: { children: React.ReactNode }) {
             }
         }
         init();
-    }, [userLoading, preferences]);
+    }, []);
 
     // Sync with user preferences
     useEffect(() => {

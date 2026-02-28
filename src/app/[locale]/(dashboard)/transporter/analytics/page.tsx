@@ -7,19 +7,12 @@ import {
     getRouteProfitability
 } from '@/app/actions/analytics-actions';
 import { OverviewCards } from '@/components/transporter/analytics/OverviewCards';
-import dynamic from 'next/dynamic';
+import { RevenueChart } from '@/components/transporter/analytics/RevenueChart';
+import { VehicleUtilizationTable } from '@/components/transporter/analytics/VehicleUtilizationTable';
+import { DriverPerformanceList } from '@/components/transporter/analytics/DriverPerformanceList';
+import { RouteProfitabilityList } from '@/components/transporter/analytics/RouteProfitabilityList';
 import { Button } from '@/components/ui/button';
 import { Download } from 'lucide-react';
-
-const AnalyticsChartsContainer = dynamic(() => import('@/components/transporter/analytics/AnalyticsChartsContainer'), {
-    ssr: false,
-    loading: () => <div className="space-y-4 pt-4">
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-            <div className="col-span-4 h-[400px] bg-slate-50 animate-pulse rounded-xl" />
-            <div className="col-span-3 h-[400px] bg-slate-50 animate-pulse rounded-xl" />
-        </div>
-    </div>
-});
 
 export default async function AnalyticsPage() {
     // Fetch data in parallel
@@ -50,16 +43,27 @@ export default async function AnalyticsPage() {
             </div>
 
             <div className="space-y-4">
-                <Suspense fallback={<div className="h-[120px] bg-slate-50 animate-pulse rounded-xl" />}>
+                <Suspense fallback={<div>Loading stats...</div>}>
                     <OverviewCards data={kpis} />
                 </Suspense>
 
-                <AnalyticsChartsContainer
-                    revenueData={revenueData}
-                    driverData={driverData}
-                    routeData={routeData}
-                    vehicleData={vehicleData}
-                />
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+                    <Suspense fallback={<div>Loading chart...</div>}>
+                        <RevenueChart data={revenueData} />
+                    </Suspense>
+                    <Suspense fallback={<div>Loading drivers...</div>}>
+                        <DriverPerformanceList data={driverData} />
+                    </Suspense>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+                    <Suspense fallback={<div>Loading routes...</div>}>
+                        <RouteProfitabilityList data={routeData} />
+                    </Suspense>
+                    <Suspense fallback={<div>Loading fleet...</div>}>
+                        <VehicleUtilizationTable data={vehicleData} />
+                    </Suspense>
+                </div>
             </div>
         </div>
     );

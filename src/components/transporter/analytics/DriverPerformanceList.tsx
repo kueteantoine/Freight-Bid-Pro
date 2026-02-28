@@ -12,7 +12,7 @@ interface DriverPerformanceProps {
     data: DriverData[];
 }
 
-export default function DriverPerformanceList({ data }: DriverPerformanceProps) {
+export function DriverPerformanceList({ data }: DriverPerformanceProps) {
     return (
         <Card className="col-span-3">
             <CardHeader>

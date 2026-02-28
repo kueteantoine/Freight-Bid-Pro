@@ -49,7 +49,6 @@ import { CarrierBiddingDashboard } from "@/components/transporter/bidding/Carrie
 import { BiddingAnalyticsPanel } from "@/components/transporter/bidding/BiddingAnalyticsPanel";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTranslations } from "next-intl";
-import { useCurrency } from "@/contexts/CurrencyContext";
 import { FeaturedBadge } from "@/components/ads/featured-badge";
 
 export default function CarrierLoadsPage() {

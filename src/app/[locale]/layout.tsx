@@ -14,7 +14,7 @@ export async function generateMetadata({
     params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
     const { locale } = await params;
-    // const t = await getTranslations({ locale, namespace: 'common' });
+    const t = await getTranslations({ locale, namespace: 'common' });
 
     return {
         applicationName: "Freight Bid Pro",
@@ -31,7 +31,6 @@ export async function generateMetadata({
         formatDetection: {
             telephone: false,
         },
-        manifest: "/manifest.json",
     };
 }
 
@@ -47,25 +46,15 @@ export default async function LocaleLayout({
     params: Promise<{ locale: string }>;
 }) {
     const { locale } = await params;
+    // Providing all messages to the client side is the easiest way to get started
     const messages = await getMessages();
+
+    // Configure RTL based on the locale (e.g. if Arabic is added later)
     const dir = locale === 'ar' ? 'rtl' : 'ltr';
 
     return (
         <html lang={locale} dir={dir} suppressHydrationWarning>
-            <head>
-                <script
-                    type="application/ld+json"
-                    dangerouslySetInnerHTML={{
-                        __html: JSON.stringify({
-                            "@context": "https://schema.org",
-                            "@type": "WebSite",
-                            "name": "Freight Bid Pro",
-                            "url": process.env.NEXT_PUBLIC_APP_URL || 'https://freightbidpro.com',
-                        })
-                    }}
-                />
-            </head>
-            <body className="antialiased h-full" suppressHydrationWarning>
+            <body className="antialiased h-full">
                 <NextIntlClientProvider messages={messages}>
                     <ThemeProvider
                         attribute="class"

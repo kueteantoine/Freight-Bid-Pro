@@ -31,8 +31,8 @@ export function NotificationCenter({ userId }: NotificationCenterProps) {
                 const data = await notificationService.fetchNotifications();
                 setNotifications(data);
                 setIsLoading(false);
-            } catch (error: any) {
-                console.error('Error loading notifications:', error.message || error);
+            } catch (error) {
+                console.error('Error loading notifications:', error);
                 setIsLoading(false);
             }
         };
