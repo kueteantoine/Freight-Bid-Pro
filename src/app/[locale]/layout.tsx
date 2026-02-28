@@ -5,8 +5,6 @@ import { AnalyticsProvider } from "@/contexts/AnalyticsContext";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations } from "next-intl/server";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
-import PWAInstallPrompt from "@/components/pwa/PWAInstallPrompt";
-import OfflineStatusIndicator from "@/components/pwa/OfflineStatusIndicator";
 
 import type { Metadata, Viewport } from "next";
 
@@ -80,8 +78,6 @@ export default async function LocaleLayout({
                                 {children}
                             </CurrencyProvider>
                         </AnalyticsProvider>
-                        <PWAInstallPrompt />
-                        <OfflineStatusIndicator />
                         <Toaster />
                     </ThemeProvider>
                 </NextIntlClientProvider>
